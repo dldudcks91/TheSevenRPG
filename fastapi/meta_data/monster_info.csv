@@ -1,0 +1,9 @@
+﻿monster_idx,monster_name,monster_type,monster_base,size_type,hp,attack,defense,magic_defense,attack_speed,exp_reward,sprite_path,description
+2101,Starving Wolf,Beast,Wolf,1,80,15,5,5,1.6,45,wolf_small,굶주려 날카로워진 새끼 늑대
+2102,Alpha Wolf,Beast,Wolf,2,180,25,10,10,1.2,120,wolf_medium,무리를 이끄는 우두머리 늑대
+2201,Stone Watcher,Construct,Golem,2,220,18,30,15,0.7,150,golem_medium,유적을 지키는 돌 파수꾼
+2202,Ancient Golem,Construct,Golem,3,450,40,50,20,0.4,400,golem_large,거대한 고대의 강철 골렘
+2301,Shadow Imp,Demon,Imp,1,75,18,5,20,1.5,55,imp_small,마법 저항력이 높은 그림자 임프
+2302,Greater Demon Imp,Demon,Imp,2,160,28,15,35,1.1,140,imp_medium,지옥의 마력을 머금은 상급 임프
+2401,Rusty Skeleton,Undead,Skeleton,1,100,12,8,5,1.3,50,skeleton_small,녹슨 장비를 걸친 해골 병사
+2402,Skeleton Knight,Undead,Skeleton,2,250,22,18,10,0.9,130,skeleton_medium,한때 기사였던 강력한 해골 전사

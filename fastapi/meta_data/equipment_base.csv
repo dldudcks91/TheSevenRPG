@@ -1,0 +1,7 @@
+﻿item_idx,item_base,main_group,sub_group,size_type,min_damage,max_damage,speed
+100101,글라디우스,weapon,sword,small,8,12,1.2
+100102,Katana,weapon,sword,medium,12,16,1.0
+100103,클레이모어,weapon,sword,big,16,20,0.8
+100201,워엑스,weapon,axe,small,4,16,1.2
+100202,토마호크,weapon,axe,medium,6,22,1.0
+100203,할버드,weapon,axe,big,8,28,0.8
