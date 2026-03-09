@@ -1,9 +1,46 @@
-﻿monster_idx,monster_name,monster_type,monster_base,size_type,hp,attack,defense,magic_defense,attack_speed,exp_reward,sprite_path,description
-2101,Starving Wolf,Normal,Wolf,1,80,15,5,5,1.6,45,wolf_small,굶주려 날카로워진 새끼 늑대
-2102,Alpha Wolf,Normal,Wolf,2,180,25,10,10,1.2,120,wolf_medium,무리를 이끄는 우두머리 늑대
-2201,Stone Watcher,Normal,Golem,2,220,18,30,15,0.7,150,golem_medium,유적을 지키는 돌 파수꾼
-2202,Ancient Golem,Normal,Golem,3,450,40,50,20,0.4,400,golem_large,거대한 고대의 강철 골렘
-2301,Shadow Imp,Demon,Imp,1,75,18,5,20,1.5,55,imp_small,마법 저항력이 높은 그림자 임프
-2302,Greater Demon Imp,Demon,Imp,2,160,28,15,35,1.1,140,imp_medium,지옥의 마력을 머금은 상급 임프
-2401,Rusty Skeleton,Undead,Skeleton,1,100,12,8,5,1.3,50,skeleton_small,녹슨 장비를 걸친 해골 병사
-2402,Skeleton Knight,Undead,Skeleton,2,250,22,18,10,0.9,130,skeleton_medium,한때 기사였던 강력한 해골 전사
+monster_idx,monster_name,monster_type,monster_base,size_type,hp,attack,defense,magic_defense,attack_speed,exp_reward,sprite_path,description
+2111,고블린,Normal,Humanoid,1,70,12,4,3,1.5,40,humanoid_small,약하지만 무리지어 덤비는 잡몹
+2112,오크 전사,Normal,Humanoid,2,200,28,15,8,1.0,130,humanoid_medium,육중한 몸집의 근접 전투형 오크
+2113,트롤,Normal,Humanoid,3,450,45,30,12,0.7,350,humanoid_large,강력한 재생력을 가진 거대 수인
+2121,회색 늑대,Normal,Beast,1,65,16,3,3,1.8,45,beast_small,빠른 발로 먹이를 추격하는 늑대
+2122,그리즐리,Normal,Beast,3,420,48,20,8,0.7,360,beast_large,압도적인 힘을 가진 거대 곰
+2123,검은 표범,Normal,Beast,2,170,32,8,5,1.4,140,beast_medium,은밀하게 기습하는 흑표범
+2131,코볼드,Normal,Reptile,1,75,11,6,5,1.4,42,reptile_small,작지만 교활한 도마뱀 인간
+2132,도마뱀인간 전사,Normal,Reptile,2,210,26,18,10,1.0,135,reptile_medium,단단한 비늘을 두른 파충류 전사
+2133,나가 마법사,Normal,Reptile,2,160,22,10,20,1.1,145,reptile_medium,강력한 마법을 다루는 뱀인간
+2141,거대 거미,Normal,Insect,1,60,14,4,4,1.7,40,insect_small,독을 품은 거대한 거미
+2142,독 전갈,Normal,Insect,1,80,15,7,6,1.5,50,insect_small,꼬리의 독침으로 치명상을 입히는 전갈
+2143,사마귀 전사,Normal,Insect,2,150,30,10,7,1.5,130,insect_medium,날카로운 낫으로 공격하는 사마귀
+2151,오우거,Normal,Giant,3,500,50,35,10,0.6,380,giant_large,우둔하지만 압도적인 힘을 가진 거인
+2152,사이클롭스,Normal,Giant,3,550,55,30,8,0.55,400,giant_large,강력한 일격으로 지형을 부수는 외눈 거인
+2153,미노타우르스,Normal,Giant,3,480,52,28,12,0.7,370,giant_large,황소 머리를 가진 돌격형 거인
+2211,임프,Demon,MinorDemon,1,60,13,3,15,1.7,50,minordemon_small,장난기 가득한 지옥의 소악마
+2212,지옥 하운드,Demon,MinorDemon,1,80,18,5,8,1.6,55,minordemon_small,불꽃을 내뿜는 지옥의 개
+2213,악령,Demon,MinorDemon,2,140,20,6,22,1.3,120,minordemon_medium,인간의 몸을 빙의하는 하급 악마
+2221,발록,Demon,CombatDemon,3,520,60,28,20,0.7,420,combatdemon_large,불과 어둠을 다루는 강력한 전투 악마
+2222,지옥 기사,Demon,CombatDemon,2,280,38,25,15,0.9,180,combatdemon_medium,지옥의 갑옷을 두른 악마 기사
+2223,지옥 파괴자,Demon,CombatDemon,3,480,65,22,12,0.6,400,combatdemon_large,모든 것을 짓밟는 거대한 파괴형 악마
+2231,서큐버스,Demon,ArcaneDemon,2,150,25,8,28,1.2,160,arcanedemon_medium,매혹과 마법으로 적을 약화시키는 악마
+2232,인큐버스,Demon,ArcaneDemon,2,160,22,7,30,1.1,155,arcanedemon_medium,악몽을 심어 정신을 잠식하는 악마
+2233,악마 마법사,Demon,ArcaneDemon,2,130,20,6,35,1.2,165,arcanedemon_medium,지옥의 마법을 다루는 악마 술사
+2241,타락 천사,Demon,FallenAngel,2,220,35,18,22,1.1,180,fallenangel_medium,신성을 잃고 어둠에 물든 검사형 천사
+2242,저주의 세라핌,Demon,FallenAngel,2,190,28,15,25,1.2,175,fallenangel_medium,저주를 내려 적을 약화시키는 타락 천사
+2243,어둠의 세라핌,Demon,FallenAngel,2,200,30,16,28,1.1,178,fallenangel_medium,어둠의 마력으로 적을 잠식하는 타락 천사
+2251,지옥 군주,Demon,HighDemon,3,600,70,40,30,0.65,500,highdemon_large,지옥을 지배하는 전투형 고위 악마
+2252,악마 대마법사,Demon,HighDemon,2,250,45,15,50,1.0,450,highdemon_medium,강력한 마법으로 모든 것을 소각하는 악마
+2253,심연의 군주,Demon,HighDemon,3,650,65,35,40,0.6,520,highdemon_large,다른 악마들을 지배하는 최고위 악마
+2311,스켈레톤 전사,Undead,Skeleton,1,90,14,10,4,1.2,48,skeleton_small,녹슨 무기를 든 해골 전사
+2312,스켈레톤 궁수,Undead,Skeleton,1,75,16,6,4,1.3,50,skeleton_small,원거리에서 화살을 쏘는 해골
+2313,스켈레톤 기사,Undead,Skeleton,2,230,24,20,8,0.9,140,skeleton_medium,한때 기사였던 강력한 해골 전사
+2321,구울,Undead,Ghoul,1,85,15,5,4,1.4,45,ghoul_small,시체를 파먹는 굶주린 언데드
+2322,좀비,Undead,Ghoul,1,100,12,7,3,0.8,42,ghoul_small,느리지만 끈질긴 생명력의 언데드
+2323,드라우그르,Undead,Ghoul,2,220,26,16,8,1.0,135,ghoul_medium,북방의 전설에서 깨어난 언데드 전사
+2331,유령,Undead,Specter,1,60,14,2,25,1.6,55,specter_small,실체 없이 떠도는 원혼
+2332,밴시,Undead,Specter,2,140,18,3,35,1.3,150,specter_medium,절규로 적의 의지를 꺾는 여성 유령
+2333,레이스,Undead,Specter,2,170,22,4,40,1.2,165,specter_medium,강력한 어둠의 기운을 가진 고위 영혼
+2341,뱀파이어,Undead,Vampire,2,200,32,14,18,1.3,170,vampire_medium,피를 마셔 생명력을 회복하는 흡혈귀
+2342,뱀파이어 기사,Undead,Vampire,2,260,38,20,20,1.1,195,vampire_medium,전투 능력이 극대화된 흡혈귀 기사
+2343,블러드 로드,Undead,Vampire,3,440,55,25,28,0.9,380,vampire_large,뱀파이어 집단을 이끄는 혈족의 군주
+2351,리치,Undead,Lich,2,180,40,8,50,1.0,400,lich_medium,불사의 마법으로 죽음을 극복한 마법사
+2352,데스 나이트,Undead,Lich,2,280,42,28,20,0.9,380,lich_medium,죽어서도 충성을 바치는 언데드 기사
+2353,네크로만서,Undead,Lich,2,160,35,7,45,1.0,390,lich_medium,죽어서도 사령술을 부리는 언데드 마법사
