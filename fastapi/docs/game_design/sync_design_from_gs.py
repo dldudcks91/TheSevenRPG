@@ -1,5 +1,10 @@
+import sys
+import io
 import pandas as pd
 import os
+
+# Windows 콘솔 인코딩 문제 방지
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # ---------------------------------------------------------
 # ⚙️ 세팅 구역 
