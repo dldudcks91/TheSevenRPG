@@ -1,4 +1,4 @@
-테이블 명,컬럼 명,데이터 타입,PK/FK,설명 및 제약 조건
+﻿테이블 명,컬럼 명,데이터 타입,PK/FK,설명 및 제약 조건
 Users,user_no,BIGINT,PK,계정 고유 번호 (자동 증가)
 ,user_name,VARCHAR(50),Unique,유저 닉네임
 ,gold,BIGINT,,보유 재화
@@ -6,21 +6,18 @@ Users,user_no,BIGINT,PK,계정 고유 번호 (자동 증가)
 ,max_inventory,INT,,인벤토리 최대 칸 수 (기본 100)
 ,created_at,DATETIME,,계정 생성일
 UserStats,user_no,BIGINT,PK/FK,"소유자 (Users 참조, 1:1 관계)"
-,level,INT,,캐릭터 레벨 (최대 99)
+,level,INT,,캐릭터 레벨
 ,exp,BIGINT,,누적 경험치
-,stat_points,INT,,잔여 스탯 포인트 (레벨업당 5포인트)
-,stat_str,INT,,힘 (공격력 +0.5%/pt)
-,stat_dex,INT,,"민첩 (공속 +0.3%/pt, 명중률 +0.5%/pt)"
-,stat_vital,INT,,체력 (최대HP +10/pt - 레벨업 자동증가 없음)
-,stat_luck,INT,,"운 (치명타확률 +0.1%/pt, 치명타데미지 +0.3%/pt, 회피율 +0.1%/pt)"
-,stat_cost,INT,,코스트 (최대코스트 +2/pt / 레벨당 자동 +1)
+,stat_points,INT,,잔여 스탯 포인트
+,stat_str,INT,,힘 (공격력 보정)
+,stat_dex,INT,,"민첩 (공속, 명중률)"
+,stat_vital,INT,,체력
+,stat_cost,INT,,코스트
 Items,item_uid,VARCHAR(36),PK,아이템 고유 식별자 (UUID)
 ,user_no,BIGINT,FK,소유자 (Users 참조)
 ,base_item_id,INT,,메타데이터(equipment_base) 참조용
-,item_level,INT,,장비레벨 (숨김 - 뜰 수 있는 옵션 종류 결정)
 ,rarity,VARCHAR(20),,"normal, magic, rare, unique"
 ,item_score,INT,,몬스터 킬 점수 기반 퀄리티 수치
-,item_cost,INT,,계산된 코스트 값 (베이스코스트 × 등급배율 × 레벨배율)
 ,prefix_id,VARCHAR(50),,"접두사 ID (메타데이터 참조, Nullable)"
 ,suffix_id,VARCHAR(50),,"접미사 ID (메타데이터 참조, Nullable)"
 ,set_id,VARCHAR(50),,고정 부여된 7죄종 세트 ID (Nullable)
