@@ -1,9 +1,46 @@
-﻿monster_idx,monster_name,monster_type,monster_base,size_type,hp,attack,defense,magic_defense,attack_speed,exp_reward,sprite_path,description
-2101,Starving Wolf,Normal,Wolf,1,80,15,5,5,1.6,45,wolf_small,굶주려 날카로워진 새끼 늑대
-2102,Alpha Wolf,Normal,Wolf,2,180,25,10,10,1.2,120,wolf_medium,무리를 이끄는 우두머리 늑대
-2201,Stone Watcher,Normal,Golem,2,220,18,30,15,0.7,150,golem_medium,유적을 지키는 돌 파수꾼
-2202,Ancient Golem,Normal,Golem,3,450,40,50,20,0.4,400,golem_large,거대한 고대의 강철 골렘
-2301,Shadow Imp,Demon,Imp,1,75,18,5,20,1.5,55,imp_small,마법 저항력이 높은 그림자 임프
-2302,Greater Demon Imp,Demon,Imp,2,160,28,15,35,1.1,140,imp_medium,지옥의 마력을 머금은 상급 임프
-2401,Rusty Skeleton,Undead,Skeleton,1,100,12,8,5,1.3,50,skeleton_small,녹슨 장비를 걸친 해골 병사
-2402,Skeleton Knight,Undead,Skeleton,2,250,22,18,10,0.9,130,skeleton_medium,한때 기사였던 강력한 해골 전사
+monster_idx,monster_name,monster_type,monster_base,size_type,hp,attack,defense,magic_defense,attack_speed,exp_reward,sprite_path,description
+1101,Starving Wolf,Normal,Wolf,1,80,15,5,5,1.6,45,wolf_small,굶주려 날카로워진 새끼 늑대
+1102,Alpha Wolf,Normal,Wolf,2,180,25,10,10,1.2,120,wolf_medium,무리를 이끄는 우두머리 늑대
+1103,Dire Wolf,Normal,Wolf,3,320,40,18,12,1.0,250,wolf_large,공포의 대형 야생 늑대
+1201,Young Yeti,Normal,Yeti,2,180,25,12,8,1.0,130,yeti_medium,설산을 처음 내려온 어린 예티
+1202,Frost Yeti,Normal,Yeti,3,380,42,22,12,0.8,280,yeti_large,혹한을 견뎌낸 서리 예티
+1203,Ancient Yeti,Normal,Yeti,3,580,60,35,18,0.6,450,yeti_large,태초부터 설산을 지배해온 고대 예티
+1301,Swamp Troll,Normal,Troll,2,250,22,25,10,0.8,160,troll_medium,늪지대에 서식하는 끈질긴 트롤
+1302,Stone Troll,Normal,Troll,3,400,35,40,15,0.6,300,troll_large,단단한 돌가죽을 가진 바위 트롤
+1303,War Troll,Normal,Troll,3,600,55,55,20,0.5,500,troll_large,전쟁에 단련된 상급 트롤 전사
+1401,Lizard Scout,Normal,Lizardman,1,90,16,8,8,1.5,60,lizard_small,날렵한 도마뱀 척후병
+1402,Lizard Warrior,Normal,Lizardman,2,200,28,18,12,1.1,150,lizard_medium,검과 방패를 다루는 도마뱀 전사
+1403,Lizard Shaman,Normal,Lizardman,2,160,22,12,30,1.0,180,lizard_medium,원시 주술을 다루는 도마뱀 주술사
+1501,Stone Watcher,Normal,Golem,2,220,18,30,15,0.7,150,golem_medium,유적을 지키는 돌 파수꾼
+1502,Iron Golem,Normal,Golem,3,380,30,50,25,0.5,320,golem_large,철로 단련된 거대 골렘
+1503,Ancient Golem,Normal,Golem,3,550,45,70,35,0.4,500,golem_large,태고의 마법으로 빚어진 고대 골렘
+2101,Shadow Imp,Demon,Imp,1,75,18,5,20,1.5,55,imp_small,마법 저항력이 높은 그림자 임프
+2102,Fire Imp,Demon,Imp,1,90,22,8,25,1.4,80,imp_small,불꽃을 다루는 붉은 임프
+2103,Greater Imp,Demon,Imp,2,160,30,15,40,1.1,160,imp_medium,지옥의 마력을 머금은 상급 임프
+2201,Goblin Peon,Demon,Goblin,1,60,14,5,15,1.7,45,goblin_small,오합지졸 고블린 잡병
+2202,Goblin Warrior,Demon,Goblin,1,110,22,10,20,1.5,100,goblin_small,무기를 든 고블린 전사
+2203,Goblin Shaman,Demon,Goblin,2,140,28,8,40,1.2,160,goblin_medium,독과 저주를 다루는 고블린 주술사
+2301,Temptress,Demon,Succubus,2,130,25,10,35,1.2,120,succubus_medium,달콤한 속삭임으로 유혹하는 마녀
+2302,Dark Enchantress,Demon,Succubus,2,200,35,15,50,1.0,220,succubus_medium,암흑 마법으로 적을 지배하는 마녀
+2303,Succubus Queen,Demon,Succubus,2,320,45,20,65,0.9,380,succubus_medium,서큐버스 무리를 이끄는 여왕
+2401,Stone Gargoyle,Demon,Gargoyle,2,240,25,35,20,0.9,180,gargoyle_medium,석상에서 깨어난 가고일
+2402,Winged Gargoyle,Demon,Gargoyle,2,200,32,25,30,1.2,200,gargoyle_medium,날개를 펼쳐 급습하는 가고일
+2403,Demon Gargoyle,Demon,Gargoyle,3,420,48,45,40,0.8,420,gargoyle_large,악마의 피를 이어받은 상급 가고일
+2501,Orc Grunt,Demon,Orc,2,220,32,20,10,1.0,160,orc_medium,오크 전선의 돌격 병사
+2502,Orc Berserker,Demon,Orc,2,300,50,15,12,1.2,280,orc_medium,광기에 빠진 오크 광전사
+2503,Orc Warchief,Demon,Orc,3,480,65,35,20,0.8,500,orc_large,오크 군단을 이끄는 전쟁족장
+3101,Skeleton Warrior,Undead,Skeleton,1,100,12,8,5,1.3,50,skeleton_small,녹슨 검을 든 해골 병사
+3102,Skeleton Archer,Undead,Skeleton,1,80,18,5,5,1.4,60,skeleton_small,뼈로 만든 활을 다루는 해골 궁수
+3103,Skeleton Knight,Undead,Skeleton,2,250,22,18,10,0.9,130,skeleton_medium,한때 기사였던 강력한 해골 전사
+3201,Rotting Zombie,Undead,Zombie,2,200,15,10,5,0.8,90,zombie_medium,천천히 다가오는 썩은 좀비
+3202,Plague Zombie,Undead,Zombie,2,280,20,15,8,0.7,150,zombie_medium,역병을 퍼뜨리는 좀비
+3203,Zombie Brute,Undead,Zombie,3,500,30,20,10,0.5,300,zombie_large,비대해진 몸으로 압도하는 거대 좀비
+3301,Wandering Spirit,Undead,Ghost,1,80,14,3,40,1.3,70,ghost_small,이승을 떠돌며 방황하는 영혼
+3302,Banshee,Undead,Ghost,2,150,25,5,60,1.1,160,ghost_medium,날카로운 울음으로 공포를 주는 밴시
+3303,Specter,Undead,Ghost,2,220,35,8,80,1.0,270,ghost_medium,강렬한 원한이 형체를 이룬 스펙터
+3401,Blood Thrall,Undead,Vampire,2,160,22,12,20,1.2,110,vampire_medium,뱀파이어에게 지배당한 피의 하수인
+3402,Dark Vampire,Undead,Vampire,2,280,35,20,35,1.1,240,vampire_medium,밤을 지배하는 어둠의 뱀파이어
+3403,Vampire Lord,Undead,Vampire,3,450,55,30,50,0.9,450,vampire_large,뱀파이어 혈통의 정점에 선 군주
+3501,Bone Mage,Undead,Lich,2,120,20,8,50,1.0,140,lich_medium,뼈다귀를 무기로 다루는 마법사
+3502,Dark Lich,Undead,Lich,2,230,35,12,70,0.9,280,lich_medium,오랜 세월 죽음을 거부한 리치
+3503,Lich King,Undead,Lich,3,400,55,20,90,0.7,500,lich_large,언데드 군단을 지배하는 리치 왕
