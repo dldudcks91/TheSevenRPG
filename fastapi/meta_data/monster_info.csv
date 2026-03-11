@@ -1,4 +1,4 @@
-monster_idx,monster_name,monster_type,monster_base,size_type,hp,attack,defense,magic_defense,attack_speed,exp_reward,sprite_path,description
+﻿monster_idx,monster_name,monster_type,monster_base,size_type,hp,attack,defense,magic_defense,attack_speed,exp_reward,sprite_path,description
 1101,Starving Wolf,Normal,Wolf,1,80,15,5,5,1.6,45,wolf_small,굶주려 날카로워진 새끼 늑대
 1102,Alpha Wolf,Normal,Wolf,2,180,25,10,10,1.2,120,wolf_medium,무리를 이끄는 우두머리 늑대
 1103,Dire Wolf,Normal,Wolf,3,320,40,18,12,1.0,250,wolf_large,공포의 대형 야생 늑대

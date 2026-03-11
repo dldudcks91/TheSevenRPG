@@ -61,11 +61,11 @@ TheSevenRPG/
 ## 기획 문서
 - 기획 관련 논의 및 문서는 `fastapi/docs/game_design/`에서 관리.
 - 마크다운 기획서: `fastapi/docs/game_design/GAME_DESIGN.md`
-- 구글 시트 동기화: `sync_design_from_gs.py` (다운로드), `sync_design_to_gs.py` (업로드)
+- 구글 시트 동기화: `data/sync_design_from_gs.py` (다운로드), `data/sync_design_to_gs.py` (업로드)
 
 ## 데이터 동기화 규칙
 - "메타데이터를 불러와" = `fastapi/meta_data/sync_data_from_gs.py` 실행
-- "기획 데이터를 불러와" = `fastapi/docs/game_design/sync_design_from_gs.py` 실행
+- "기획 데이터를 불러와" = `fastapi/docs/game_design/data/sync_design_from_gs.py` 실행
 
 ## 세션 시작/종료 프로토콜
 
@@ -73,13 +73,13 @@ TheSevenRPG/
 1. `git pull` 실행하여 GitHub 최신 소스를 가져온다.
 2. 아래 sync 스크립트를 순서대로 실행하여 구글 시트 데이터를 로컬로 내려받는다.
    - `fastapi/meta_data/sync_data_from_gs.py`
-   - `fastapi/docs/game_design/sync_design_from_gs.py`
+   - `fastapi/docs/game_design/data/sync_design_from_gs.py`
 
 ### 세션 종료 — "오늘 고생했어 마무리하자" 입력 시
 1. 변경된 파일을 커밋하고 `git push`하여 GitHub에 저장한다.
 2. 아래 sync 스크립트를 순서대로 실행하여 로컬 데이터를 구글 시트에 업로드한다.
    - `fastapi/meta_data/sync_data_to_gs.py`
-   - `fastapi/docs/game_design/sync_design_to_gs.py`
+   - `fastapi/docs/game_design/data/sync_design_to_gs.py`
 
 ## 기획 논의 규칙
 - 기획 논의 시 분석/제안만 제공한다. "CSV에 반영할까요?" 같은 마무리 질문을 절대 하지 않는다.
