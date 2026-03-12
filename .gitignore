@@ -1,1 +1,3 @@
 fastapi/docs/credentials.json
+fastapi/.env
+fastapi/logs/

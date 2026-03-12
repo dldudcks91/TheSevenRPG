@@ -1,66 +1,115 @@
-from typing import Dict, List, Any
-# ResourceRedisManager를 import 목록에 추가합니다.
+import redis.asyncio as aioredis
+from redis.exceptions import RedisError, ConnectionError as RedisConnectionError
+from config import settings
 
-# ResourceRedisManager를 임포트한다고 가정합니다.
+
+class RedisUnavailable(Exception):
+    """Redis 연결 불가 시 발생 — 호출부에서 폴백 처리"""
+    pass
+
 
 class RedisManager:
-    """Redis 작업 관리자들의 중앙 접근점 (비동기 버전)"""
-    
-    def __init__(self, redis_client):
-        self.redis_client = redis_client
-        
-        
+    """Redis 비동기 클라이언트 — 클래스 변수로 싱글톤 관리"""
 
+    _client: aioredis.Redis = None
 
+    # ── 연결 관리 ────────────────────────────────────────────
 
-    
-    
-    # ✅ 추가 필요한 메서드들
+    @classmethod
+    async def init(cls):
+        """서버 startup 시 호출 — Redis 연결 초기화"""
+        cls._client = aioredis.Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=settings.REDIS_DB,
+            decode_responses=True,
+            socket_connect_timeout=3,   # 연결 시도 최대 3초
+            socket_timeout=3,           # 명령 응답 최대 3초
+        )
 
-    async def hset(self, key, field, value):
-        """Hash SET"""
-        return await self.redis.hset(key, field, value)
-    
-    async def hgetall(self, key):
-        """Hash GET ALL"""
-        return await self.redis.hgetall(key)
-    
-    async def hdel(self, key, *fields):
-        """Hash DELETE"""
-        return await self.redis.hdel(key, *fields)
-    
-    async def hmset(self, key, mapping):
-        """Hash MSET"""
-        return await self.redis.hset(key, mapping=mapping)
-    
-    async def zadd(self, key, mapping):
-        """Sorted Set ADD"""
-        return await self.redis.zadd(key, mapping)
-    
-    async def zrangebyscore(self, key, min_score, max_score):
-        """Sorted Set RANGE BY SCORE"""
-        return await self.redis.zrangebyscore(key, min_score, max_score)
-    
-    async def zrem(self, key, *members):
-        """Sorted Set REMOVE"""
-        return await self.redis.zrem(key, *members)
-    
-    async def keys(self, pattern):
-        """KEYS with pattern"""
-        return await self.redis.keys(pattern)
-    
-    async def get(self, key):
-        """GET"""
-        return await self.redis.get(key)
-    
-    async def setex(self, key, seconds, value):
-        """SET with expiry"""
-        return await self.redis.setex(key, seconds, value)
-    
-    async def expire(self, key, seconds):
-        """SET TTL"""
-        return await self.redis.expire(key, seconds)
-    
-    async def delete(self, *keys):
-        """DELETE"""
-        return await self.redis.delete(*keys)
+    @classmethod
+    async def close(cls):
+        """서버 shutdown 시 호출 — Redis 연결 종료"""
+        if cls._client:
+            await cls._client.aclose()
+
+    @classmethod
+    async def ping(cls) -> bool:
+        """Redis 연결 상태 확인 — health check 용"""
+        try:
+            return await cls._client.ping()
+        except (RedisError, RedisConnectionError, Exception):
+            return False
+
+    # ── 내부 에러 래퍼 ───────────────────────────────────────
+
+    @classmethod
+    async def _exec(cls, coro):
+        """
+        모든 Redis 명령을 감싸는 에러 래퍼.
+        연결 오류 → RedisUnavailable 발생 (호출부에서 폴백 처리)
+        """
+        try:
+            return await coro
+        except (RedisConnectionError, RedisError) as e:
+            raise RedisUnavailable(f"Redis 명령 실패: {e}") from e
+
+    # ── String ───────────────────────────────────────────────
+
+    @classmethod
+    async def get(cls, key: str):
+        return await cls._exec(cls._client.get(key))
+
+    @classmethod
+    async def setex(cls, key: str, seconds: int, value: str):
+        return await cls._exec(cls._client.setex(key, seconds, value))
+
+    @classmethod
+    async def delete(cls, *keys: str):
+        return await cls._exec(cls._client.delete(*keys))
+
+    @classmethod
+    async def expire(cls, key: str, seconds: int):
+        return await cls._exec(cls._client.expire(key, seconds))
+
+    @classmethod
+    async def incr(cls, key: str) -> int:
+        return await cls._exec(cls._client.incr(key))
+
+    # ── Hash ─────────────────────────────────────────────────
+
+    @classmethod
+    async def hset(cls, key: str, field: str, value: str):
+        return await cls._exec(cls._client.hset(key, field, value))
+
+    @classmethod
+    async def hmset(cls, key: str, mapping: dict):
+        return await cls._exec(cls._client.hset(key, mapping=mapping))
+
+    @classmethod
+    async def hgetall(cls, key: str) -> dict:
+        return await cls._exec(cls._client.hgetall(key))
+
+    @classmethod
+    async def hdel(cls, key: str, *fields: str):
+        return await cls._exec(cls._client.hdel(key, *fields))
+
+    # ── Sorted Set ───────────────────────────────────────────
+
+    @classmethod
+    async def zadd(cls, key: str, mapping: dict):
+        return await cls._exec(cls._client.zadd(key, mapping))
+
+    @classmethod
+    async def zrangebyscore(cls, key: str, min_score, max_score):
+        return await cls._exec(cls._client.zrangebyscore(key, min_score, max_score))
+
+    @classmethod
+    async def zrem(cls, key: str, *members: str):
+        return await cls._exec(cls._client.zrem(key, *members))
+
+    # ── 유틸 ─────────────────────────────────────────────────
+
+    @classmethod
+    async def keys(cls, pattern: str):
+        return await cls._exec(cls._client.keys(pattern))

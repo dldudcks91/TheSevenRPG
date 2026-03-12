@@ -1,28 +1,29 @@
-
-
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+from config import settings
 
-host = 'localhost'
-user = 'root'
-password = 'an98'
-db='TheSevenRPG'
-charset='utf8'
-DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}:3306/{db}?charset-{charset}"
 
-engine = create_engine(DATABASE_URL)
-    
+engine = create_engine(
+    settings.DATABASE_URL,
+    pool_size=settings.DB_POOL_SIZE,
+    max_overflow=settings.DB_MAX_OVERFLOW,
+    pool_timeout=settings.DB_POOL_TIMEOUT,
+    pool_recycle=settings.DB_POOL_RECYCLE,
+    pool_pre_ping=True,   # 커넥션 사용 전 유효성 확인 (끊긴 커넥션 자동 재연결)
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+
 def init_db():
-    """서버 시작 시 테이블이 없으면 자동으로 생성해주는 함수"""
-    import models  # 모델을 임포트해야 Base.metadata가 테이블을 인식함
+    """서버 시작 시 테이블이 없으면 자동으로 생성"""
+    import models
     Base.metadata.create_all(bind=engine)
-    print("✅ 데이터베이스 테이블 생성 완료!")
+
 
 def get_db():
     db = SessionLocal()

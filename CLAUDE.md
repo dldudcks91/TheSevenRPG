@@ -29,34 +29,14 @@ TheSevenRPG/
 │       └── redis_manager/    # RedisManager (캐시/태스크)
 ```
 
-## 아키텍처 규칙
+## 개발 가이드
+- 서버 개발 시 `fastapi-server` skill을 따른다.
+- 클라이언트 개발 시 `web-client` skill을 따른다.
+- 기획 논의 시 `game-design` skill을 따른다.
 
-### 단일 API 게이트웨이 패턴
-- 모든 클라이언트 요청은 `POST /api` 하나로 들어온다.
-- `ApiRequest(user_no, api_code, data)` 형태로 전달.
-- `APIManager.api_map`에서 api_code → (ManagerClass, method) 매핑.
-- 새 기능 추가 시: Manager 메서드 작성 → api_map에 등록.
-
-### API 코드 체계
-- 1xxx: 시스템/로그인 (GameDataManager, UserInitManager)
-- 2xxx: 인벤토리 (InventoryManager)
-- 3xxx: 전투 (BattleManager, ItemDropManager)
-
-### Manager 클래스 규칙
-- 모든 API 핸들러 메서드는 `async def method(cls, user_no: int, data: dict)` 시그니처.
-- 반환 형식: `{"success": bool, "message": str, "data": ...}`
-- 메타데이터 참조는 항상 `GameDataManager.REQUIRE_CONFIGS`에서.
-
-### 데이터 흐름
-- **메타데이터(CSV)** → 서버 기동 시 메모리 로드 (read-only, 런타임 변경 없음)
-- **유저 데이터** → MySQL (SQLAlchemy ORM)
-- **전투 스탯 캐시** → Redis (장비 변경 시 갱신)
-
-## 코딩 컨벤션
-- 한국어 주석 사용
-- 클래스명: PascalCase (예: ItemDropManager)
-- 파일명: 클래스명과 동일 (예: ItemDropManager.py)
-- 로깅: `logging.getLogger("RPG_SERVER")` 사용
+## 서버 개발 계획 & 구현 현황
+- 상세 계획 및 구현 현황: `fastapi/docs/SERVER_DEV_PLAN.md`
+- 세션 시작 시 반드시 읽는다.
 
 ## 기획 문서
 - 기획 관련 논의 및 문서는 `fastapi/docs/game_design/`에서 관리.
@@ -80,7 +60,3 @@ TheSevenRPG/
 2. 아래 sync 스크립트를 순서대로 실행하여 로컬 데이터를 구글 시트에 업로드한다.
    - `fastapi/meta_data/sync_data_to_gs.py`
    - `fastapi/docs/game_design/data/sync_design_to_gs.py`
-
-## 기획 논의 규칙
-- 기획 논의 시 분석/제안만 제공한다. "CSV에 반영할까요?" 같은 마무리 질문을 절대 하지 않는다.
-- 문서(CSV/마크다운) 수정은 사용자가 최종 결정을 내린 후 명시적으로 요청할 때만 진행한다.
