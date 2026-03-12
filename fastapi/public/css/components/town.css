@@ -1,0 +1,208 @@
+/* ============================================
+   TheSevenRPG — Town Hub (죄악의 성)
+   ============================================ */
+
+.town-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: linear-gradient(180deg, #0d0d0d 0%, #1a0a0a 50%, #0d0d0d 100%);
+}
+
+/* === 상단: 캐릭터 정보 바 === */
+.town-header {
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.town-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.char-name {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.char-level {
+    font-size: var(--font-size-sm);
+    color: var(--text-accent);
+    font-weight: bold;
+}
+
+.char-gold {
+    font-size: var(--font-size-md);
+    color: var(--rarity-rare);
+    font-weight: bold;
+}
+
+/* EXP 바 */
+.town-exp-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--exp-bar-bg);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.town-exp-bar .fill {
+    height: 100%;
+    background: var(--exp-bar);
+    border-radius: var(--radius-full);
+    transition: width var(--transition-normal);
+}
+
+/* === 스탯 패널 === */
+.town-stats {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: 0 var(--spacing-md);
+    padding-top: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
+.stat-chip .stat-value {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+/* === 중앙: 메뉴 영역 === */
+.town-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+}
+
+.town-title {
+    font-size: var(--font-size-xxl);
+    color: var(--text-accent);
+    text-shadow: 0 0 20px rgba(198, 40, 40, 0.4);
+    margin-bottom: var(--spacing-md);
+    letter-spacing: 2px;
+}
+
+.town-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    width: 100%;
+    max-width: 400px;
+}
+
+.town-menu-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg) var(--spacing-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-secondary);
+    border-radius: var(--radius-lg);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: var(--font-size-md);
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+    min-height: 100px;
+}
+
+.town-menu-btn:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-highlight);
+}
+
+.town-menu-btn:active {
+    transform: scale(0.96);
+}
+
+.town-menu-btn .menu-icon {
+    font-size: 28px;
+}
+
+.town-menu-btn .menu-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+/* === 하단: 방치 파밍 상태 바 === */
+.town-idle-bar {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+}
+
+.idle-status {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.idle-status.active {
+    color: var(--color-success);
+}
+
+.idle-timer {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.idle-collect-btn {
+    padding: 6px 14px;
+    background: var(--color-success);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-family: var(--font-main);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    min-height: 32px;
+}
+
+.idle-collect-btn:hover {
+    opacity: 0.9;
+}
+
+/* === 로그아웃 === */
+.town-logout {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-main);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.town-logout:hover {
+    color: var(--text-secondary);
+}

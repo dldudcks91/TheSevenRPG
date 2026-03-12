@@ -1,0 +1,95 @@
+/* ============================================
+   TheSevenRPG — Login Screen
+   ============================================ */
+
+.login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: radial-gradient(ellipse at center, #1a0a0a 0%, var(--bg-primary) 70%);
+    padding: var(--spacing-lg);
+}
+
+.login-title {
+    font-size: 48px;
+    font-weight: bold;
+    color: var(--text-accent);
+    margin-bottom: var(--spacing-sm);
+    text-shadow: 0 0 20px rgba(198, 40, 40, 0.5);
+    letter-spacing: 4px;
+}
+
+.login-subtitle {
+    font-size: var(--font-size-md);
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-xl);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    width: 100%;
+    max-width: 320px;
+}
+
+.login-input {
+    width: 100%;
+    padding: 14px var(--spacing-md);
+    background: var(--bg-input);
+    border: 1px solid var(--border-secondary);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: var(--font-size-lg);
+    text-align: center;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.login-input::placeholder {
+    color: var(--text-muted);
+}
+
+.login-input:focus {
+    border-color: var(--text-accent);
+}
+
+.login-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--text-accent);
+    border: none;
+    border-radius: var(--radius-md);
+    color: #fff;
+    font-family: var(--font-main);
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    cursor: pointer;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+    min-height: 50px;
+}
+
+.login-btn:hover {
+    background: #e53935;
+}
+
+.login-btn:active {
+    transform: scale(0.97);
+}
+
+.login-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.login-error {
+    color: var(--color-error);
+    font-size: var(--font-size-sm);
+    min-height: 20px;
+    text-align: center;
+}

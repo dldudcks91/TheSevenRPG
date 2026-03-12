@@ -105,7 +105,13 @@
 | 1202 | 인간 창병 | Normal | Human | 1 | 소~중형. 긴 창을 든 돌격 병사. 공격적 | `ch1_human_spearman` | `16-bit pixel art, corrupted human spearman in scorched leather armor, thrusting a long iron-tipped spear forward facing left, aggressive lunging stance, burn scars across exposed arms, jaw clenched in uncontrollable wrath, torn cape trailing behind, white background, fantasy RPG enemy sprite` |
 | 1203 | 트롤 돌격병 | Normal | Troll | 2 | 중~대형. 이 스테이지의 위협. 방어 높고 묵직한 강타 | `ch1_troll_charger` | `16-bit pixel art, massive battle-scarred troll in crude iron pauldrons, charging stance with a large spiked club raised facing left, thick grey warty skin covered in slash wounds and ember burns, sunken rage-filled eyes glowing faintly red, towering hulking silhouette, white background, fantasy RPG enemy sprite` |
 
-**스테이지 3 — 원한의 묘지 (Undead)** *(미완성)*
+**스테이지 3 — 원한의 묘지 (Undead)**
+
+| monster_idx | 이름 | monster_type | monster_base | size_type | 역할 | 리소스명 | 아트 프롬프트 |
+|------------|------|-------------|-------------|-----------|------|---------|-------------|
+| 1301 | 스켈레톤 전사 | Undead | Skeleton | 1 | 소~중형. 검+방패 근접. 묘지에서 일어난 기본 해골 병사 | `ch1_skeleton_warrior` | `16-bit pixel art, undead skeleton warrior with fully exposed white bare bones, no armor on torso, wielding a chipped sword and battered shield, upright combat stance facing left, pale white bone texture with ember cracks glowing orange, hollow eye sockets burning with red ghostly flame, tattered war cape singed by fire hanging from shoulder bones, graveyard dirt clinging to joints, white background, fantasy RPG enemy sprite` |
+| 1302 | 스켈레톤 궁수 | Undead | Skeleton | 1 | 소~중형. 원거리 물리. 묘지 뒤편에서 쏘는 해골 사수 | `ch1_skeleton_archer` | `16-bit pixel art, undead skeleton archer with fully exposed white bare ribcage and spine, no armor on body, drawing a cracked longbow with a flaming arrow nocked, aiming stance facing left, pale white bone texture with faint orange embers smoldering between exposed ribs, skull jaw hanging slightly open, quiver of charred arrows strapped to bare spine, white background, fantasy RPG enemy sprite` |
+| 1303 | 스켈레톤 기사 | Undead | Skeleton | 2 | 중~대형. 해골 말을 탄 기마 전사. 이 스테이지의 위협 | `ch1_skeleton_knight` | `16-bit pixel art, undead skeleton knight riding a skeletal warhorse, fully exposed white bare bones on both rider and mount, no armor on bodies except a dark ornate Japanese kabuto helmet with curved horns on the rider skull, rider wielding a long tattered lance facing left, pale white bone texture, hollow eye sockets burning with red ghostly flame on both rider and horse, tattered war banner trailing from lance, graveyard dirt on hooves, white background, fantasy RPG enemy sprite` |
 
 **스테이지 보스** *(고에티아 배정)*
 

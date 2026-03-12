@@ -2,150 +2,39 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>The Seven - Ultimate API Tester</title>
-    <style>
-        body { font-family: 'Malgun Gothic', sans-serif; padding: 20px; background-color: #1e1e1e; color: #fff; margin: 0; }
-        .container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; }
-        
-        /* 왼쪽: 전송 폼 */
-        .form-section { flex: 1; border: 1px solid #444; padding: 20px; border-radius: 8px; background: #2d2d2d; }
-        .form-group { margin-bottom: 15px; }
-        label { display: inline-block; width: 120px; font-weight: bold; color: #aaa; }
-        input { padding: 8px; width: 150px; background: #222; border: 1px solid #555; color: #fff; border-radius: 4px; }
-        textarea { width: 100%; height: 200px; font-family: monospace; padding: 10px; background: #111; color: #00ff00; border: 1px solid #555; border-radius: 4px; box-sizing: border-box; resize: vertical; }
-        button.submit-btn { padding: 12px 25px; background-color: #c62828; color: white; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; font-size: 16px; transition: 0.2s; }
-        button.submit-btn:hover { background-color: #e53935; }
-        
-        /* 오른쪽: 레퍼런스 및 결과 */
-        .info-section { flex: 1; display: flex; flex-direction: column; gap: 20px; }
-        .reference-box { border: 1px solid #555; padding: 15px; border-radius: 8px; background: #222; }
-        .reference-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #444; }
-        .reference-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .ref-title { color: #4CAF50; font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
-        button.apply-btn { background: #4CAF50; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        button.apply-btn:hover { background: #45a049; }
-        pre.ref-code { background: #111; padding: 10px; border-radius: 4px; color: #aaa; margin: 5px 0; font-size: 13px; }
-        
-        /* 결과 창 */
-        .result-box { flex: 1; padding: 15px; border: 1px solid #555; border-radius: 8px; background: #111; color: #ccc; white-space: pre-wrap; font-family: monospace; overflow-y: auto; }
-        .error-text { color: #ff5252; font-weight: bold; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>The Seven - 7대 죄악 RPG</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/components/login.css">
+    <link rel="stylesheet" href="css/components/town.css">
+
+    <!-- Phaser.js (Phase C5에서 사용) -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js" defer></script>
 </head>
 <body>
 
-    <h2 style="text-align: center; margin-bottom: 30px;">🩸 The Seven - Server API Controller 🩸</h2>
+    <!-- SPA 앱 컨테이너 -->
+    <div id="app"></div>
 
-    <div class="container">
-        <div class="form-section">
-            <h3 style="margin-top:0; border-bottom: 2px solid #555; padding-bottom: 10px;">📡 Request Builder</h3>
-            <div class="form-group">
-                <label>플레이어 ID:</label>
-                <input type="number" id="userNo" value="12345" />
-            </div>
-            <div class="form-group">
-                <label>API Code:</label>
-                <input type="number" id="apiCode" value="3002" style="font-weight: bold; color: #4CAF50;" /> 
-            </div>
-            <div class="form-group">
-                <label style="display:block; margin-bottom: 5px;">Payload (JSON Data):</label>
-                <textarea id="jsonData">{
-  "monster_idx": 2101,
-  "spawned_level": 30,
-  "spawned_grade": 2,
-  "field_level": 3,
-  "spawn_type": "정예"
-}</textarea>
-            </div>
-            <button class="submit-btn" onclick="sendApiRequest()">서버로 전송 (POST /api)</button>
-        </div>
+    <!-- 토스트 알림 컨테이너 -->
+    <div id="toast-container"></div>
 
-        <div class="info-section">
-            
-            <div class="reference-box">
-                <h3 style="margin-top:0; color:#aaa;">📚 API Payload 예시</h3>
-                
-                <div class="reference-item">
-                    <div class="ref-title">
-                        <span>[1002] 시스템 메타데이터 로드</span>
-                        <button class="apply-btn" onclick="applyTemplate(1002, '{}')">적용하기</button>
-                    </div>
-                    <pre class="ref-code">{}</pre>
-                </div>
-
-                <div class="reference-item">
-                    <div class="ref-title">
-                        <span>[3002] 몬스터 처치 및 아이템 획득</span>
-                        <button class="apply-btn" onclick="applyTemplate(3002, '{\n  &quot;monster_idx&quot;: 2101,\n  &quot;spawned_level&quot;: 30,\n  &quot;spawned_grade&quot;: 2,\n  &quot;field_level&quot;: 3,\n  &quot;spawn_type&quot;: &quot;정예&quot;\n}')">적용하기</button>
-                    </div>
-                    <pre class="ref-code">{
-  "monster_idx": 2101, // 몬스터 고유번호 (int)
-  "spawned_level": 30, // 젠된 레벨 (int)
-  "spawned_grade": 2,  // 몹 등급 1~4 (int)
-  "field_level": 3,    // 던전/필드 레벨 (int)
-  "spawn_type": "정예" // 일반, 정예, 보스 (string)
-}</pre>
-                </div>
-            </div>
-
-            <div id="resultBox" class="result-box">결과 대기 중...</div>
-            
-        </div>
+    <!-- 로딩 오버레이 -->
+    <div id="loading-overlay">
+        <div class="loading-spinner"></div>
     </div>
 
-    <script>
-    // 우측 패널에서 '적용하기' 버튼 누르면 좌측 폼에 자동 입력됨
-    function applyTemplate(code, jsonStr) {
-        document.getElementById('apiCode').value = code;
-        document.getElementById('jsonData').value = jsonStr;
-        document.getElementById('resultBox').textContent = "템플릿이 적용되었습니다. 전송 버튼을 누르세요.";
-        document.getElementById('resultBox').style.borderLeft = "none";
-    }
+    <!-- JS (순서 중요: session → api → app) -->
+    <script src="js/session.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
 
-    async function sendApiRequest() {
-        const resultBox = document.getElementById('resultBox');
-        
-        try {
-            const userNo = parseInt(document.getElementById('userNo').value);
-            const apiCode = parseInt(document.getElementById('apiCode').value);
-            const rawJson = document.getElementById('jsonData').value;
-            
-            let dataJson;
-            try {
-                dataJson = JSON.parse(rawJson);
-            } catch (e) {
-                throw new Error("JSON 형식이 잘못되었습니다.\n" + e.message);
-            }
-
-            const payload = {
-                user_no: userNo,
-                api_code: apiCode,
-                data: dataJson
-            };
-
-            resultBox.innerHTML = '<span style="color:#ffeb3b;">서버 응답 대기 중... ⏳</span>';
-
-            const response = await fetch('/api', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-            
-            if (response.ok) {
-                resultBox.style.borderLeft = "5px solid #4CAF50";
-                resultBox.textContent = `[서버 응답]\n${JSON.stringify(result, null, 2)}`;
-            } else {
-                resultBox.style.borderLeft = "5px solid #F44336";
-                resultBox.innerHTML = `<span class="error-text">서버 에러 (${response.status})</span>\n\n${JSON.stringify(result, null, 2)}`;
-            }
-            
-        } catch (error) {
-            resultBox.style.borderLeft = "5px solid #F44336";
-            resultBox.innerHTML = `<span class="error-text">클라이언트 에러:</span>\n${error.message}`;
-        }
-    }
-    </script>
+    <!-- 화면 모듈 (app.js 이후 로드) -->
+    <script src="js/screens/login.js"></script>
+    <script src="js/screens/town.js"></script>
 
 </body>
 </html>

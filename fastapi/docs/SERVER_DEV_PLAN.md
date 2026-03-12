@@ -22,22 +22,17 @@
 | `ItemDropManager.py` | 완성 | 드롭 판정, 아이템 생성 로직 |
 | `APIManager.py` | 완성 | api_map 등록 |
 
-### 재작성 필요
-| 파일 | 문제 |
-|------|------|
-| `models.py` | 기획서 DB 설계와 불일치 (상세 아래) |
-| `UserInitManager.py` | 인스턴스 메서드 구조 → `@classmethod` 패턴 위반 |
-| `BattleManager.py` | 인스턴스 메서드 구조, 스켈레톤 |
-| `InventoryManager.py` | 인스턴스 메서드 구조, 스켈레톤 |
-
-### models.py 불일치 상세
-| 항목 | 현재 코드 | 기획서 스펙 |
-|------|----------|------------|
-| `stat_luck`, `stat_cost` | 누락 | 5스탯 체계 (힘/민첩/체력/운/코스트) |
-| `gold` 위치 | `UserStat`에 있음 | `User` 테이블 소속 |
-| `current_stage`, `max_inventory` | `User`에 없음 | `User` 테이블 필수 컬럼 |
-| `Inventory` 컬럼 | 일부 누락 | `item_level`, `rarity`, `item_cost`, `suffix_id`, `set_id`, `dynamic_options`, `equip_slot` |
-| `Cards` 테이블 | 없음 | 기획서에 정의됨 |
+### 재작성 완료 ✅
+| 파일 | 상태 | 비고 |
+|------|------|------|
+| `models.py` | ✅ 완료 | User/UserStat/Item/Card 4테이블, 기획서 §12 기준 |
+| `UserInitManager.py` | ✅ 완료 | @classmethod 패턴, User+UserStat+초기장비 트랜잭션 |
+| `BattleManager.py` | ✅ 완료 | 전투 시뮬레이션 엔진, Redis 캐싱, 보상 지급 |
+| `InventoryManager.py` | ✅ 완료 | 장착/해제/조회/판매/인벤확장, 코스트 검증, Redis 무효화 |
+| `StageManager.py` | ✅ 신규 | 스테이지 입장/클리어, 해금 검증 |
+| `IdleFarmManager.py` | ✅ 신규 | 방치 파밍 ON/OFF, 보상 수령 |
+| `CardManager.py` | ✅ 신규 | 카드 조회/장착/해제, Redis 무효화 |
+| `EnhanceManager.py` | ✅ 신규 | 아이템 강화, 스탯 스케일링, Redis 무효화 |
 
 ---
 
@@ -46,24 +41,31 @@
 | api_code | Manager | 메서드 | 설명 | 상태 |
 |----------|---------|--------|------|------|
 | 1002 | GameDataManager | `get_all_configs` | 클라이언트 초기 데이터 로드 | 완성 |
-| 1003 | UserInitManager | `create_new_user` | 유저 생성 + 세션 발급 | 재작성 필요 |
-| 2001 | InventoryManager | `equip_item` | 장비 장착 | 재작성 필요 |
-| 2002 | InventoryManager | `unequip_item` | 장비 해제 | 미구현 |
-| 2003 | InventoryManager | `get_inventory` | 인벤토리 조회 | 미구현 |
-| 3001 | BattleManager | `battle_result` | 전투 시뮬레이션 결과 | 재작성 필요 |
+| 1003 | UserInitManager | `create_new_user` | 유저 생성 + 세션 발급 | ✅ 완성 |
+| 1004 | UserInfoManager | `get_user_info` | 유저 정보 조회 (스탯/골드/방치) | ✅ 완성 |
+| 2001 | InventoryManager | `equip_item` | 장비 장착 | ✅ 완성 |
+| 2002 | InventoryManager | `unequip_item` | 장비 해제 | ✅ 완성 |
+| 2003 | InventoryManager | `get_inventory` | 인벤토리 조회 | ✅ 완성 |
+| 3001 | BattleManager | `battle_result` | 전투 시뮬레이션 결과 | ✅ 완성 |
 | 3002 | ItemDropManager | `process_kill` | 몬스터 킬 & 드롭 처리 | 완성 |
-| 3003 | StageManager | `enter_stage` | 스테이지 입장 (해금 검증) | 미구현 |
-| 3004 | StageManager | `clear_stage` | 스테이지 클리어 (다음 해금) | 미구현 |
-| 3005 | IdleFarmManager | `toggle_idle` | 방치 파밍 ON/OFF | 미구현 |
-| 3006 | IdleFarmManager | `collect_idle` | 방치 파밍 보상 수령 | 미구현 |
+| 3003 | StageManager | `enter_stage` | 스테이지 입장 (해금 검증) | ✅ 완성 |
+| 3004 | StageManager | `clear_stage` | 스테이지 클리어 (다음 해금) | ✅ 완성 |
+| 3005 | IdleFarmManager | `toggle_idle` | 방치 파밍 ON/OFF | ✅ 완성 |
+| 3006 | IdleFarmManager | `collect_idle` | 방치 파밍 보상 수령 | ✅ 완성 |
+| 2004 | InventoryManager | `sell_item` | 아이템 판매 | ✅ 완성 |
+| 2005 | InventoryManager | `expand_inventory` | 인벤토리 확장 | ✅ 완성 |
+| 2006 | EnhanceManager | `enhance_item` | 아이템 강화 | ✅ 완성 |
+| 2007 | CardManager | `get_cards` | 카드 목록 조회 | ✅ 완성 |
+| 2008 | CardManager | `equip_card` | 카드 장비 장착 | ✅ 완성 |
+| 2009 | CardManager | `unequip_card` | 카드 해제 | ✅ 완성 |
 
 ---
 
 ## 개발 Phase
 
-### Phase 1 — DB 모델 재정비
+### Phase 1 — DB 모델 재정비 ✅
 **목적**: 이후 모든 Phase의 기반. 기획서 DB 설계(§12) 기준으로 재작성.
-**상태**: 계획 수립 완료, 검증 단계 진행 전
+**상태**: 완료
 
 **변경 파일**
 - `models.py` (수정)
@@ -246,7 +248,66 @@ Phase 4 (BattleManager) ← 핵심 / 가장 복잡
 Phase 5 (StageManager)
     ↓
 Phase 6 (IdleFarmManager)
+    ↓
+Phase 7 (CardManager) ← 카드 시스템
+    ↓
+Phase 8 (InventoryManager 확장) ← 판매/인벤 확장
+    ↓
+Phase 9 (EnhanceManager) ← 아이템 강화
 ```
+
+---
+
+### Phase 7 — 카드 시스템 ✅
+**목적**: 몬스터 카드 수집 및 장비 장착을 통한 추가 스탯 확보.
+
+**신규 파일**
+- `services/rpg/CardManager.py`
+
+**작업 내용**
+- `get_cards` (API 2007): 보유 카드 목록 조회
+- `equip_card` (API 2008): 카드를 장비에 장착 (1장비 1카드)
+- `unequip_card` (API 2009): 카드 해제
+
+**어뷰징 방지 포인트**
+- 카드/아이템 소유권 검증
+- 한 장비에 카드 중복 장착 차단
+- 장착 중인 장비에 카드 변경 시 battle_stats 무효화
+
+---
+
+### Phase 8 — 아이템 판매 / 인벤토리 확장 ✅
+**목적**: 골드 순환 경제 + 인벤토리 관리.
+
+**변경 파일**
+- `services/rpg/InventoryManager.py` (메서드 추가)
+
+**작업 내용**
+- `sell_item` (API 2004): 아이템 판매 (rarity × level 기반 가격)
+  - 장착 중 판매 차단, 카드 부착 시 카드도 삭제
+- `expand_inventory` (API 2005): 골드 소비로 인벤 확장
+  - 확장할수록 비용 증가, 최대 500칸 상한
+
+**임시 수치**
+- 판매가: normal=10, magic=30, rare=100, unique=500 (× item_level)
+- 확장 비용: 500 × (현재칸/100 + 1), 10칸씩 확장
+
+---
+
+### Phase 9 — 아이템 강화 ✅
+**목적**: 장비 성장 시스템. 골드 소비로 장비 스탯 증가.
+
+**신규 파일**
+- `services/rpg/EnhanceManager.py`
+
+**작업 내용**
+- `enhance_item` (API 2006): 골드 소비 → item_level 증가 → dynamic_options 수치 스케일링
+  - 장착 중 강화 시 battle_stats 무효화
+
+**임시 수치**
+- 강화 비용: 100 × 현재 레벨
+- 최대 강화 레벨: 20
+- 레벨당 스탯 증가: 10% (복리)
 
 ---
 

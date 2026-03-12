@@ -1,5 +1,8 @@
 # TheSevenRPG — 몬스터 픽셀아트 프롬프트 (45종)
 
+> 이 파일은 **몬스터 베이스**의 범용 프롬프트입니다 (약/중/강 3단계).
+> 챕터별 고유 인스턴스 프롬프트는 → `fastapi/docs/game_design/monster_design.md` 참조.
+
 > 공통 스타일: `pixel art`, `16-bit style`, `RPG monster sprite`, `dark fantasy`,
 > `black background`, `front-facing`, `full body`
 > 강도 표현: 약(small/worn) → 중(standard) → 강(large/armored/elite)

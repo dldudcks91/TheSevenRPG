@@ -25,10 +25,17 @@ class ErrorCode(str, Enum):
     # ── E3xxx: 인벤토리 ──────────────────────────────────
     ITEM_NOT_FOUND      = "E3001"   # 아이템 없음
     EQUIP_SLOT_MISMATCH = "E3002"   # 장착 불가 (부위 불일치)
+    COST_EXCEEDED       = "E3003"   # 코스트 초과
+    INVENTORY_FULL      = "E3004"   # 인벤토리 가득 참
+    CARD_NOT_FOUND      = "E3005"   # 카드 없음
+    CARD_ALREADY_EQUIPPED = "E3006" # 이미 장착된 카드
+    ENHANCE_FAILED      = "E3007"   # 강화 실패 (최대 레벨 등)
+    INSUFFICIENT_GOLD   = "E3008"   # 골드 부족
 
     # ── E4xxx: 전투 ──────────────────────────────────────
     STAGE_NOT_FOUND     = "E4001"   # 스테이지 없음
     INVALID_BATTLE_REQ  = "E4002"   # 잘못된 전투 요청
+    STAGE_NOT_UNLOCKED  = "E4003"   # 스테이지 미해금
 
     # ── E9xxx: 서버 내부 ─────────────────────────────────
     DB_ERROR            = "E9001"   # DB 오류

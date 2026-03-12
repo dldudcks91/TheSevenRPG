@@ -1,0 +1,79 @@
+/* ============================================
+   TheSevenRPG — CSS Variables
+   7대 죄악 테마 컬러, 아이템 등급, 공통 변수
+   ============================================ */
+
+:root {
+    /* === 죄종 테마 컬러 === */
+    --color-wrath: #dc2626;       /* 1장 분노 */
+    --color-envy: #16a34a;        /* 2장 시기 */
+    --color-greed: #ca8a04;       /* 3장 탐욕 */
+    --color-sloth: #6b7280;       /* 4장 나태 */
+    --color-gluttony: #ea580c;    /* 5장 폭식 */
+    --color-lust: #db2777;        /* 6장 색욕 */
+    --color-pride: #7c3aed;       /* 7장 오만 */
+
+    /* === 아이템 등급 컬러 === */
+    --rarity-normal: #9ca3af;     /* 일반 — 회색 */
+    --rarity-magic: #3b82f6;      /* 매직 — 파랑 */
+    --rarity-rare: #eab308;       /* 레어 — 노랑 */
+    --rarity-craft: #22c55e;      /* 제작 — 초록 */
+    --rarity-unique: #a855f7;     /* 유니크 — 보라 */
+
+    /* === 다크 테마 기본색 === */
+    --bg-primary: #0f0f0f;
+    --bg-secondary: #1a1a1a;
+    --bg-tertiary: #252525;
+    --bg-card: #2d2d2d;
+    --bg-input: #1e1e1e;
+
+    --border-primary: #333;
+    --border-secondary: #444;
+    --border-highlight: #555;
+
+    --text-primary: #e5e5e5;
+    --text-secondary: #a3a3a3;
+    --text-muted: #737373;
+    --text-accent: #c62828;
+
+    /* === 상태 컬러 === */
+    --color-success: #4caf50;
+    --color-warning: #ff9800;
+    --color-error: #f44336;
+    --color-info: #2196f3;
+
+    /* === HP/EXP 바 === */
+    --hp-bar: #e53935;
+    --hp-bar-bg: #4a1111;
+    --exp-bar: #ffc107;
+    --exp-bar-bg: #4a3c11;
+    --cost-bar: #42a5f5;
+    --cost-bar-bg: #11304a;
+
+    /* === 간격 === */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* === 폰트 === */
+    --font-main: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+    --font-size-xs: 11px;
+    --font-size-sm: 13px;
+    --font-size-md: 15px;
+    --font-size-lg: 18px;
+    --font-size-xl: 24px;
+    --font-size-xxl: 32px;
+
+    /* === 둥근 모서리 === */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+
+    /* === 트랜지션 === */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+}
