@@ -1,0 +1,218 @@
+/* ============================================
+   TheSevenRPG — Idle Farm Screen
+   방치 파밍 ON/OFF, 보상 수령
+   ============================================ */
+
+.idle-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-primary);
+}
+
+/* === 헤더 === */
+.idle-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+    min-height: 48px;
+}
+
+.idle-back-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.idle-header-title {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.idle-header-right {
+    min-width: 44px;
+}
+
+/* === 메인 컨텐츠 === */
+.idle-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    gap: var(--spacing-lg);
+}
+
+/* === 타이머 디스플레이 === */
+.idle-timer-display {
+    text-align: center;
+}
+
+.idle-timer-value {
+    font-size: 48px;
+    font-weight: bold;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    letter-spacing: 2px;
+}
+
+.idle-timer-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: var(--spacing-xs);
+}
+
+/* === 상태 표시 === */
+.idle-status-box {
+    text-align: center;
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    width: 100%;
+    max-width: 300px;
+}
+
+.idle-status-text {
+    font-size: var(--font-size-md);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.idle-status-text.active {
+    color: var(--color-success);
+}
+
+.idle-stage-info {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+/* === 스테이지 선택 === */
+.idle-stage-select {
+    width: 100%;
+    max-width: 300px;
+}
+
+.idle-stage-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+    text-align: center;
+}
+
+.idle-stage-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+}
+
+.idle-stage-nav {
+    background: var(--bg-card);
+    border: 1px solid var(--border-secondary);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.idle-stage-current {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--text-primary);
+    min-width: 60px;
+    text-align: center;
+}
+
+/* === 액션 버튼 === */
+.idle-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+    max-width: 300px;
+}
+
+.idle-toggle-btn {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-lg);
+    font-family: var(--font-main);
+    font-weight: bold;
+    cursor: pointer;
+    min-height: 52px;
+    transition: background var(--transition-fast);
+}
+
+.idle-toggle-btn.start {
+    background: var(--color-success);
+    color: #fff;
+}
+
+.idle-toggle-btn.stop {
+    background: var(--color-error);
+    color: #fff;
+}
+
+.idle-collect-btn {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-warning);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-warning);
+    font-size: var(--font-size-md);
+    font-family: var(--font-main);
+    font-weight: bold;
+    cursor: pointer;
+    min-height: 48px;
+}
+
+/* === 보상 결과 === */
+.idle-reward-box {
+    text-align: center;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-warning);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    width: 100%;
+    max-width: 300px;
+    display: none;
+}
+
+.idle-reward-box.show {
+    display: block;
+}
+
+.idle-reward-title {
+    font-size: var(--font-size-md);
+    font-weight: bold;
+    color: var(--color-warning);
+    margin-bottom: var(--spacing-sm);
+}
+
+.idle-reward-detail {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}

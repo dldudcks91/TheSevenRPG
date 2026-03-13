@@ -1,0 +1,218 @@
+/* ============================================
+   TheSevenRPG — Cards Screen
+   카드 도감, 카드-장비 장착/해제
+   ============================================ */
+
+.cards-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-primary);
+}
+
+/* === 헤더 === */
+.cards-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+    min-height: 48px;
+}
+
+.cards-back-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cards-header-title {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.cards-count {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+/* === 카드 그리드 === */
+.cards-grid-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.cards-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: var(--spacing-xl);
+    font-size: var(--font-size-sm);
+    grid-column: 1 / -1;
+}
+
+/* === 카드 아이템 === */
+.card-item {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    cursor: pointer;
+    text-align: center;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+}
+
+.card-item:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-highlight);
+}
+
+.card-item.selected {
+    border-color: var(--text-accent);
+    background: var(--bg-tertiary);
+}
+
+.card-item.equipped {
+    border-color: var(--color-success);
+}
+
+.card-icon {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.card-name {
+    font-size: var(--font-size-xs);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.card-equipped-label {
+    font-size: 9px;
+    color: var(--color-success);
+    font-weight: bold;
+}
+
+/* === 카드 상세 패널 === */
+.card-detail-panel {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-primary);
+    padding: var(--spacing-md);
+    display: none;
+}
+
+.card-detail-panel.show {
+    display: block;
+}
+
+.card-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.card-detail-name {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.card-detail-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-detail-info {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.card-detail-equip-info {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-md);
+}
+
+.card-detail-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.card-detail-actions .btn {
+    flex: 1;
+    font-size: var(--font-size-sm);
+}
+
+/* === 장비 선택 목록 (카드 장착 시) === */
+.card-equip-list {
+    margin-top: var(--spacing-sm);
+    display: none;
+}
+
+.card-equip-list.show {
+    display: block;
+}
+
+.card-equip-list-title {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.card-equip-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.card-equip-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    cursor: pointer;
+    min-height: 40px;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.card-equip-item:hover {
+    background: var(--bg-tertiary);
+}

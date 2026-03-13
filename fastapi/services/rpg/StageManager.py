@@ -19,10 +19,12 @@ class StageManager:
     @classmethod
     async def enter_stage(cls, user_no: int, data: dict):
         """API 3003: 스테이지 입장 — 해금 검증 + 몬스터 풀 반환"""
+        # ── [1] 입력 추출 ──
         stage_id = data.get("stage_id")
         if stage_id is None:
             return error_response(ErrorCode.STAGE_NOT_FOUND, "stage_id가 필요합니다.")
 
+        # ── [3] DB 세션 + 상태 검증 ──
         db = SessionLocal()
         try:
             user = db.query(User).filter(User.user_no == user_no).first()
@@ -41,83 +43,89 @@ class StageManager:
                     return error_response(ErrorCode.STAGE_NOT_UNLOCKED, "해당 챕터를 모두 클리어해야 합니다.")
             else:
                 return error_response(ErrorCode.STAGE_NOT_FOUND, f"존재하지 않는 스테이지: {stage_id}")
-
-            # Redis에 진행 상태 저장 (포탈 귀환 지원)
-            try:
-                await RedisManager.hmset(f"user:{user_no}:stage_progress", {
-                    "stage_id": str(stage_id),
-                    "wave": "1",
-                    "kills": "0",
-                })
-                await RedisManager.expire(f"user:{user_no}:stage_progress", 86400)
-            except RedisUnavailable:
-                pass
-
-            # 몬스터 풀 생성
-            monster_pool = cls._generate_monster_pool(stage_id)
-
-            return {
-                "success": True,
-                "message": f"스테이지 {stage_id} 입장",
-                "data": {"stage_id": stage_id, "monsters": monster_pool},
-            }
         except Exception as e:
-            logger.error(f"[Stage] 입장 실패: {e}", exc_info=True)
+            logger.error(f"[StageManager] enter_stage 실패: {e}", exc_info=True)
             return error_response(ErrorCode.DB_ERROR, "스테이지 입장 중 오류가 발생했습니다.")
         finally:
             db.close()
 
+        # ── [5] Redis 진행 상태 저장 ──
+        try:
+            await RedisManager.hmset(f"user:{user_no}:stage_progress", {
+                "stage_id": str(stage_id),
+                "wave": "1",
+                "kills": "0",
+            })
+            await RedisManager.expire(f"user:{user_no}:stage_progress", 86400)
+        except RedisUnavailable:
+            logger.warning(f"[StageManager] stage_progress 저장 실패 - Redis 장애 (user_no={user_no})")
+
+        # ── [6] 응답 반환 ──
+        monster_pool = cls._generate_monster_pool(stage_id)
+        return {
+            "success": True,
+            "message": f"스테이지 {stage_id} 입장",
+            "data": {"stage_id": stage_id, "monsters": monster_pool},
+        }
+
     @classmethod
     async def clear_stage(cls, user_no: int, data: dict):
         """API 3004: 스테이지 클리어 — 다음 스테이지 해금"""
+        # ── [1] 입력 추출 ──
         stage_id = data.get("stage_id")
         if stage_id is None:
             return error_response(ErrorCode.STAGE_NOT_FOUND, "stage_id가 필요합니다.")
 
-        # enter_stage 선행 확인
+        # ── [2] enter_stage 선행 확인 (Redis) ──
         progress_key = f"user:{user_no}:stage_progress"
         try:
             progress = await RedisManager.hgetall(progress_key)
             if not progress or int(progress.get("stage_id", 0)) != stage_id:
                 return error_response(ErrorCode.INVALID_BATTLE_REQ, "해당 스테이지에 입장하지 않았습니다.")
         except RedisUnavailable:
-            pass  # Redis 장애 시 검증 스킵 (graceful degradation)
+            logger.warning(f"[StageManager] stage_progress 검증 실패 - Redis 장애 (user_no={user_no})")
 
+        # ── [3] DB 세션 + 상태 검증 ──
         db = SessionLocal()
         try:
-            user = db.query(User).filter(User.user_no == user_no).first()
+            user = db.query(User).filter(User.user_no == user_no).with_for_update().first()
             if not user:
                 return error_response(ErrorCode.USER_NOT_FOUND, "유저를 찾을 수 없습니다.")
 
+            # ── [4] 비즈니스 로직 ──
             unlocked = False
-            # 현재 최고 진행 스테이지를 클리어한 경우에만 다음 해금
             if stage_id == user.current_stage and stage_id < MAX_STAGE:
                 user.current_stage = stage_id + 1
                 unlocked = True
 
+            current_stage = user.current_stage
+
+            # ── [5] 커밋 ──
             db.commit()
 
-            # 진행 정보 삭제
-            try:
-                await RedisManager.delete(progress_key)
-            except RedisUnavailable:
-                pass
-
-            return {
-                "success": True,
-                "message": f"스테이지 {stage_id} 클리어!",
-                "data": {
-                    "stage_id": stage_id,
-                    "unlocked_next": unlocked,
-                    "current_stage": user.current_stage,
-                },
-            }
         except Exception as e:
             db.rollback()
-            logger.error(f"[Stage] 클리어 처리 실패: {e}", exc_info=True)
+            logger.error(f"[StageManager] clear_stage 실패: {e}", exc_info=True)
             return error_response(ErrorCode.DB_ERROR, "스테이지 클리어 처리 중 오류가 발생했습니다.")
         finally:
             db.close()
+
+        # Redis 진행 정보 삭제
+        try:
+            await RedisManager.delete(progress_key)
+        except RedisUnavailable:
+            logger.warning(f"[StageManager] stage_progress 삭제 실패 - Redis 장애 (user_no={user_no})")
+
+        # ── [6] 응답 반환 ──
+        return {
+            "success": True,
+            "message": f"스테이지 {stage_id} 클리어!",
+            "data": {
+                "stage_id": stage_id,
+                "unlocked_next": unlocked,
+                "current_stage": current_stage,
+            },
+        }
 
     @classmethod
     def _generate_monster_pool(cls, stage_id: int) -> list:

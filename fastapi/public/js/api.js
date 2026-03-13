@@ -2,90 +2,73 @@
  * TheSevenRPG — API Communication Layer
  * POST /api 단일 게이트웨이, Bearer 세션 인증, 재시도 로직
  */
-const Api = (() => {
-    const MAX_RETRIES = 3;
-    const BASE_DELAY = 1000; // 1초, 지수 백오프
+import { getSessionId, clearSession } from './session.js';
+import { showToast } from './utils.js';
 
-    /**
-     * 서버 API 호출
-     * @param {number} apiCode - API 코드 (1002, 1003, 2001, ...)
-     * @param {object} data - 요청 데이터
-     * @returns {Promise<object>} 서버 응답
-     */
-    async function apiCall(apiCode, data = {}) {
-        const headers = { 'Content-Type': 'application/json' };
+const MAX_RETRIES = 3;
+const BASE_DELAY = 1000;
 
-        const sessionId = Session.getSessionId();
-        if (sessionId) {
-            headers['Authorization'] = `Bearer ${sessionId}`;
-        }
+/**
+ * 서버 API 호출
+ * @param {number} apiCode - API 코드 (1002, 1003, 2001, ...)
+ * @param {object} data - 요청 데이터
+ * @returns {Promise<object|null>} 서버 응답 또는 null (네트워크 실패)
+ */
+export async function apiCall(apiCode, data = {}) {
+    const headers = { 'Content-Type': 'application/json' };
 
-        const body = JSON.stringify({
-            api_code: apiCode,
-            data: data
-        });
+    const sessionId = getSessionId();
+    if (sessionId) {
+        headers['Authorization'] = `Bearer ${sessionId}`;
+    }
 
-        let lastError = null;
+    const body = JSON.stringify({
+        api_code: apiCode,
+        data: data
+    });
 
-        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-            try {
-                const response = await fetch('/api', {
-                    method: 'POST',
-                    headers,
-                    body
-                });
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+            const response = await fetch('/api', {
+                method: 'POST',
+                headers,
+                body
+            });
 
-                const result = await response.json();
+            const result = await response.json();
 
-                // 서버가 정상 응답했으면 재시도 불필요
-                if (response.ok) {
-                    if (result.success === false) {
-                        handleApiError(result);
-                    }
-                    return result;
-                }
-
-                // HTTP 에러 (4xx, 5xx)
+            if (!result.success) {
                 handleApiError(result);
-                return result;
+            }
+            return result;
 
-            } catch (err) {
-                lastError = err;
-                // 네트워크 에러만 재시도 (fetch 자체 실패)
-                if (attempt < MAX_RETRIES - 1) {
-                    const delay = BASE_DELAY * Math.pow(2, attempt);
-                    await sleep(delay);
-                }
+        } catch (err) {
+            if (attempt < MAX_RETRIES - 1) {
+                await new Promise(r => setTimeout(r, BASE_DELAY * 2 ** attempt));
             }
         }
-
-        // 모든 재시도 실패
-        Toast.show('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.', 'error');
-        throw lastError;
     }
 
-    /** API 에러 처리 */
-    function handleApiError(result) {
-        const errorCode = result.error_code || '';
-        const message = result.message || '알 수 없는 오류';
+    showToast('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.', 'error');
+    return null;
+}
 
-        // E1002: 세션 만료 → 로그인 화면으로
-        if (errorCode === 'E1002') {
-            Session.clear();
-            Toast.show('세션이 만료되었습니다. 다시 로그인해주세요.', 'warning');
-            App.navigate('login');
-            return;
-        }
+/** API 에러 처리 */
+function handleApiError(result) {
+    const errorCode = result.error_code || '';
+    const message = result.message || '알 수 없는 오류';
 
-        // 그 외 에러 → 토스트
-        if (result.success === false) {
-            Toast.show(message, 'error');
-        }
+    // E1002: 세션 만료 → 로그인 화면으로
+    if (errorCode === 'E1002') {
+        clearSession();
+        showToast('세션이 만료되었습니다. 다시 로그인해주세요.', 'warning');
+        // 순환 의존 방지: app.js의 navigate() 대신 직접 hash 변경
+        window.location.hash = '#login';
+        return;
     }
 
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    // 그 외 에러 → 토스트
+    if (result.success === false) {
+        showToast(message, 'error');
     }
-
-    return { apiCall };
-})();
+}

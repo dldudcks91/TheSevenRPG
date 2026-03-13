@@ -9,7 +9,7 @@
 - **DB**: MySQL (pymysql + SQLAlchemy ORM)
 - **Cache**: Redis (비동기, 전투 스탯 캐싱 등)
 - **메타데이터**: CSV 파일 → 서버 기동 시 메모리 로드 (GameDataManager)
-- **Frontend**: 미정 (현재 public/index.html)
+- **Frontend**: Vanilla JS (ES Modules, 빌드 도구 없음) + Phaser.js (전투 연출)
 
 ## 프로젝트 구조
 ```
@@ -30,8 +30,8 @@ TheSevenRPG/
 ```
 
 ## 개발 가이드
-- 서버 개발 시 `fastapi-server` skill을 따른다.
-- 클라이언트 개발 시 `web-client` skill을 따른다.
+- 서버 개발 시 `fastapi-server` + `manager-convention` skill을 따른다.
+- 클라이언트 개발 시 `web-client` + `client-convention` skill을 따른다.
 - 기획 논의 시 `game-design` skill을 따른다.
 
 ## 서버 개발 계획 & 구현 현황
@@ -51,12 +51,6 @@ TheSevenRPG/
 
 ### 세션 시작 — "안녕 반가워" 입력 시
 1. `git pull` 실행하여 GitHub 최신 소스를 가져온다.
-2. 아래 sync 스크립트를 순서대로 실행하여 구글 시트 데이터를 로컬로 내려받는다.
-   - `fastapi/meta_data/sync_data_from_gs.py`
-   - `fastapi/docs/game_design/data/sync_design_from_gs.py`
 
 ### 세션 종료 — "오늘 고생했어 마무리하자" 입력 시
 1. 변경된 파일을 커밋하고 `git push`하여 GitHub에 저장한다.
-2. 아래 sync 스크립트를 순서대로 실행하여 로컬 데이터를 구글 시트에 업로드한다.
-   - `fastapi/meta_data/sync_data_to_gs.py`
-   - `fastapi/docs/game_design/data/sync_design_to_gs.py`

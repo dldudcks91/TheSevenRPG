@@ -311,12 +311,188 @@ Phase 9 (EnhanceManager) ← 아이템 강화
 
 ---
 
+### Phase 10 — Manager 컨벤션 리팩토링 ✅
+**목적**: 전체 Manager를 `manager-convention` 스킬 기준에 맞게 통일. 트랜잭션 안전성, 에러 처리 일관성, 캐시 무효화 정확성 향상.
+
+**변경 파일 (8개)**
+- `services/rpg/EnhanceManager.py` — `with_for_update()`, 캐시 무효화 warning 로깅
+- `services/rpg/CardManager.py` — `with_for_update()`, 캐시 무효화 warning 로깅
+- `services/system/UserInfoManager.py` — Redis 장애 시 warning 로깅
+- `services/rpg/InventoryManager.py` — 5개 메서드 모두 `with_for_update()`, warning 로깅
+- `services/rpg/StageManager.py` — clear_stage `with_for_update()`, Redis warning 로깅
+- `services/rpg/IdleFarmManager.py` — collect_idle `with_for_update()`, Redis warning 로깅
+- `services/rpg/ItemDropManager.py` — `error_response()` 통일, 입력값 검증 강화
+- `services/rpg/BattleManager.py` — `_grant_rewards` 트랜잭션 통합 (db 파라미터 전달), `with_for_update()`
+
+**리팩토링 적용 사항**
+| 항목 | 적용 내용 |
+|------|-----------|
+| 행 잠금 | 골드/스탯/슬롯 변경 시 `with_for_update()` 추가 (레이스 컨디션 방지) |
+| 에러 처리 | 모든 Manager에서 `error_response()` 통일 (직접 dict 반환 제거) |
+| 캐시 무효화 | `RedisUnavailable` catch 시 `logger.warning` 추가 (모니터링 사각지대 제거) |
+| 로거 접두사 | `[ManagerName]` 형식으로 통일 (예: `[BattleManager]`) |
+| 메서드 구조 | 6단계 순서 준수 (입력추출→메타검증→DB검증→로직→커밋→응답) |
+| 트랜잭션 | BattleManager `_grant_rewards`가 자체 세션 → db 파라미터 전달로 변경 (1메서드=1커밋) |
+| 응답 반환 | try 블록 밖에서 반환 (DB 세션 닫힌 후) |
+
+---
+
+## 데이터베이스 설계
+
+> 기획서 GAME_DESIGN.md §12에서 이동
+
+### Users (유저 계정)
+
+| 컬럼 | 타입 | 키 | 설명 |
+|------|------|-----|------|
+| user_no | BIGINT | PK | 계정 고유 번호 (자동 증가) |
+| user_name | VARCHAR(50) | Unique | 유저 닉네임 |
+| gold | BIGINT | | 보유 재화 |
+| current_stage | INT | | 진행 중인 최고 스테이지 |
+| max_inventory | INT | | 인벤토리 최대 칸 수 (기본 100) |
+| created_at | DATETIME | | 계정 생성일 |
+
+### UserStats (캐릭터 스탯)
+
+| 컬럼 | 타입 | 키 | 설명 |
+|------|------|-----|------|
+| user_no | BIGINT | PK/FK | 소유자 (Users 참조, 1:1) |
+| level | INT | | 캐릭터 레벨 (최대 50) |
+| exp | BIGINT | | 누적 경험치 |
+| stat_points | INT | | 잔여 스탯 포인트 |
+| stat_str | INT | | 힘 (공격력 +0.5%/pt) |
+| stat_dex | INT | | 민첩 (공속 +0.3%, 명중 +0.5%/pt) |
+| stat_vital | INT | | 체력 (HP +10/pt) |
+| stat_luck | INT | | 운 (치명타확률 +0.1%, 치명타데미지 +0.3%, 회피 +0.1%/pt) |
+| stat_cost | INT | | 코스트 (최대코스트 +2/pt) |
+
+### Items (아이템 인스턴스)
+
+| 컬럼 | 타입 | 키 | 설명 |
+|------|------|-----|------|
+| item_uid | VARCHAR(36) | PK | UUID |
+| user_no | BIGINT | FK | 소유자 |
+| base_item_id | INT | | equipment_base 메타데이터 참조 |
+| item_level | INT | | 장비 레벨 (숨김, 옵션 풀 결정) |
+| rarity | VARCHAR(20) | | normal / magic / rare / unique |
+| item_score | INT | | 몬스터 킬 점수 기반 품질 |
+| item_cost | INT | | 계산된 코스트 값 |
+| prefix_id | VARCHAR(50) | | 접두사 ID (Nullable) |
+| suffix_id | VARCHAR(50) | | 접미사 ID (Nullable) |
+| set_id | VARCHAR(50) | | 7죄종 세트 ID (Nullable) |
+| dynamic_options | JSON | | 랜덤 부여 스탯 (예: `{"atk": 15, "hp": 50}`) |
+| is_equipped | BOOLEAN | | 장착 여부 (인덱스 필수) |
+| equip_slot | VARCHAR(20) | | 장착 부위 (장착 시만 존재) |
+
+### Cards (카드 인스턴스)
+
+| 컬럼 | 타입 | 키 | 설명 |
+|------|------|-----|------|
+| card_uid | VARCHAR(36) | PK | UUID |
+| user_no | BIGINT | FK | 소유자 |
+| monster_idx | INT | | 드랍한 몬스터 종류 |
+| equipped_item | VARCHAR(36) | FK | 장착된 장비 (Nullable) |
+
+---
+
+## 클라이언트 개발 현황
+
+### 완성된 클라이언트 파일
+| 파일 | 상태 | 비고 |
+|------|------|------|
+| `public/index.html` | ✅ 완성 | SPA 엔트리, ES Module 단일 진입점 |
+| `public/js/app.js` | ✅ 완성 | 해시 기반 라우터, Screen 레지스트리 |
+| `public/js/api.js` | ✅ 완성 | apiCall (재시도, 세션 인증) |
+| `public/js/store.js` | ✅ 완성 | 중앙 상태 관리 (pub/sub) |
+| `public/js/session.js` | ✅ 완성 | localStorage 세션 관리 |
+| `public/js/utils.js` | ✅ 완성 | DOM 헬퍼, 포맷터 |
+| `public/css/variables.css` | ✅ 완성 | CSS 변수 (테마, 등급, 공통) |
+| `public/css/common.css` | ✅ 완성 | 레이아웃, 타이포, 공통 요소 |
+
+### Screen 구현 현황
+| Screen | JS 파일 | CSS 파일 | 사용 API | 상태 |
+|--------|---------|----------|----------|------|
+| Login | `screens/login.js` | `css/components/login.css` | 1003 | ✅ 완성 |
+| Town | `screens/town.js` | `css/components/town.css` | 1004 | ✅ 완성 |
+| Inventory | `screens/inventory.js` | `css/components/inventory.css` | 2001~2006 | ✅ 완성 |
+| StageSelect | `screens/stage-select.js` | `css/components/stage-select.css` | 3001, 3003, 3004 | ✅ 완성 |
+| IdleFarm | `screens/idle-farm.js` | `css/components/idle-farm.css` | 3005, 3006 | ✅ 완성 |
+| Cards | `screens/cards.js` | `css/components/cards.css` | 2007~2009 | ✅ 완성 |
+| Battle | 미구현 | 미구현 | — | 미착수 (Phaser.js 전투 씬) |
+
+### 클라이언트 참고사항
+- 아이템 이름: `장비 #${base_item_id}` 플레이스홀더 (메타데이터 매핑 미구현)
+- 카드 이름: `몬스터 #${monster_idx}` 플레이스홀더
+- 스테이지/챕터 데이터: JS 내 하드코딩 (CSV 메타데이터 클라이언트 로드 미구현)
+- 장비 슬롯: weapon/armor/helmet/gloves/boots (서버 VALID_EQUIP_SLOTS와 일치)
+
+---
+
+## Phase 11 (예정) — 시뮬레이션 도구
+
+**목적**: 기획 밸런싱을 위한 대량 시뮬레이션 CLI 도구. DB/Redis 없이 CSV 메타데이터만으로 독립 실행.
+**전제조건**: 아래 기획 항목이 확정되어야 구현 가능.
+
+**3가지 시뮬레이션 모드**
+
+| 모드 | 용도 | 핵심 출력 |
+|------|------|----------|
+| PVE | 특정 빌드로 특정 몬스터 N회 전투 | 승률, 평균 턴수, DPS, 명중률, 위험구간 |
+| PVP | 두 빌드 간 N회 대전 | 승률 비교, 스탯 우위 분석 |
+| 드롭 | 특정 몬스터 N킬 드롭 분포 | 등급별 장비 수, 기대 파밍 횟수 |
+
+**구현 전 확정 필요 항목**
+
+| 항목 | 영향 모드 | 현재 상태 |
+|------|----------|----------|
+| 몬스터 레벨 정의 | PVE/PVP | 미정 (레벨차 명중 보정에 필수) |
+| 몬스터 명중/회피 값 | PVE | 미정 (몬스터→플레이어 명중 판정 불가) |
+| 몬스터 크리티컬 여부 | PVE | 미정 |
+| 장비 레벨 스케일링 공식 | PVE/PVP | 미정 (레벨별 base_atk/base_def 성장) |
+| 장비 옵션 수치 범위 | PVE/PVP | 미정 (접두/접미사 실제 수치) |
+| 접미사(suffix) CSV | PVE/PVP/드롭 | 미작성 |
+| PVP 전용 규칙 | PVP | 미정 (PVE와 동일? 별도 보정?) |
+| PVP 선공 결정 방식 | PVP | 미정 |
+| 방어구 base_def 적용 방식 | PVE/PVP | 미정 |
+| 골드 드롭량 공식 | 드롭 | 미정 |
+| 기타(카드/재료) 드롭 상세 | 드롭 | 미정 |
+| cost 스탯 시뮬 처리 | PVE/PVP | 미정 (무시? 일정비율 투자 가정?) |
+
+**아키텍처 (예정)**
+```
+fastapi/tools/simulator/
+├── simulator.py           # CLI 진입점 (argparse)
+├── engine/
+│   ├── battle_engine.py   # 전투 공식 (BattleManager 로직 재사용)
+│   ├── stat_calculator.py # 스탯 계산 (장비 포함)
+│   ├── drop_engine.py     # 드롭 판정 (ItemDropManager 로직 재사용)
+│   └── build_generator.py # 스탯빌드/장비셋 자동 생성
+├── modes/
+│   ├── pve_sim.py         # PVE 시뮬레이션
+│   ├── pvp_sim.py         # PVP 시뮬레이션
+│   └── drop_sim.py        # 드롭 시뮬레이션
+└── report/
+    └── formatter.py       # 결과 포맷팅 (텍스트/CSV)
+```
+
+**빌드 프리셋 (예정)**
+
+| 프리셋 | STR | DEX | VIT | LUCK | 설명 |
+|--------|-----|-----|-----|------|------|
+| str_main | 60% | 15% | 20% | 5% | 근접 딜러 |
+| dex_main | 15% | 60% | 10% | 15% | 민첩 딜러 |
+| tank | 20% | 10% | 60% | 10% | 탱커 |
+| luck_main | 10% | 20% | 15% | 55% | 크리/드롭 특화 |
+| balanced | 25% | 25% | 25% | 25% | 균형 |
+
+---
+
 ## 미결정 기획 항목 (개발 전 확정 필요)
 
 | 항목 | 영향 Phase | 비고 |
 |------|-----------|------|
 | 경험치 곡선 (레벨업 필요 경험치) | Phase 4 | 미기획 |
 | 데미지 공식 세부 (최소/최대 범위) | Phase 4 | 기획서에 미확정 |
-| 골드 드롭 공식 | Phase 4, 6 | 미기획 |
+| 골드 드롭 공식 | Phase 4, 6, 11 | 미기획 |
 | 몬스터 스탯 (일반/정예/보스 배율) | Phase 4 | 미기획 |
 | 방치 파밍 시간당 드롭 수량 | Phase 6 | 미기획 |

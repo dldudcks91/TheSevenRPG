@@ -1,0 +1,94 @@
+# 세계 구조 & 챕터 설계
+
+> 설계 규칙: [chapter_guide.md](chapter_guide.md)
+
+---
+
+## 챕터별 지역 설계
+
+| 챕터 | 죄종 | 지역명 | 영문 | 상태이상 | 스테이지 타입 순서 |
+|------|------|--------|------|---------|------------------|
+| 1 | 분노 / Wrath | 불타는 전장 | Burning Battlefield | 화상 | Demon → Normal → Undead |
+| 2 | 시기 / Envy | 뒤틀린 숲 | Twisted Forest | 중독 | Normal → Demon → Undead |
+| 3 | 탐욕 / Greed | 황금의 사막 | Golden Desert | 스턴 | Normal → Undead → Demon |
+| 4 | 나태 / Sloth | 망각의 동토 | Frozen Oblivion | 빙결 | Undead → Demon → Normal |
+| 5 | 폭식 / Gluttony | 심연의 동굴 | Caverns of the Abyss | 침식 | Undead → Normal → Demon |
+| 6 | 색욕 / Lust | 타락한 궁전 | Corrupted Palace | 매혹 | Demon → Undead → Normal |
+| 7 | 오만 / Pride | 신의 폐허 | Ruins of God | 심판 | Demon → Normal → Undead |
+
+---
+
+## 챕터별 상세
+
+### Chapter 1 — 분노 / 불타는 전장 (상태이상: 화상)
+
+- 스테이지: 파멸의 진영(Demon) → 핏빛 교전지대(Normal) → 원한의 묘지(Undead)
+- 몬스터 풀: Goblin · Orc · Imp / Human · Troll / Skeleton
+- 분위기: 끝나지 않는 전쟁이 대지를 갈아엎은 곳. 불길과 연기, 쓰러진 병사들의 원한
+- 챕터 보스: 전장의 군주 — 분노에 물든 대장군
+
+### Chapter 2 — 시기 / 뒤틀린 숲 (상태이상: 중독)
+
+- 스테이지: 변형의 경계(Normal) → 독무의 심림(Demon) → 부패한 뿌리(Undead)
+- 몬스터 풀: Wolf · Lizardman / Succubus · Orc / Ghost · Zombie
+- 분위기: 독성비가 내리는 뒤틀린 숲. 다른 존재의 힘을 탐내는 그림자. 변형된 생물들의 땅
+- 챕터 보스: 숲의 거울 — 침입자의 모습을 복사하는 시기의 화신
+
+### Chapter 3 — 탐욕 / 황금의 사막 (상태이상: 스턴)
+
+- 스테이지: 모래에 묻힌 폐허(Normal) → 저주받은 지하묘지(Undead) → 황금 보물고(Demon)
+- 몬스터 풀: Lizardman · Golem / Skeleton · Vampire / Imp · Goblin
+- 분위기: 사막에 묻힌 고대 왕국. 모래폭풍 속에 황금이 번쩍이지만 모두 저주가 걸려있음
+- 챕터 보스: 황금 수호자 — 보물에 집착한 나머지 보물이 된 왕
+
+### Chapter 4 — 나태 / 망각의 동토 (상태이상: 빙결)
+
+- 스테이지: 얼어붙은 평원(Undead) → 빙하 요새(Demon) → 영구동결의 심부(Normal)
+- 몬스터 풀: Zombie · Ghost / Goblin · Imp / Yeti · Troll
+- 분위기: 모든 것이 얼어붙어 멈춘 동토. 시간이 정지한 듯 눈보라만 영원히 몰아치는 망각의 땅
+- 챕터 보스: 동토의 지배자 — 움직임을 잃어버린 고대의 정령
+
+### Chapter 5 — 폭식 / 심연의 동굴 (상태이상: 침식)
+
+- 스테이지: 탐식의 입구(Undead) → 맥동하는 미로(Normal) → 소화의 심연(Demon)
+- 몬스터 풀: Zombie · Lich / Yeti · Golem / Gargoyle · Orc
+- 분위기: 끝없이 이어지는 동굴. 모든 것을 삼키는 살아있는 미로
+- 챕터 보스: 심연의 입 — 모든 것을 집어삼키는 폭식의 화신
+
+### Chapter 6 — 색욕 / 타락한 궁전 (상태이상: 매혹)
+
+- 스테이지: 부패한 정원(Demon) → 유혹의 회랑(Undead) → 욕망의 왕좌(Normal)
+- 몬스터 풀: Succubus · Imp / Vampire · Ghost / Lizardman · Troll
+- 분위기: 화려하지만 부패한 궁전. 유혹과 함정, 욕망에 잠식된 하수인들
+- 챕터 보스: 궁전의 여왕 — 욕망을 먹고 신이 된 색욕의 화신
+
+### Chapter 7 — 오만 / 신의 폐허 (상태이상: 심판)
+
+- 스테이지: 천상의 계단(Demon) → 무너진 신전(Normal) → 오만의 왕좌(Undead)
+- 몬스터 풀: Gargoyle · Orc / Golem · Yeti / Lich · Vampire
+- 분위기: 하얀 대리석으로 지어진 신의 궁전이 무너진 폐허. 신성한 빛이 오염되어 차갑게 빛나는 최후의 땅
+- 챕터 보스: 타락한 신 — 스스로를 신이라 칭하다 추락한 오만의 끝
+
+---
+
+## 챕터별 색채 팔레트
+
+| 챕터 | 죄종 | 주조색 | 오염 색채 |
+|------|------|--------|----------|
+| 1 | 분노 | 深黑 + 재 | 붉은 불길 · 잿빛 연기 |
+| 2 | 시기 | 深黑 + 초록 | 독성 초록 · 뒤틀린 발광 균류 · 산성비 |
+| 3 | 탐욕 | 어두운 황갈색 | 부패한 황금빛 · 모래폭풍 · 저주받은 광채 |
+| 4 | 나태 | 차가운 백색 + 회색 | 눈보라 · 얼어붙은 정적 · 빙하의 푸른빛 |
+| 5 | 폭식 | 흑자색 | 유기물 보라 · 붉은 맥동 균열 |
+| 6 | 색욕 | 진홍 + 어두운 보라 | 퇴폐적 붉은빛 · 부패한 화려함 |
+| 7 | 오만 | 순백 + 금빛 | 하얀 대리석 · 오염된 신성한 빛 · 부서진 신상 |
+
+### 챕터 4 — 겨울 요소
+- 나태 테마의 "모든 것이 멈춘 정지"를 겨울/동토로 표현
+- 유일하게 **겨울/눈 덮인** 환경을 갖는 챕터
+- 팔레트: cold white / ice blue / ash gray / deep void black
+
+### 챕터 7 — 하얀 신전 요소
+- 오만 테마의 "신을 자칭한 존재의 거처"를 하얀 대리석 궁전 폐허로 표현
+- 순백의 신성함이 오염되어 차갑게 빛나는 최후의 땅
+- 팔레트: pure white marble / corrupted gold / pale divine light / shadow black

@@ -1,10 +1,14 @@
 import random
 import logging
 from services.system.GameDataManager import GameDataManager
+from services.system.ErrorCode import ErrorCode, error_response
 
 logger = logging.getLogger("RPG_SERVER")
 
+
 class ItemDropManager:
+    """몬스터 킬 & 드랍 처리 (API 3002)"""
+
     # --- [기획 밸런싱 상수] ---
     STAT_GROWTH_RATE = 1.10
     SPAWN_MULTIPLIERS = {
@@ -16,31 +20,50 @@ class ItemDropManager:
     @classmethod
     async def process_kill(cls, user_no: int, data: dict):
         """API Code 3002: 몬스터 킬 및 드랍 처리"""
+        # ── [1] 입력 추출 ──
+        monster_idx = data.get("monster_idx")
+        spawned_level = data.get("spawned_level")
+        spawned_grade = data.get("spawned_grade")
+        field_level = data.get("field_level")
+        spawn_type = data.get("spawn_type", "일반")
+
+        if monster_idx is None:
+            return error_response(ErrorCode.INVALID_BATTLE_REQ, "monster_idx가 필요합니다.")
+        if spawned_level is None or spawned_grade is None or field_level is None:
+            return error_response(ErrorCode.INVALID_BATTLE_REQ, "spawned_level, spawned_grade, field_level이 필요합니다.")
+
+        # 타입 변환 + 범위 검증
         try:
-            # 1. 시스템 설정 불러오기
-            configs = GameDataManager.REQUIRE_CONFIGS
-            if not configs.get('monsters'):
-                return {"success": False, "message": "Game data not loaded yet."}
+            monster_idx = int(monster_idx)
+            spawned_level = int(spawned_level)
+            spawned_grade = int(spawned_grade)
+            field_level = int(field_level)
+        except (ValueError, TypeError):
+            return error_response(ErrorCode.INVALID_BATTLE_REQ, "전투 파라미터 타입이 올바르지 않습니다.")
 
-            # 2. 클라이언트 전달 데이터
-            monster_idx = data["monster_idx"]
-            spawned_level = data["spawned_level"]
-            spawned_grade = data["spawned_grade"]
-            field_level = data["field_level"]
-            spawn_type = data.get("spawn_type", "일반")
+        if spawned_level < 1 or spawned_grade < 1 or field_level < 1:
+            return error_response(ErrorCode.INVALID_BATTLE_REQ, "전투 파라미터는 1 이상이어야 합니다.")
 
-            if monster_idx not in configs['monsters']:
-                return {"success": False, "message": f"Invalid monster_idx: {monster_idx}"}
-            
-            base_monster = configs['monsters'][monster_idx]
+        if spawn_type not in cls.SPAWN_MULTIPLIERS:
+            return error_response(ErrorCode.INVALID_BATTLE_REQ, f"유효하지 않은 spawn_type: {spawn_type}")
 
-            # 3. 스코어 계산 (configs['score_config'] 사용)
+        # ── [2] 메타데이터 검증 ──
+        configs = GameDataManager.REQUIRE_CONFIGS
+        if not configs.get('monsters'):
+            return error_response(ErrorCode.INTERNAL_ERROR, "게임 데이터가 로드되지 않았습니다.")
+
+        if monster_idx not in configs['monsters']:
+            return error_response(ErrorCode.INVALID_BATTLE_REQ, f"존재하지 않는 몬스터: {monster_idx}")
+
+        base_monster = configs['monsters'][monster_idx]
+
+        # ── [4] 비즈니스 로직 ──
+        try:
             score = cls._calc_monster_score(spawned_level, field_level, configs['score_config'])
 
-            # 4. 드랍 횟수 및 테이블 설정
             drop_table = configs['drop_config'].get(spawned_grade, [("Nodrop", 100)])
-            roll_count = cls.SPAWN_MULTIPLIERS.get(spawn_type, cls.SPAWN_MULTIPLIERS["일반"])["drop_roll"]
-            
+            roll_count = cls.SPAWN_MULTIPLIERS[spawn_type]["drop_roll"]
+
             drops = []
             for _ in range(roll_count):
                 category = cls._roll_weighted(drop_table)
@@ -49,23 +72,22 @@ class ItemDropManager:
                     if equip_data:
                         drops.append({"type": "equipment", "data": equip_data})
                 elif category != "Nodrop":
-                    # 골드나 잡템 (기본 공식)
                     amount = random.randint(10, 50) * spawned_grade
                     drops.append({"type": category, "amount": amount})
 
-            return {
-                "success": True,
-                "data": {
-                    "monster_score": round(score, 2),
-                    "drops": drops
-                }
-            }
-            
-        except KeyError as e:
-            return {"success": False, "message": f"Missing required parameter: {str(e)}"}
         except Exception as e:
-            logger.error(f"[ItemDrop Error] {e}", exc_info=True)
-            return {"success": False, "message": "Internal Server Error"}
+            logger.error(f"[ItemDropManager] process_kill 실패: {e}", exc_info=True)
+            return error_response(ErrorCode.INTERNAL_ERROR, "드랍 처리 중 오류가 발생했습니다.")
+
+        # ── [6] 응답 반환 ──
+        return {
+            "success": True,
+            "message": "드랍 처리 완료",
+            "data": {
+                "monster_score": round(score, 2),
+                "drops": drops
+            }
+        }
 
     # --- 내부 헬퍼 메서드들 ---
     @classmethod
@@ -98,14 +120,13 @@ class ItemDropManager:
         # 2. 타겟 파밍: 몬스터 타입에 따른 드랍 부위 결정 (투구, 무기 등)
         m_base = monster["monster_base"]
         m_size = monster["size_type"]
-        weight_key = f"{m_base}_{m_size}" # 예: "Wolf_1"
-        
+        weight_key = f"{m_base}_{m_size}"
+
         part_weights = configs['drop_equip_weights'].get(weight_key, {})
-        
+
         # 부위 가중치가 없으면 랜덤 부위로 fallback
         if part_weights and sum(part_weights.values()) > 0:
             target_part_korean = cls._roll_weighted(list(part_weights.items()))
-            # 한글 부위명을 main_group(영문)으로 매핑
             part_map = {"무기": "weapon", "갑옷": "armor", "투구": "helmet", "장갑": "gloves", "신발": "boots"}
             target_main_group = part_map.get(target_part_korean, "weapon")
         else:
@@ -114,27 +135,25 @@ class ItemDropManager:
         # 3. 결정된 부위(main_group)에 맞는 베이스 아이템 필터링
         valid_bases = [b for b in configs['equip_bases'] if b.get('main_group') == target_main_group]
         if not valid_bases:
-            return {} # 해당 부위 베이스가 없으면 드랍 실패
-            
+            return {}
+
         base_item = random.choice(valid_bases)
         item_name = base_item.get("item_base", "Unknown Item")
-        
+
         # 4. 접두사/접미사 부여 (옵션 개수는 rarity_config 참조)
         options = []
         if r_data["prefix_count"] > 0 and configs['prefixes']:
-            # 해당 장비 부위에 맞는 접두사만 필터링
             valid_prefixes = [p for p in configs['prefixes'] if p.get("equipment_type") == target_main_group]
-            
+
             if valid_prefixes:
-                # TODO: weight 기반으로 뽑도록 개선 필요. 현재는 랜덤.
                 prefix = random.choice(valid_prefixes)
-                
+
                 # 방어코드: 빈 문자열이나 '-' 처리
                 min_val = float(prefix["min_stat_1"]) if str(prefix.get("min_stat_1", "")).replace('.','',1).isdigit() else 1.0
                 max_val = float(prefix["max_stat_1"]) if str(prefix.get("max_stat_1", "")).replace('.','',1).isdigit() else 5.0
-                
+
                 val = round(random.uniform(min_val, max_val), 2)
-                
+
                 stat_name = prefix.get("stat_1", "stat")
                 options.append(f"{stat_name} +{val}")
                 item_name = f"{prefix.get('prefix_korean', 'Unknown')}의 {item_name}"

@@ -27,31 +27,54 @@ class BattleManager:
     @classmethod
     async def battle_result(cls, user_no: int, data: dict):
         """API 3001: 전투 시뮬레이션 — 서버가 전 과정을 시뮬레이션하고 결과만 반환"""
+        # ── [1] 입력 추출 ──
         monster_idx = data.get("monster_idx")
         spawn_type = data.get("spawn_type", "일반")
 
         if monster_idx is None:
             return error_response(ErrorCode.INVALID_BATTLE_REQ, "monster_idx가 필요합니다.")
 
-        # 1. 몬스터 정보 로드
+        if spawn_type not in cls.SPAWN_MULTIPLIERS:
+            return error_response(ErrorCode.INVALID_BATTLE_REQ, f"유효하지 않은 spawn_type: {spawn_type}")
+
+        # ── [2] 메타데이터 검증 ──
         monsters = GameDataManager.REQUIRE_CONFIGS.get("monsters", {})
         monster = monsters.get(int(monster_idx))
         if not monster:
             return error_response(ErrorCode.INVALID_BATTLE_REQ, f"몬스터를 찾을 수 없습니다: {monster_idx}")
 
-        # 2. 유저 전투 스탯 로드 (Redis 캐시 → DB fallback)
+        # 유저 전투 스탯 로드 (Redis 캐시 → DB fallback)
         player = await cls._load_battle_stats(user_no)
         if not player:
             return error_response(ErrorCode.USER_NOT_FOUND, "유저 스탯을 찾을 수 없습니다.")
 
-        # 3. 전투 시뮬레이션
+        # ── [4] 전투 시뮬레이션 (순수 계산) ──
         battle_log, result = cls._simulate(player, monster, spawn_type)
 
-        # 4. 승리 시 보상 지급
+        # ── 승리 시 보상 지급 (단일 트랜잭션) ──
         rewards = {}
         if result == "win":
-            rewards = await cls._grant_rewards(user_no, monster, int(player["level"]))
+            db = SessionLocal()
+            try:
+                rewards = cls._grant_rewards(db, user_no, monster, int(player["level"]))
 
+                # ── [5] 커밋 + 캐시 무효화 ──
+                db.commit()
+
+                if rewards.get("leveled_up"):
+                    try:
+                        await RedisManager.delete(f"user:{user_no}:battle_stats")
+                    except RedisUnavailable:
+                        logger.warning(f"[BattleManager] battle_stats 캐시 무효화 실패 (user_no={user_no})")
+
+            except Exception as e:
+                db.rollback()
+                logger.error(f"[BattleManager] battle_result 보상 지급 실패: {e}", exc_info=True)
+                return error_response(ErrorCode.DB_ERROR, "전투 보상 지급 중 오류가 발생했습니다.")
+            finally:
+                db.close()
+
+        # ── [6] 응답 반환 ──
         return {
             "success": True,
             "message": "전투 완료",
@@ -75,7 +98,7 @@ class BattleManager:
             if cached:
                 return {k: float(v) for k, v in cached.items()}
         except RedisUnavailable:
-            pass
+            logger.warning(f"[BattleManager] battle_stats 캐시 조회 실패 - Redis 장애 (user_no={user_no})")
 
         # DB 계산
         db = SessionLocal()
@@ -130,7 +153,7 @@ class BattleManager:
                 await RedisManager.hmset(cache_key, {k: str(v) for k, v in battle.items()})
                 await RedisManager.expire(cache_key, 3600)
             except RedisUnavailable:
-                pass
+                logger.warning(f"[BattleManager] battle_stats 캐시 저장 실패 - Redis 장애 (user_no={user_no})")
 
             return battle
         finally:
@@ -230,52 +253,39 @@ class BattleManager:
     # ── 보상 지급 ──────────────────────────────────────────
 
     @classmethod
-    async def _grant_rewards(cls, user_no: int, monster: dict, player_level: int) -> dict:
-        """승리 시 경험치/골드 지급 + 레벨업 처리"""
-        db = SessionLocal()
-        try:
-            user = db.query(User).filter(User.user_no == user_no).first()
-            stat = db.query(UserStat).filter(UserStat.user_no == user_no).first()
+    def _grant_rewards(cls, db, user_no: int, monster: dict, player_level: int) -> dict:
+        """승리 시 경험치/골드 지급 + 레벨업 처리 (DB 세션을 전달받아 사용, commit하지 않음)"""
+        user = db.query(User).filter(User.user_no == user_no).with_for_update().first()
+        stat = db.query(UserStat).filter(UserStat.user_no == user_no).with_for_update().first()
 
-            # 경험치 (임시 — 미확정 기획)
-            exp_gained = monster.get("exp_reward", 10)
-
-            # 골드 (임시 — 미확정 기획)
-            gold_gained = random.randint(5, 20) * max(1, player_level // 5)
-
-            stat.exp += exp_gained
-            leveled_up = False
-            while stat.level < cls.MAX_LEVEL:
-                required = cls.EXP_TABLE.get(stat.level, float("inf"))
-                if stat.exp >= required:
-                    stat.exp -= required
-                    stat.level += 1
-                    stat.stat_points += 5
-                    leveled_up = True
-                else:
-                    break
-
-            user.gold += gold_gained
-            db.commit()
-
-            if leveled_up:
-                try:
-                    await RedisManager.delete(f"user:{user_no}:battle_stats")
-                except RedisUnavailable:
-                    pass
-
-            return {
-                "exp_gained": exp_gained,
-                "gold_gained": gold_gained,
-                "level": stat.level,
-                "exp": stat.exp,
-                "leveled_up": leveled_up,
-                "gold": user.gold,
-            }
-
-        except Exception as e:
-            db.rollback()
-            logger.error(f"[Battle] 보상 지급 실패: {e}", exc_info=True)
+        if not user or not stat:
             return {}
-        finally:
-            db.close()
+
+        # 경험치 (임시 — 미확정 기획)
+        exp_gained = monster.get("exp_reward", 10)
+
+        # 골드 (임시 — 미확정 기획)
+        gold_gained = random.randint(5, 20) * max(1, player_level // 5)
+
+        stat.exp += exp_gained
+        leveled_up = False
+        while stat.level < cls.MAX_LEVEL:
+            required = cls.EXP_TABLE.get(stat.level, float("inf"))
+            if stat.exp >= required:
+                stat.exp -= required
+                stat.level += 1
+                stat.stat_points += 5
+                leveled_up = True
+            else:
+                break
+
+        user.gold += gold_gained
+
+        return {
+            "exp_gained": exp_gained,
+            "gold_gained": gold_gained,
+            "level": stat.level,
+            "exp": stat.exp,
+            "leveled_up": leveled_up,
+            "gold": user.gold,
+        }

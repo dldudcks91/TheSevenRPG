@@ -1,0 +1,247 @@
+/* ============================================
+   TheSevenRPG — Stage Select Screen
+   챕터/스테이지 선택, 전투 결과
+   ============================================ */
+
+.stage-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-primary);
+}
+
+/* === 헤더 === */
+.stage-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+    min-height: 48px;
+}
+
+.stage-back-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stage-header-title {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.stage-header-right {
+    min-width: 44px;
+}
+
+/* === 챕터 선택 영역 === */
+.chapter-selector {
+    display: flex;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    overflow-x: auto;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.chapter-btn {
+    flex: 0 0 auto;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-secondary);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-main);
+    cursor: pointer;
+    min-height: 36px;
+    min-width: 44px;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.chapter-btn.active {
+    color: #fff;
+    font-weight: bold;
+}
+
+.chapter-btn.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* 챕터별 테마 컬러 */
+.chapter-btn[data-chapter="1"].active { background: var(--color-wrath); border-color: var(--color-wrath); }
+.chapter-btn[data-chapter="2"].active { background: var(--color-sloth); border-color: var(--color-sloth); }
+.chapter-btn[data-chapter="3"].active { background: var(--color-greed); border-color: var(--color-greed); }
+.chapter-btn[data-chapter="4"].active { background: var(--color-envy); border-color: var(--color-envy); }
+.chapter-btn[data-chapter="5"].active { background: var(--color-gluttony); border-color: var(--color-gluttony); }
+.chapter-btn[data-chapter="6"].active { background: var(--color-lust); border-color: var(--color-lust); }
+.chapter-btn[data-chapter="7"].active { background: var(--color-pride); border-color: var(--color-pride); }
+
+/* === 챕터 정보 === */
+.chapter-info {
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.chapter-name {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.chapter-sin {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.chapter-boss {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: var(--spacing-xs);
+}
+
+/* === 스테이지 리스트 === */
+.stage-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.stage-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+    min-height: 60px;
+}
+
+.stage-card:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-highlight);
+}
+
+.stage-card.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.stage-card.cleared {
+    border-left: 3px solid var(--color-success);
+}
+
+.stage-card-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stage-card-name {
+    font-size: var(--font-size-md);
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.stage-card-type {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.stage-card-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.stage-card-status {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.stage-card-status.cleared {
+    color: var(--color-success);
+}
+
+.stage-enter-btn {
+    background: var(--text-accent);
+    border: none;
+    border-radius: var(--radius-md);
+    color: #fff;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-main);
+    padding: var(--spacing-xs) var(--spacing-md);
+    cursor: pointer;
+    min-height: 36px;
+    font-weight: bold;
+}
+
+/* === 전투 결과 오버레이 === */
+.battle-result-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: var(--spacing-lg);
+}
+
+.battle-result-overlay.show {
+    display: flex;
+}
+
+.battle-result-title {
+    font-size: var(--font-size-xxl);
+    font-weight: bold;
+    margin-bottom: var(--spacing-lg);
+}
+
+.battle-result-title.victory {
+    color: var(--color-success);
+}
+
+.battle-result-title.defeat {
+    color: var(--color-error);
+}
+
+.battle-result-rewards {
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+}
+
+.battle-result-rewards div {
+    font-size: var(--font-size-md);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.battle-result-actions {
+    display: flex;
+    gap: var(--spacing-md);
+}

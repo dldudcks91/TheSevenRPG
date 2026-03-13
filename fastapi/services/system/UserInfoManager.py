@@ -42,7 +42,7 @@ class UserInfoManager:
                         "elapsed_seconds": elapsed,
                     }
             except RedisUnavailable:
-                pass  # Redis 다운 시 방치 정보 없이 진행
+                logger.warning(f"[UserInfoManager] 방치 파밍 상태 조회 실패 - Redis 장애 (user_no={user_no})")
 
             return {
                 "success": True,
@@ -68,7 +68,7 @@ class UserInfoManager:
             }
 
         except Exception as e:
-            logger.error(f"[UserInfo] 조회 실패: {e}", exc_info=True)
+            logger.error(f"[UserInfoManager] get_user_info 실패: {e}", exc_info=True)
             return error_response(ErrorCode.DB_ERROR, "유저 정보 조회 중 오류가 발생했습니다.")
         finally:
             db.close()
