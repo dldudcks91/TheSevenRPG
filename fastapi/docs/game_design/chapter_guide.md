@@ -32,7 +32,6 @@
 - 밝은 색채가 아닌, 어둠 위에 깔리는 특정 색조로 챕터 구분
 
 ### 픽셀아트 프롬프트
-- 배경: `fastapi/docs/prompt/background.md`
-- 몬스터 베이스(45종): `fastapi/docs/prompt/monster.md`
-- 몬스터 챕터별 인스턴스: `monster_design.md` (각 인스턴스별 아트 프롬프트 포함)
+- 배경: `fastapi/docs/art_prompt/background.md`
+- 몬스터 (베이스 + 챕터별 인스턴스): `fastapi/docs/art_prompt/monster.md`
 - 공통 스타일: `pixel art, 16-bit style`

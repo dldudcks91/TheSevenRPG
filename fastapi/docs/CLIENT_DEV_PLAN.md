@@ -38,7 +38,7 @@
 | 챕터 배경 이미지 | 7종 보유 | `resources/background_chapter_*.png` |
 | 1챕터 스테이지 배경 | 3종 보유 | `resources/background_ch1_st*.png` |
 | 캐릭터 스프라이트 | 미작업 | |
-| 몬스터 스프라이트 (48종) | 미작업 | AI 생성 프롬프트만 존재 (`docs/prompt/monster.md`) |
+| 몬스터 스프라이트 (48종) | 미작업 | AI 생성 프롬프트만 존재 (`docs/art_prompt/monster.md`) |
 | 전투 이펙트 | 미작업 | |
 | NPC/시설 아트 | 미작업 | |
 | 사운드/BGM | 미기획 | |

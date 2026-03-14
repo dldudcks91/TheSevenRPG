@@ -2,6 +2,156 @@
 
 ---
 
+## 2026-03-15 (16차 기획 대화)
+
+### 1. 무기 옵션 구조 확정
+- **기본 옵션**: 공격력 % (항상 부여)
+- **죄종 옵션**: 매직 1개, 레어/크래프트 2개
+- **공통 옵션 풀 14종 확정**: 최소/최대 피해, 명중률, 힘, 민첩, 대형/중형/소형 추가 피해, vs Normal/Demon/Undead 추가 피해, 골드 증가%, 드랍 확률%, 코스트 감소%
+- 죄종 접사 변경: 분노→치명타확률, 나태→공격속도+%
+
+### 2. 갑옷 옵션 구조 확정
+- **기본 옵션**: 방어력 +% (항상 부여)
+- **공통 옵션 풀 14종 확정**: 방어력+N, 체력+N, 회피율+N, 힘, 민첩, 대형/중형/소형 피해 감소, vs Normal/Demon/Undead 피해 감소, 골드 증가%, 드랍 확률%, 코스트 감소%
+- 죄종 접사 변경: 분노→반사피해N, 나태→타격회복속도%, 시기→CC지속시간감소%
+
+### 3. 경직 시스템 도입 확정
+- **모든 피격**에 기본 경직 발생
+- **둔기 Implicit 변경**: "명중 시 상대 공격 딜레이" → "경직 시간 추가 +N초 (기본 경직에 가산)"
+- **타격회복속도(FHR)**: 경직 시간을 감소시키는 방어 스탯 (갑옷 나태 죄종 옵션)
+- 공격 측(경직 시간 추가) vs 방어 측(FHR) 공방 축 형성
+
+### 4. 세트 효과 복구 (이전 세션 누락분)
+- **색욕 4세트 — 갈취**: 타격 시 적 공격력·방어력 각 X% 흡수
+- **색욕 6세트 — 지배**: 입히는 피해의 n%를 마법피해로 변환
+- **탐욕 4세트 — 탐욕의 감정**: 드롭 장비 접사 수치 상위 굴림 확률 증가
+- **탐욕 6세트 — 약탈왕**: 보스 처치 시 아이템 2개 드롭
+
+### 수정된 파일 목록
+| 파일 | 변경 내용 |
+|------|----------|
+| `fastapi/docs/game_design/equipment_design.md` | 무기/갑옷 옵션 구조, 경직 시스템, 세트 효과 추가 |
+| `fastapi/docs/game_design/battle_guide.md` | 경직 시스템 섹션 추가 |
+| `fastapi/docs/game_design/equipment_guide.md` | 둔기 경직 설명 추가 |
+| `fastapi/docs/game_design/item_guide.md` | 등급별 옵션 구성, 드롭 로직 갱신 |
+| `fastapi/docs/game_design/GAME_DESIGN.md` | 체크리스트 갱신, 기획 완료 항목 추가 |
+
+### 미확정 (후속 기획 필요)
+- 투구/장갑/신발 옵션 설계 (공통 풀 + 죄종 접사)
+- 나태 세트 4/6세트
+- 오만 세트 2/4세트
+- 옵션 수치 범위/티어
+
+---
+
+## 2026-03-15 (15-b차 기획 대화)
+
+### 1. 스토리 시스템 대폭 개선
+
+#### 프롤로그 완전 재작성 (story_line.md)
+- **변경 전**: 단순 텍스트 (6개의 칼, 인간으로 추락, 분노만 남음)
+- **변경 후**: 5씬 구성 (왕좌 → 배신의 밤 → 추락 → 마을 → 불길)
+- "7개의 칼" 설정 도입: 바알의 왜곡된 기억. 실제 배신 참여자 5명 (사탄 추방, 루시퍼 불참)
+- 낙인 설정: 추락 시 새겨진 저주이자 죄악의 힘을 흡수하는 무기
+- 마을 에피소드: 인간의 선의를 이해하지 못하는 바알
+
+#### 프롤로그 세부 연출 문서 신규 (chapters/prologue.md)
+- 5씬 각각의 일러스트 지시, 인게임 텍스트, 연출 노트 포함
+- 텍스트 내레이션 + 일러스트 방식
+
+#### 배신의 밤 인과 관계 재구성 (story_guide.md)
+- **변경 전**: 레비아탄이 시기로 말을 꺼냄 → 바알제붑이 맹약 넘김 → 각 악마 선택
+- **변경 후**: 시간순 재구성 (아스모데우스 스파이 → 바알제붑 맹약 거래 → 배신의 밤 → 추락)
+- 사탄: "참여 안 함" → "참여 안 함. 배신 세부를 모름" 명확화
+- 루시퍼: 추락 유도 → **"불참. 바알을 살리기 위해 다른 방법을 찾고 있었음"** 변경
+- 챕터 간 연결: "칼도 안 든 놈" 대사 → "힘 흡수 + 기억 파편 회복 → 다음 악마 감지" 구조로 변경
+
+### 2. Ch1 분노 스토리 대폭 확장 (ch1_wrath.md)
+
+#### 보스 몰록 (Moloch) 추가
+- **스테이지 보스 → 4보스 체제**: 기존 3보스(아바돈/레기온/둘라한) + 챕터 보스 몰록
+- 출전: 구약 레위기·열왕기 / Demon / Gargoyle 베이스
+- 사탄과의 관계: 자발적 추종자 — 유일하게 선택해서 따라온 자
+
+#### 보스별 사탄과의 관계 + 과거 에피소드 추가
+| 보스 | 사탄과의 관계 | 분노의 단계 |
+|------|-------------|-----------|
+| 아바돈 | 충직한 부하 — 명령에 삼켜진 자 | 1단계: 통제를 잃은 분노 |
+| 레기온 | 거짓 약속의 피해자 — 속아서 파멸한 자 | 2단계: 자기를 향한 분노 |
+| 둘라한 | 비자발적 오염 — 분노에 깨워진 자 | 3단계: 정체성을 삼킨 분노 |
+| 몰록 | 자발적 추종자 — 스스로 따라온 자 | 4단계: 숭배하는 분노 |
+
+#### 사탄 설정 보강
+- 추방 후 자력으로 힘을 키워 불타는 전장을 지배
+- 배신의 밤 세부를 모름 (추락 사실만 감지)
+- 카인 성경 모티프 강화: "내가 내 아우를 지키는 자입니까?"
+
+#### 스토리 전달 방식 추가
+- 첫 클리어 = 스토리 모드 / 반복 = 던전 모드
+- 스토리 퀘스트 없음 — 스테이지 해금 진행이 스토리 대체
+
+### 3. 카드/도감 시스템 통합 개편 (GAME_DESIGN.md)
+- **변경 전**: 카드 거래 가능, 카드 레벨업 존재, 도감은 직접 드롭만 등록
+- **변경 후**: 카드 → 도감 통합 구조
+  - 카드 드롭 → 도감에 자동 등록 (인벤토리에 쌓이지 않음)
+  - 첫 장 = 스킬 해금, 중복 = 도감 경험치 누적 → 도감 레벨업 → 패시브 보너스
+  - 카드 거래 불가 (직접 파밍만이 유일한 획득 경로)
+  - 카드 레벨업 삭제 (도감 레벨업으로 대체)
+
+### 4. 인디게임 페스티벌 공모전 문서 (신규)
+- `fastapi/docs/festival/` 폴더 신규 생성
+- `README.md`: 작업 규칙 (심사위원 관점, 마감 2026-03-21)
+- `game_design_doc.md`: 기획서
+- `game_intro.md`: 게임 소개
+
+### 수정된 파일 목록
+| 파일 | 변경 내용 |
+|------|----------|
+| `fastapi/docs/game_design/story/story_guide.md` | 배신의 밤 인과 재구성, 루시퍼 불참 확정, 챕터 연결 구조 변경 |
+| `fastapi/docs/game_design/story/story_line.md` | 프롤로그 5씬 전면 재작성, 7개의 칼 설정 |
+| `fastapi/docs/game_design/story/chapters/prologue.md` | **신규** — 프롤로그 세부 연출 (일러스트 지시, 인게임 텍스트) |
+| `fastapi/docs/game_design/story/chapters/ch1_wrath.md` | 보스 몰록 추가, 4보스 과거+분노 단계, 사탄 설정 보강 |
+| `fastapi/docs/game_design/monster_design.md` | 아트 프롬프트 컬럼 제거 + Ch1 보스 몰록 행 추가 |
+| `fastapi/docs/game_design/GAME_DESIGN.md` | 카드/도감 통합 체크리스트 갱신 |
+| `fastapi/docs/festival/*` | **신규** — 인디게임 페스티벌 공모전 문서 3종 |
+
+---
+
+## 2026-03-15 (15차 기획 대화)
+
+### 1. 아트 프롬프트 폴더 구조 정리
+- **변경 전**: `fastapi/docs/prompt/` (monster.md, background.md)
+- **변경 후**: `fastapi/docs/art_prompt/` (monster.md, background.md)
+- 폴더명을 `art_prompt`로 변경하여 용도를 명확히 함
+
+### 2. monster_design.md에서 아트 프롬프트 분리
+- `monster_design.md`는 순수 게임 기획 스펙만 담도록 정리
+- 몹 테이블: `아트 프롬프트` 컬럼 제거 → `리소스명`까지만 유지
+- 보스 테이블: `아트 프롬프트` 컬럼 제거 → `선정 근거`까지만 유지
+- 제거된 프롬프트는 `art_prompt/monster.md` Part 2로 이동
+
+### 3. 아트 프롬프트 스타일 통일
+- **변경 전**: Part 1(베이스)은 `black background, front-facing` / Part 2(인스턴스)는 `white background, facing left` 혼재
+- **변경 후**: 전체 `white background, facing left`로 통일
+- `pixel art` → `16-bit pixel art`로 일괄 변경
+- 공통 스타일 태그: `16-bit pixel art, RPG monster sprite, dark fantasy, white background, facing left, full body`
+
+### 4. monster.md Part 2 구성 완료
+- Ch1~Ch4 챕터별 인스턴스 프롬프트 추가 (36 몹 + 12 보스 = 48개)
+- monster_design.md의 설계와 1:1 대응
+
+### 수정된 파일 목록
+| 파일 | 변경 내용 |
+|------|----------|
+| `fastapi/docs/prompt/` → `fastapi/docs/art_prompt/` | 폴더명 변경 |
+| `fastapi/docs/art_prompt/monster.md` | Part 2 추가, 전체 스타일 통일 |
+| `fastapi/docs/game_design/monster_design.md` | 아트 프롬프트 컬럼 제거 |
+| `fastapi/docs/game_design/CHANGELOG.md` | prompt → art_prompt 참조 갱신 |
+| `fastapi/docs/game_design/chapter_guide.md` | 프롬프트 참조 경로 갱신 |
+| `fastapi/docs/CLIENT_DEV_PLAN.md` | prompt → art_prompt 참조 갱신 |
+
+---
+
 ## 2026-03-11 (12차 기획 대화)
 
 ### 1. 챕터 순서 재배치
@@ -38,7 +188,7 @@
 - 각 챕터에 6종 몬스터 (타입당 2종) 배정 완료
 
 ### 6. 배경 프롬프트 작성 (21스테이지)
-- `fastapi/docs/prompt/background.md` 전면 재작성
+- `fastapi/docs/art_prompt/background.md` 전면 재작성
 - 기존 챕터별 1개 → 스테이지별 1개 (총 21개 프롬프트)
 - 스테이지 진행감: 외곽 → 내부 → 심부 (깊어질수록 어둡고 위험)
 
@@ -59,7 +209,7 @@
 | `fastapi/meta_data/chapter_monster_pool.csv` | 챕터별 몬스터 풀 재배정 |
 | `fastapi/docs/game_design/세계.csv` | 전면 재작성 (상태이상, 스테이지명 포함) |
 | `fastapi/docs/game_design/GAME_DESIGN.md` | 상태이상 7종, 세계 구조, 색채 팔레트 갱신 |
-| `fastapi/docs/prompt/background.md` | 21스테이지 프롬프트 전면 재작성 |
+| `fastapi/docs/art_prompt/background.md` | 21스테이지 프롬프트 전면 재작성 |
 | `fastapi/resources/stages/*.png` | 배경 이미지 21장 (+ 중복 3장) 분할 저장 |
 
 ### 다음 기획 우선순위 (분석 완료, 미착수)
