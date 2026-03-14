@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/angames/Desktop/LYC status)",
+      "Bash(git clone https://github.com/dldudcks91/TheSevenRPG.git /Users/angames/Desktop/LYC)",
+      "Bash(git init)",
+      "Bash(git remote add origin https://github.com/dldudcks91/TheSevenRPG.git)",
+      "Bash(git fetch origin)",
+      "Bash(git checkout -b main origin/main)",
+      "Bash(wc -l /Users/angames/Desktop/LYC/fastapi/public/js/screens/*.js)"
+    ]
+  }
+}

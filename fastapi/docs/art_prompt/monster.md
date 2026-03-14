@@ -710,6 +710,11 @@ fantasy RPG enemy sprite, white background, facing left, full body
 16-bit pixel art, tall elegant demon lord Mephistopheles with dark bat wings spread wide, wearing a luxurious black suit with golden trim and a golden pocket watch chain, one hand holding a glowing golden contract scroll the other gesturing invitingly facing left, sharp aristocratic features with a confident smirk, curved horns polished like obsidian, golden eyes burning with cunning intelligence, white background, fantasy RPG boss sprite
 ```
 
+**맘몬 (Mammon)** — Ch3 챕터 보스 · 은 30개의 거래
+```
+16-bit pixel art, wretched demon of greed Mammon sitting on a crumbling throne of golden coins and treasure, emaciated yet imposing figure in once-luxurious robes now tattered and stained, skeletal hands overflowing with cursed golden coins that melt through bony fingers, hollow despairing eyes glowing dim gold with deep regret, a heavy chain of thirty silver coins wrapped around neck like a noose, piles of useless gold crumbling to sand around the throne, hunched defeated posture facing left, aura of golden dust and despair, white background, fantasy RPG chapter boss sprite
+```
+
 ---
 
 ## Chapter 4 — 나태 「망각의 동토」
@@ -782,4 +787,48 @@ fantasy RPG enemy sprite, white background, facing left, full body
 **파주주 (Pazuzu)** — 얼어붙은 바람왕
 ```
 16-bit pixel art, ancient wind king Pazuzu frozen in eternal stillness — massive chimeric body with lion torso and eagle talons entirely encased in thick glacial ice with cracks revealing dark skin beneath, four frost-shattered wings frozen mid-spread, scorpion tail frozen solid pointing upward, face frozen in a silent roar with icicles hanging from horns and jaw, faint blue glow of trapped wind energy pulsing within the ice shell, towering colossal silhouette, white background, fantasy RPG boss sprite
+```
+
+**벨페고르 (Belphegor)** — Ch4 챕터 보스 · 알면서 방관한 자
+```
+16-bit pixel art, slothful demon lord Belphegor sitting motionless on a frozen throne of solid ice, massive heavy body slumped in absolute apathy, thick frost-covered dark fur robes draped over hunched shoulders, eyes half-closed with dim pale blue glow of someone who has given up, one arm dangling lifelessly off the throne armrest, thick chains of ice growing from throne into body as if the seat itself is consuming him, icicles hanging from curved horns and beard, frozen breath hanging in still air, expression of absolute indifference and resignation facing left, white background, fantasy RPG chapter boss sprite
+```
+
+---
+
+## Chapter 5 — 폭식 「심연의 동굴」
+
+> 테마: 살아있는 동굴, 침식/소화, 끝없는 굶주림
+
+### Ch5 챕터 보스
+
+**바알제붑 (Beelzebub)** — Ch5 챕터 보스 · 모든 것의 시작
+```
+16-bit pixel art, lord of flies Beelzebub as a massive bloated insectoid demon, grotesquely swollen abdomen pulsating with consumed souls visible through translucent chitinous skin, upper body humanoid with four clawed arms reaching forward in desperate hunger, enormous tattered fly wings buzzing behind, compound eyes glowing sickly amber with mindless craving, gaping maw lined with rows of crushing teeth dripping acidic saliva that dissolves the ground below, swarm of dark flies orbiting the body, hunched forward ravenous stance facing left, cavern walls of living flesh in background dissolving, white background, fantasy RPG chapter boss sprite
+```
+
+---
+
+## Chapter 6 — 색욕 「타락한 궁전」
+
+> 테마: 퇴폐한 화려함, 거짓된 아름다움, 조종과 배신
+
+### Ch6 챕터 보스
+
+**아스모데우스 (Asmodeus)** — Ch6 챕터 보스 · 처음부터 적이었던 자
+```
+16-bit pixel art, master spy demon Asmodeus in deceptively beautiful humanoid form, tall elegant figure with flawless pale skin and an unsettlingly perfect face hiding cold calculation, wearing ornate dark royal armor with hidden angelic silver runes beneath the surface betraying true allegiance, three pairs of wings — one angelic white one demonic black one skeletal bare — representing triple nature of deception, wielding a thin rapier that shifts between holy silver and demonic obsidian, crown of roses with hidden thorns drawing blood from temples, eyes split vertically — one golden angelic one crimson demonic, confident smirk of someone who was never on your side facing left, white background, fantasy RPG chapter boss sprite
+```
+
+---
+
+## Chapter 7 — 오만 「신의 폐허」
+
+> 테마: 무너진 천상, 신성의 잔해, 비극적 충성
+
+### Ch7 챕터 보스
+
+**루시퍼 (Lucifer)** — Ch7 챕터 보스 · 배신이 아니었다
+```
+16-bit pixel art, fallen morning star Lucifer in battle-worn angelic form — tall majestic figure with cracked golden armor revealing wounded flesh beneath, twelve magnificent wings once pure white now half-shattered and bleeding golden light from broken feathers, wielding a massive holy lance crackling with fading divine energy in one hand, other hand reaching out in a gesture of sorrowful farewell, face beautiful but etched with exhaustion and grief — eyes burning soft gold with tears of light streaming down, halo above head cracked and flickering between radiance and darkness, standing alone in ruins of a heavenly battlefield, the most powerful yet most tragic presence, white background, fantasy RPG chapter boss sprite
 ```
