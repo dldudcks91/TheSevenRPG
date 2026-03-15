@@ -17,7 +17,9 @@ class GameDataManager:
         'rarity_config': {},
         'equip_bases': [],
         'prefixes': [],
-        'uniques': []
+        'uniques': [],
+        'chapters': {},
+        'stages': {},
     }
 
     def __new__(cls):
@@ -64,7 +66,7 @@ class GameDataManager:
             # 4. Drop Equipment Weights (JSON 직렬화를 위해 튜플 대신 String Key 사용)
             for row in cls._read_csv(os.path.join(base_path, "monster_drop_equipment.csv")):
                 sub_type = row["monster_sub_type"]
-                m_class = int(row["monster_class"])
+                m_class = int(row["monster_grade"])
                 
                 # "Wolf_1" 형태의 키로 저장
                 key_str = f"{sub_type}_{m_class}"
@@ -79,13 +81,15 @@ class GameDataManager:
             # 5. Rarity Config
             for row in cls._read_csv(os.path.join(base_path, "equip_rarity_config.csv")):
                 cls.REQUIRE_CONFIGS['rarity_config'][row["rarity"]] = {
+                    "rarity_korean": row.get("rarity_korean", ""),
                     "min_score": float(row["min_score"]),
                     "max_score": float(row["max_score"]),
-                    "weight": int(row["base_weight"]),
+                    "base_cost": int(float(row.get("base_cost", 0))),
                     "prefix_count": int(row["prefix_count"]),
                     "suffix_count": int(row["suffix_count"]),
                     "option_min": int(row["option_min"]),
-                    "option_max": int(row["option_max"])
+                    "option_max": int(row["option_max"]),
+                    "color_hex": row.get("color_hex", ""),
                 }
 
             # 6. Equipment Base
@@ -96,6 +100,26 @@ class GameDataManager:
 
             # 8. Equipment Unique
             cls.REQUIRE_CONFIGS['uniques'] = cls._read_csv(os.path.join(base_path, "equipment_unique.csv"))
+
+            # 9. Chapter Info
+            for row in cls._read_csv(os.path.join(base_path, "chapter_info.csv")):
+                cls.REQUIRE_CONFIGS['chapters'][int(row["chapter_id"])] = {
+                    "sin_kr": row["sin_kr"],
+                    "sin_en": row["sin_en"],
+                    "region_kr": row["region_kr"],
+                    "region_en": row["region_en"],
+                    "boss_name": row["boss_name_kr"],
+                    "boss_desc": row["boss_desc"],
+                }
+
+            # 10. Stage Info
+            for row in cls._read_csv(os.path.join(base_path, "stage_info.csv")):
+                cls.REQUIRE_CONFIGS['stages'][int(row["stage_id"])] = {
+                    "chapter_id": int(row["chapter_id"]),
+                    "stage_num": int(row["stage_num"]),
+                    "monster_type": row["monster_type"],
+                    "stage_name": row["stage_name"],
+                }
 
             cls._loaded = True
             logger.info("=== Game CSV Data Load Complete ===")

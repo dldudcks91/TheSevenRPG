@@ -1,0 +1,247 @@
+/* ============================================
+   Battle Screen — 전투 연출 화면
+   ============================================ */
+
+.battle-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
+}
+
+/* ── 상단 바 ── */
+.battle-top-bar {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+    text-align: center;
+}
+
+.battle-stage-name {
+    font-size: var(--font-size-md);
+    color: var(--text-secondary);
+}
+
+/* ── HUD (HP 바) ── */
+.battle-hud {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+}
+
+.hud-player,
+.hud-monster {
+    flex: 1;
+}
+
+.hud-vs {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--text-muted);
+    padding: 0 var(--spacing-xs);
+}
+
+.hud-name {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.hud-player .hud-name {
+    color: #90caf9;
+}
+
+.hud-monster .hud-name {
+    color: #ef9a9a;
+    text-align: right;
+}
+
+.hud-hp-bar {
+    height: 10px;
+    background: var(--hp-bar-bg);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.hud-hp-fill {
+    height: 100%;
+    background: var(--hp-bar);
+    border-radius: var(--radius-full);
+    transition: width 0.3s ease;
+}
+
+.hud-hp-fill.monster {
+    background: #e53935;
+}
+
+.hud-hp-text {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-family: var(--font-mono);
+}
+
+.hud-monster .hud-hp-text {
+    text-align: right;
+}
+
+/* ── 전투 아레나 (Phaser 캔버스) ── */
+.battle-arena {
+    flex: 1;
+    min-height: 180px;
+    max-height: 240px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f0f 100%);
+    border-top: 1px solid var(--border-primary);
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.battle-arena canvas {
+    display: block;
+}
+
+/* ── 전투 로그 ── */
+.battle-log-area {
+    flex: 1;
+    min-height: 120px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.battle-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    line-height: 1.6;
+}
+
+.log-entry {
+    padding: 2px 0;
+    color: var(--text-secondary);
+}
+
+.log-entry.player {
+    color: #90caf9;
+}
+
+.log-entry.monster {
+    color: #ef9a9a;
+}
+
+.log-entry.crit {
+    font-weight: bold;
+}
+
+.log-entry.crit.player {
+    color: #ffeb3b;
+}
+
+.log-entry.crit.monster {
+    color: #ff6e40;
+}
+
+.log-entry.miss {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ── 결과 오버레이 ── */
+.battle-result-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-normal);
+    z-index: 100;
+}
+
+.battle-result-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.battle-result-box {
+    text-align: center;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-secondary);
+    min-width: 260px;
+}
+
+.battle-result-box.victory {
+    border-color: var(--color-warning);
+}
+
+.battle-result-box.defeat {
+    border-color: var(--color-error);
+}
+
+.battle-result-title {
+    font-size: var(--font-size-xxl);
+    font-weight: bold;
+    margin-bottom: var(--spacing-md);
+}
+
+.battle-result-box.victory .battle-result-title {
+    color: var(--color-warning);
+}
+
+.battle-result-box.defeat .battle-result-title {
+    color: var(--color-error);
+}
+
+.battle-result-rewards {
+    margin-bottom: var(--spacing-lg);
+}
+
+.reward-row {
+    font-size: var(--font-size-md);
+    color: var(--text-secondary);
+    padding: var(--spacing-xs) 0;
+}
+
+.reward-row span {
+    color: var(--color-success);
+    font-weight: bold;
+    margin-left: var(--spacing-sm);
+}
+
+.reward-row.level-up {
+    color: var(--color-warning);
+    font-weight: bold;
+    font-size: var(--font-size-lg);
+    animation: levelUpPulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes levelUpPulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+
+.battle-result-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+}
+
+.battle-result-actions .btn {
+    min-width: 100px;
+}

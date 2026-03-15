@@ -1,0 +1,22 @@
+{
+    "name": "The Seven - 7대 죄악 RPG",
+    "short_name": "The Seven",
+    "description": "7대 죄악 테마 웹 RPG — 몬스터 파밍, 장비 드롭, 스탯 강화",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#0f0f0f",
+    "theme_color": "#c62828",
+    "icons": [
+        {
+            "src": "assets/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

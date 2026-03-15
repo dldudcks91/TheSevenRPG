@@ -27,8 +27,8 @@ class ErrorCode(str, Enum):
     EQUIP_SLOT_MISMATCH = "E3002"   # 장착 불가 (부위 불일치)
     COST_EXCEEDED       = "E3003"   # 코스트 초과
     INVENTORY_FULL      = "E3004"   # 인벤토리 가득 참
-    CARD_NOT_FOUND      = "E3005"   # 카드 없음
-    CARD_ALREADY_EQUIPPED = "E3006" # 이미 장착된 카드
+    COLLECTION_NOT_FOUND  = "E3005"  # 도감 항목 없음
+    SKILL_SLOT_INVALID    = "E3006" # 스킬 슬롯 오류 (미해금/이미 사용 중)
     ENHANCE_FAILED      = "E3007"   # 강화 실패 (최대 레벨 등)
     INSUFFICIENT_GOLD   = "E3008"   # 골드 부족
 

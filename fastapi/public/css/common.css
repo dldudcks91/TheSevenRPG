@@ -197,3 +197,25 @@ html, body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--border-highlight);
 }
+
+/* === 터치 피드백 (모바일 UX) === */
+[data-action] {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+[data-action]:active {
+    opacity: 0.75;
+    transition: opacity 0.05s ease;
+}
+
+/* === safe-area (노치 대응) === */
+@supports (padding: env(safe-area-inset-top)) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+}

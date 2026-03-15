@@ -25,14 +25,14 @@
 ### 재작성 완료 ✅
 | 파일 | 상태 | 비고 |
 |------|------|------|
-| `models.py` | ✅ 완료 | User/UserStat/Item/Card 4테이블, 기획서 §12 기준 |
+| `models.py` | ✅ 완료 | User/UserStat/Item/Collection 4테이블, 기획서 기준 |
 | `UserInitManager.py` | ✅ 완료 | @classmethod 패턴, User+UserStat+초기장비 트랜잭션 |
 | `BattleManager.py` | ✅ 완료 | 전투 시뮬레이션 엔진, Redis 캐싱, 보상 지급 |
 | `InventoryManager.py` | ✅ 완료 | 장착/해제/조회/판매/인벤확장, 코스트 검증, Redis 무효화 |
 | `StageManager.py` | ✅ 신규 | 스테이지 입장/클리어, 해금 검증 |
 | `IdleFarmManager.py` | ✅ 신규 | 방치 파밍 ON/OFF, 보상 수령 |
-| `CardManager.py` | ✅ 신규 | 카드 조회/장착/해제, Redis 무효화 |
-| `EnhanceManager.py` | ✅ 신규 | 아이템 강화, 스탯 스케일링, Redis 무효화 |
+| `CollectionManager.py` | ✅ 신규 | 도감 조회/스킬 장착/해제, 카드 등록 |
+| `EnhanceManager.py` | ⏸️ 보류 | 기획 보류 (api_map 미등록, 코드 보존) |
 
 ---
 
@@ -54,10 +54,10 @@
 | 3006 | IdleFarmManager | `collect_idle` | 방치 파밍 보상 수령 | ✅ 완성 |
 | 2004 | InventoryManager | `sell_item` | 아이템 판매 | ✅ 완성 |
 | 2005 | InventoryManager | `expand_inventory` | 인벤토리 확장 | ✅ 완성 |
-| 2006 | EnhanceManager | `enhance_item` | 아이템 강화 | ✅ 완성 |
-| 2007 | CardManager | `get_cards` | 카드 목록 조회 | ✅ 완성 |
-| 2008 | CardManager | `equip_card` | 카드 장비 장착 | ✅ 완성 |
-| 2009 | CardManager | `unequip_card` | 카드 해제 | ✅ 완성 |
+| 2006 | EnhanceManager | `enhance_item` | 아이템 강화 | ⏸️ 보류 (기획 보류) |
+| 2007 | CollectionManager | `get_collection` | 도감 목록 조회 | ✅ 완성 |
+| 2008 | CollectionManager | `equip_skill` | 스킬 슬롯 장착 | ✅ 완성 |
+| 2009 | CollectionManager | `unequip_skill` | 스킬 슬롯 해제 | ✅ 완성 |
 
 ---
 
@@ -76,7 +76,7 @@
 | 추가 | `gold` | BigInteger, default=0 | UserStat에서 이동 |
 | 추가 | `current_stage` | Integer, default=1 | 진행 중 최고 스테이지 |
 | 추가 | `max_inventory` | Integer, default=100 | 인벤토리 최대 칸 수 |
-| 추가 | `cards` relationship | 1:N → Cards | |
+| 추가 | `collections` relationship | 1:N → Collections | |
 | 유지 | `last_login`, `status` | | 기획서에 없지만 운영 필요 |
 
 **UserStat 테이블 변경**
@@ -95,22 +95,26 @@
 | 변경 | `item_uid` | Integer → String(36) | UUID |
 | 변경 | `item_base_id` → `base_item_id` | String(50) → Integer | 메타데이터 참조 |
 | 추가 | `item_level` | Integer | 장비 레벨 |
-| 추가 | `rarity` | String(20) | normal/magic/rare/unique |
+| 추가 | `rarity` | String(20) | magic/rare/craft/unique (일반 등급 제거) |
+| 추가 | `item_score` | Integer | 몬스터 킬 점수 기반 품질 |
 | 추가 | `item_cost` | Integer | 코스트 값 |
+| 추가 | `prefix_id` | String(50), nullable | 접두사 ID |
 | 추가 | `suffix_id` | String(50), nullable | 접미사 ID |
 | 추가 | `set_id` | String(50), nullable | 세트 ID |
 | 추가 | `dynamic_options` | JSON | 랜덤 부여 스탯 |
+| 추가 | `is_equipped` | Boolean | 장착 여부 (인덱스 필수) |
 | 추가 | `equip_slot` | String(20), nullable | 장착 부위 |
 | 삭제 | `item_type` | | 장비 전용 테이블로 변경 |
 | 삭제 | `amount` | | 장비 전용 테이블로 변경 |
 
-**Cards 테이블 (신규)**
+**Collections 테이블 (도감 — 카드→도감 통합 개편)**
 | 컬럼 | 타입 | 키 | 설명 |
 |------|------|-----|------|
-| `card_uid` | String(36) | PK | UUID |
-| `user_no` | BigInteger | FK → Users | 소유자 |
-| `monster_idx` | Integer | | 드랍한 몬스터 종류 |
-| `equipped_item` | String(36) | FK → Items, nullable | 장착된 장비 참조 |
+| `user_no` | BigInteger | PK/FK → Users | 소유자 (복합 PK) |
+| `monster_idx` | Integer | PK | 몬스터 종류 (복합 PK) |
+| `card_count` | Integer | | 누적 획득 카드 수 |
+| `collection_level` | Integer | | 도감 레벨 (1~5) |
+| `skill_slot` | Integer | nullable | 장착된 스킬 슬롯 (1~4) |
 
 **의존성 확인 필요**
 - `ItemDropManager.py`가 Inventory 모델 참조 시 Item으로 변경 필요
@@ -249,7 +253,7 @@ Phase 5 (StageManager)
     ↓
 Phase 6 (IdleFarmManager)
     ↓
-Phase 7 (CardManager) ← 카드 시스템
+Phase 7 (CollectionManager) ← 도감 시스템
     ↓
 Phase 8 (InventoryManager 확장) ← 판매/인벤 확장
     ↓
@@ -258,21 +262,31 @@ Phase 9 (EnhanceManager) ← 아이템 강화
 
 ---
 
-### Phase 7 — 카드 시스템 ✅
-**목적**: 몬스터 카드 수집 및 장비 장착을 통한 추가 스탯 확보.
+### Phase 7 — 도감 시스템 ✅ (카드→도감 통합 개편)
+**목적**: 몬스터 카드 수집 → 도감 자동 등록 → 스킬 해금 → 스킬 슬롯 장착.
 
 **신규 파일**
-- `services/rpg/CardManager.py`
+- `services/rpg/CollectionManager.py` (CardManager.py 대체)
+
+**기획 변경 (15-b차)**
+- 카드는 인벤토리 아이템이 아님 → 도감에 자동 등록
+- 첫 카드 = 스킬 해금, 중복 카드 = 도감 경험치 → 레벨업 → 패시브 보너스
+- 카드를 장비에 장착하는 방식 폐기 → 스킬 슬롯 4개 (Lv1/5/15/30 점진 해금)
 
 **작업 내용**
-- `get_cards` (API 2007): 보유 카드 목록 조회
-- `equip_card` (API 2008): 카드를 장비에 장착 (1장비 1카드)
-- `unequip_card` (API 2009): 카드 해제
+- `get_collection` (API 2007): 도감 목록 조회 + 해금 슬롯 수 반환
+- `equip_skill` (API 2008): 도감 스킬을 스킬 슬롯에 장착
+- `unequip_skill` (API 2009): 스킬 슬롯에서 해제
+- `register_card` (내부 전용): 카드 드롭 시 도감 등록 (신규/중복 처리)
 
 **어뷰징 방지 포인트**
-- 카드/아이템 소유권 검증
-- 한 장비에 카드 중복 장착 차단
-- 장착 중인 장비에 카드 변경 시 battle_stats 무효화
+- 도감 소유권 검증 (user_no 조건 필수)
+- 스킬 슬롯 해금 레벨 서버 검증
+- 이미 사용 중인 슬롯 자동 교체 (기존 스킬 해제 후 장착)
+
+**미구현 (기획 미확정)**
+- 도감 레벨업 로직 (레벨별 필요 카드 수, 패시브 보너스)
+- 카드 스킬의 전투 중 발동 로직
 
 ---
 
@@ -284,18 +298,19 @@ Phase 9 (EnhanceManager) ← 아이템 강화
 
 **작업 내용**
 - `sell_item` (API 2004): 아이템 판매 (rarity × level 기반 가격)
-  - 장착 중 판매 차단, 카드 부착 시 카드도 삭제
+  - 장착 중 판매 차단
 - `expand_inventory` (API 2005): 골드 소비로 인벤 확장
   - 확장할수록 비용 증가, 최대 500칸 상한
 
 **임시 수치**
-- 판매가: normal=10, magic=30, rare=100, unique=500 (× item_level)
+- 판매가: magic=30, rare=100, craft=300, unique=500 (× item_level)
 - 확장 비용: 500 × (현재칸/100 + 1), 10칸씩 확장
 
 ---
 
-### Phase 9 — 아이템 강화 ✅
+### Phase 9 — 아이템 강화 ⏸️ 보류
 **목적**: 장비 성장 시스템. 골드 소비로 장비 스탯 증가.
+**상태**: 기획 보류 — 엔드 콘텐츠 부족 시 추후 재활성화. 코드 보존, api_map 미등록.
 
 **신규 파일**
 - `services/rpg/EnhanceManager.py`
@@ -337,6 +352,28 @@ Phase 9 (EnhanceManager) ← 아이템 강화
 
 ---
 
+### Phase 10.5 — 기획 동기화 (15-b차/16차) ✅
+**목적**: 기획서 업데이트(카드→도감 통합, 장비 옵션 구조 확정, 강화 보류)에 맞춰 서버 코드 동기화.
+
+**변경 파일 (7개)**
+- `models.py` — Card→Collection 테이블 재설계, Item에 `prefix_id`/`item_score`/`is_equipped` 추가, rarity 기본값 `"magic"`
+- `services/system/ErrorCode.py` — `CARD_NOT_FOUND`/`CARD_ALREADY_EQUIPPED` → `COLLECTION_NOT_FOUND`/`SKILL_SLOT_INVALID`
+- `services/rpg/CollectionManager.py` — **신규** (CardManager.py 대체). 도감 CRUD + 스킬 슬롯 장착/해제
+- `services/rpg/InventoryManager.py` — `SELL_PRICE_TABLE`에서 normal 제거 + craft 추가, 판매 시 카드 삭제 로직 제거
+- `services/system/APIManager.py` — CardManager→CollectionManager, EnhanceManager(2006) 비활성화
+- `services/rpg/__init__.py` — import 변경
+
+**기획 변경 반영 요약**
+| 기획 변경 | 서버 반영 |
+|----------|----------|
+| 카드→도감 통합 (15-b차) | Card 테이블→Collection 테이블, CardManager→CollectionManager |
+| 스킬 슬롯 4개 점진 해금 | CollectionManager.equip_skill에 레벨 검증 |
+| 일반 등급 제거 (16차) | Item.rarity default="magic", SELL_PRICE_TABLE normal 제거 |
+| 장비 접두사 시스템 (16차) | Item.prefix_id 컬럼 추가 |
+| 강화 시스템 보류 | EnhanceManager api_map 미등록 (코드 보존) |
+
+---
+
 ## 데이터베이스 설계
 
 > 기획서 GAME_DESIGN.md §12에서 이동
@@ -374,7 +411,7 @@ Phase 9 (EnhanceManager) ← 아이템 강화
 | user_no | BIGINT | FK | 소유자 |
 | base_item_id | INT | | equipment_base 메타데이터 참조 |
 | item_level | INT | | 장비 레벨 (숨김, 옵션 풀 결정) |
-| rarity | VARCHAR(20) | | normal / magic / rare / unique |
+| rarity | VARCHAR(20) | | magic / rare / craft / unique (일반 등급 제거) |
 | item_score | INT | | 몬스터 킬 점수 기반 품질 |
 | item_cost | INT | | 계산된 코스트 값 |
 | prefix_id | VARCHAR(50) | | 접두사 ID (Nullable) |
@@ -384,47 +421,22 @@ Phase 9 (EnhanceManager) ← 아이템 강화
 | is_equipped | BOOLEAN | | 장착 여부 (인덱스 필수) |
 | equip_slot | VARCHAR(20) | | 장착 부위 (장착 시만 존재) |
 
-### Cards (카드 인스턴스)
+### Collections (도감)
 
 | 컬럼 | 타입 | 키 | 설명 |
 |------|------|-----|------|
-| card_uid | VARCHAR(36) | PK | UUID |
-| user_no | BIGINT | FK | 소유자 |
-| monster_idx | INT | | 드랍한 몬스터 종류 |
-| equipped_item | VARCHAR(36) | FK | 장착된 장비 (Nullable) |
+| user_no | BIGINT | PK/FK | 소유자 (복합 PK) |
+| monster_idx | INT | PK | 몬스터 종류 (복합 PK) |
+| card_count | INT | | 누적 획득 카드 수 |
+| collection_level | INT | | 도감 레벨 (1~5) |
+| skill_slot | INT | | 장착된 스킬 슬롯 1~4 (Nullable) |
 
 ---
 
 ## 클라이언트 개발 현황
 
-### 완성된 클라이언트 파일
-| 파일 | 상태 | 비고 |
-|------|------|------|
-| `public/index.html` | ✅ 완성 | SPA 엔트리, ES Module 단일 진입점 |
-| `public/js/app.js` | ✅ 완성 | 해시 기반 라우터, Screen 레지스트리 |
-| `public/js/api.js` | ✅ 완성 | apiCall (재시도, 세션 인증) |
-| `public/js/store.js` | ✅ 완성 | 중앙 상태 관리 (pub/sub) |
-| `public/js/session.js` | ✅ 완성 | localStorage 세션 관리 |
-| `public/js/utils.js` | ✅ 완성 | DOM 헬퍼, 포맷터 |
-| `public/css/variables.css` | ✅ 완성 | CSS 변수 (테마, 등급, 공통) |
-| `public/css/common.css` | ✅ 완성 | 레이아웃, 타이포, 공통 요소 |
-
-### Screen 구현 현황
-| Screen | JS 파일 | CSS 파일 | 사용 API | 상태 |
-|--------|---------|----------|----------|------|
-| Login | `screens/login.js` | `css/components/login.css` | 1003 | ✅ 완성 |
-| Town | `screens/town.js` | `css/components/town.css` | 1004 | ✅ 완성 |
-| Inventory | `screens/inventory.js` | `css/components/inventory.css` | 2001~2006 | ✅ 완성 |
-| StageSelect | `screens/stage-select.js` | `css/components/stage-select.css` | 3001, 3003, 3004 | ✅ 완성 |
-| IdleFarm | `screens/idle-farm.js` | `css/components/idle-farm.css` | 3005, 3006 | ✅ 완성 |
-| Cards | `screens/cards.js` | `css/components/cards.css` | 2007~2009 | ✅ 완성 |
-| Battle | 미구현 | 미구현 | — | 미착수 (Phaser.js 전투 씬) |
-
-### 클라이언트 참고사항
-- 아이템 이름: `장비 #${base_item_id}` 플레이스홀더 (메타데이터 매핑 미구현)
-- 카드 이름: `몬스터 #${monster_idx}` 플레이스홀더
-- 스테이지/챕터 데이터: JS 내 하드코딩 (CSV 메타데이터 클라이언트 로드 미구현)
-- 장비 슬롯: weapon/armor/helmet/gloves/boots (서버 VALID_EQUIP_SLOTS와 일치)
+> 상세 내용은 [CLIENT_DEV_PLAN.md](CLIENT_DEV_PLAN.md) 참조.
+> Phase C1~C8 전체 완성.
 
 ---
 

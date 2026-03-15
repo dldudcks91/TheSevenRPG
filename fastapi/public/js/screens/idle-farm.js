@@ -95,6 +95,19 @@ const IdleFarmScreen = {
         this._clearTimer();
     },
 
+    /** 탭 비활성 → 타이머 정지 */
+    onPause() {
+        this._clearTimer();
+    },
+
+    /** 탭 활성 → 타이머 재시작 (서버 시각 기준 보정) */
+    onResume() {
+        const isActive = Store.get('idle.active');
+        if (isActive && !this._timerInterval) {
+            this._syncState();
+        }
+    },
+
     handleEvent(e) {
         const target = e.target.closest('[data-action]');
         if (!target) return;

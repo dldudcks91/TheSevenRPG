@@ -1,6 +1,6 @@
 import logging
 from database import SessionLocal
-from models import User, UserStat, Item, Card
+from models import User, UserStat, Item
 from services.redis_manager.RedisManager import RedisManager, RedisUnavailable
 from services.system.ErrorCode import ErrorCode, error_response
 
@@ -10,9 +10,9 @@ VALID_EQUIP_SLOTS = {"weapon", "armor", "helmet", "gloves", "boots"}
 
 # 아이템 판매 가격 배율 (rarity → 골드 배수)
 SELL_PRICE_TABLE = {
-    "normal": 10,
     "magic": 30,
     "rare": 100,
+    "craft": 300,
     "unique": 500,
 }
 
@@ -150,10 +150,13 @@ class InventoryManager:
                     "base_item_id": i.base_item_id,
                     "item_level": i.item_level,
                     "rarity": i.rarity,
+                    "item_score": i.item_score,
                     "item_cost": i.item_cost,
+                    "prefix_id": i.prefix_id,
                     "suffix_id": i.suffix_id,
                     "set_id": i.set_id,
                     "dynamic_options": i.dynamic_options,
+                    "is_equipped": i.is_equipped,
                     "equip_slot": i.equip_slot,
                 }
                 for i in items
@@ -194,12 +197,8 @@ class InventoryManager:
                 return error_response(ErrorCode.EQUIP_SLOT_MISMATCH, "장착 중인 아이템은 판매할 수 없습니다. 먼저 해제하세요.")
 
             # ── [4] 비즈니스 로직 ──
-            base_price = SELL_PRICE_TABLE.get(item.rarity, 10)
+            base_price = SELL_PRICE_TABLE.get(item.rarity, 30)
             sell_price = base_price * item.item_level
-
-            attached_card = db.query(Card).filter(Card.equipped_item == item_uid).first()
-            if attached_card:
-                db.delete(attached_card)
 
             user = db.query(User).filter(User.user_no == user_no).with_for_update().first()
             user.gold += sell_price

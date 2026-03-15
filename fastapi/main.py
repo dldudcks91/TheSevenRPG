@@ -23,7 +23,6 @@ app = FastAPI(title="Hardcore Farming RPG Server")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-app.mount("/", StaticFiles(directory="public", html=True), name="public")
 
 # 세션 없이 접근 가능한 API 코드 목록
 PUBLIC_API_CODES = {
@@ -38,7 +37,7 @@ PUBLIC_API_CODES = {
 async def startup_event():
     logger.info("=== RPG Server Starting Up ===")
     await RedisManager.init()
-    GameDataManager.load_all_csv()
+    GameDataManager.load_all_csv(base_path="./meta_data/")
     database.init_db()
     logger.info("=== Server is Ready to Battle ===")
 
@@ -126,3 +125,5 @@ async def api_gateway(request: Request, body: ApiRequest):
             ErrorCode.INTERNAL_ERROR,
             "서버 내부 오류가 발생했습니다."
         ))
+# Static mount를 파일 맨 끝으로 이동
+app.mount("/", StaticFiles(directory="public", html=True), name="public")

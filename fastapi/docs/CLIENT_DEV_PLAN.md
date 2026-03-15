@@ -28,9 +28,36 @@
 | 3006 | 방치 파밍 보상 수령 | ✅ |
 
 ### 클라이언트 현재 상태
+
+#### 공통 모듈
 | 파일 | 상태 | 비고 |
 |------|------|------|
-| `public/index.html` | API 테스트 페이지 | 게임 UI 아님, 교체 대상 |
+| `public/index.html` | ✅ 완성 | SPA 엔트리, ES Module 단일 진입점 |
+| `public/js/app.js` | ✅ 완성 | 해시 기반 라우터, Screen 레지스트리, 메타데이터 초기 로드 |
+| `public/js/api.js` | ✅ 완성 | apiCall (재시도, 세션 인증) |
+| `public/js/store.js` | ✅ 완성 | 중앙 상태 관리 (pub/sub) |
+| `public/js/session.js` | ✅ 완성 | localStorage 세션 관리 |
+| `public/js/utils.js` | ✅ 완성 | DOM 헬퍼, 포맷터 |
+| `public/js/meta-data.js` | ✅ 완성 | API 1002 메타데이터 로드, 장비/몬스터/챕터/스테이지 룩업 |
+| `public/css/variables.css` | ✅ 완성 | CSS 변수 (테마, 등급, 공통) |
+| `public/css/common.css` | ✅ 완성 | 레이아웃, 타이포, 공통 요소 |
+
+#### Screen 구현 현황
+| Screen | JS 파일 | CSS 파일 | 사용 API | 상태 |
+|--------|---------|----------|----------|------|
+| Login | `screens/login.js` | `css/components/login.css` | 1003 | ✅ 완성 |
+| Town | `screens/town.js` | `css/components/town.css` | 1004 | ✅ 완성 |
+| Inventory | `screens/inventory.js` | `css/components/inventory.css` | 2001~2005 | ✅ 완성 (메타데이터 이름 매핑 완료) |
+| StageSelect | `screens/stage-select.js` | `css/components/stage-select.css` | 3003 | ✅ 완성 (메타데이터 기반 챕터/스테이지) |
+| Battle | `screens/battle.js` | `css/components/battle.css` | 3001, 3004 | ✅ 완성 (Phaser.js 전투 연출, wave별 전투) |
+| IdleFarm | `screens/idle-farm.js` | `css/components/idle-farm.css` | 3005, 3006 | ✅ 완성 |
+| Collection | `screens/cards.js` | `css/components/cards.css` | 2007~2009 | ✅ 완성 (몬스터 이름 메타데이터 매핑 완료) |
+
+#### 참고사항
+- 아이템 이름: `meta-data.js`의 `getEquipName()` 사용 (equipment_base CSV 매핑)
+- 몬스터 이름: `meta-data.js`의 `getMonsterName()` 사용 (monster_info CSV 매핑)
+- 스테이지/챕터: `meta-data.js`의 `getChapters()`/`getStagesByChapter()` 사용
+- 장비 슬롯: weapon/armor/helmet/gloves/boots (서버 VALID_EQUIP_SLOTS와 일치)
 
 ### 그래픽 리소스 현황
 | 리소스 | 상태 | 비고 |
@@ -65,20 +92,28 @@ fastapi/public/
 │   ├── variables.css       # CSS 변수 (테마/등급 컬러)
 │   ├── common.css          # 공통 레이아웃
 │   └── components/         # 컴포넌트별 CSS
+│       ├── login.css
+│       ├── town.css
+│       ├── inventory.css
+│       ├── stage-select.css
+│       ├── battle.css
+│       ├── idle-farm.css
+│       └── cards.css
 ├── js/
 │   ├── app.js              # 앱 초기화, 화면 라우터
 │   ├── api.js              # apiCall() 서버 통신
 │   ├── session.js          # 세션(localStorage) 관리
-│   ├── screens/            # 화면별 JS
-│   │   ├── login.js
-│   │   ├── town.js
-│   │   ├── inventory.js
-│   │   ├── stage-select.js
-│   │   └── battle.js
-│   └── phaser/             # Phaser.js 전투 씬
-│       ├── BootScene.js
-│       ├── BattleScene.js
-│       └── ResultScene.js
+│   ├── store.js            # 중앙 상태 관리 (pub/sub)
+│   ├── utils.js            # DOM 헬퍼, 포맷터
+│   ├── meta-data.js        # API 1002 메타데이터 캐싱, 룩업 함수
+│   └── screens/            # 화면별 JS (Phaser 포함)
+│       ├── login.js
+│       ├── town.js
+│       ├── inventory.js
+│       ├── stage-select.js
+│       ├── battle.js       # Phaser.js BattleScene 내장
+│       ├── idle-farm.js
+│       └── cards.js
 └── assets/
     ├── backgrounds/        # 챕터/스테이지 배경
     ├── sprites/            # 캐릭터/몬스터 스프라이트
@@ -89,7 +124,7 @@ fastapi/public/
 
 ## 개발 Phase
 
-### Phase C1 — 프로젝트 기반 구축
+### Phase C1 — 프로젝트 기반 구축 ✅
 **목적**: SPA 골격, 공통 모듈, 서버 통신 레이어 완성. 이후 모든 Phase의 기반.
 
 **작업 파일**
@@ -134,7 +169,7 @@ fastapi/public/
 
 ---
 
-### Phase C2 — 로그인 화면
+### Phase C2 — 로그인 화면 ✅
 **목적**: 서버 API 1003과 연동. 게임 진입점.
 
 **작업 파일**
@@ -153,7 +188,7 @@ fastapi/public/
 
 ---
 
-### Phase C3 — 마을 허브 (죄악의 성)
+### Phase C3 — 마을 허브 (죄악의 성) ✅
 **목적**: 게임의 중앙 화면. 모든 기능의 진입점.
 
 **작업 파일**
@@ -185,7 +220,7 @@ fastapi/public/
 
 ---
 
-### Phase C4 — 인벤토리 & 장비 UI
+### Phase C4 — 인벤토리 & 장비 UI ✅
 **목적**: 장비 관리. 코어 게임 루프의 "장비 교체" 단계.
 
 **작업 파일**
@@ -231,7 +266,7 @@ fastapi/public/
 
 ---
 
-### Phase C5 — 전투 씬 (Phaser.js)
+### Phase C5 — 전투 씬 (Phaser.js) ✅
 **목적**: 핵심 연출. 서버 battle_log를 애니메이션으로 재생.
 
 **작업 파일**
@@ -283,7 +318,7 @@ fastapi/public/
 
 ---
 
-### Phase C6 — 스테이지 선택 & 진행 UI
+### Phase C6 — 스테이지 선택 & 진행 UI ✅
 **목적**: 콘텐츠 해금 흐름 시각화. 스토리 모드 진행.
 
 **작업 파일**
@@ -339,7 +374,7 @@ fastapi/public/
 
 ---
 
-### Phase C7 — 방치 파밍 UI
+### Phase C7 — 방치 파밍 UI ✅
 **목적**: 핵심 게임 루프 완성. 접속 없이도 보상이 쌓이는 구조의 UI.
 
 **작업 파일**
@@ -374,57 +409,65 @@ fastapi/public/
 
 ---
 
-### Phase C8 — 폴리싱 & PWA
+### Phase C8 — 폴리싱 & PWA ✅
 **목적**: 사용자 경험 완성, 모바일 대비.
 
 **작업 파일**
-- `public/manifest.json` (신규)
-- `public/sw.js` (신규)
-- 기존 파일 전반 수정
+- `public/manifest.json` (신규) ✅
+- `public/sw.js` (신규) ✅
+- `public/index.html` (수정) ✅ PWA 메타태그, manifest 링크
+- `public/js/app.js` (수정) ✅ SW 등록, visibilitychange, isAppHidden 내보내기
+- `public/css/common.css` (수정) ✅ 터치 피드백, safe-area 대응
+- `public/js/screens/battle.js` (수정) ✅ onPause/onResume (Phaser 일시정지)
+- `public/js/screens/town.js` (수정) ✅ onPause/onResume (방치 타이머)
+- `public/js/screens/idle-farm.js` (수정) ✅ onPause/onResume (방치 타이머)
 
-**작업 내용**
+**구현 완료 항목**
 
-1. **PWA**
-   - `manifest.json`: 앱 이름, 아이콘, `display: standalone`
-   - Service Worker: 오프라인 에셋 캐싱
+1. **PWA** ✅
+   - `manifest.json`: 앱 이름, 아이콘, `display: standalone`, portrait 고정
+   - Service Worker: 앱 셸 프리캐시 + 네트워크 우선/캐시 폴백 전략
+   - `index.html`: theme-color, apple-mobile-web-app, manifest 링크
+   - SW 등록: `app.js`에서 자동 등록
 
-2. **성능 최적화**
-   - 레이지 로딩: 현재 챕터 에셋만 로드
-   - 오브젝트 풀링: 데미지 텍스트, 이펙트 재사용
-   - `visibilitychange` 이벤트: 탭 비활성 시 애니메이션 일시정지
+2. **성능 최적화** ✅
+   - `visibilitychange`: app.js에서 전역 감지 → Screen별 onPause/onResume 호출
+   - Battle: Phaser scene.pause/resume
+   - Town/IdleFarm: 타이머 정지/재시작 (서버 시각 기준 보정)
+   - 메모리 릭 점검 완료: 모든 Screen에서 unmount 시 리스너/타이머/Phaser 정리 확인
 
-3. **UI/UX 폴리싱**
-   - 화면 전환 트랜지션
-   - 로딩 인디케이터 (API 호출 중)
-   - 토스트 알림 통합
-   - 터치 피드백 (모바일)
+3. **UI/UX 폴리싱** ✅
+   - 화면 전환 트랜지션: CSS opacity transition (이미 C1에서 구현)
+   - 로딩 인디케이터: loading-overlay (이미 C1에서 구현)
+   - 토스트 알림: toast-container (이미 C1에서 구현)
+   - 터치 피드백: `[data-action]:active` opacity 피드백 + tap-highlight 제거
+   - safe-area: 노치 디바이스 대응 (env(safe-area-inset-*))
 
-**성능 기준**
-- 초기 로딩 3초 이내
-- 전투 씬 60 FPS
-- 에셋 총 용량 챕터당 5MB 이하
-- 메모리 릭 없음 (씬 전환 시 리스너/타이머 정리)
+**미구현 (에셋 의존)**
+- 레이지 로딩: 스프라이트 에셋 미작업 상태라 적용 대상 없음
+- 오브젝트 풀링: 스프라이트 에셋 추가 시 적용 예정
+- PWA 아이콘: `assets/icons/icon-192.png`, `icon-512.png` 제작 필요
 
 ---
 
 ## 개발 순서
 
 ```
-Phase C1 (기반 구축)     ← SPA 골격, 통신, 세션
+Phase C1 (기반 구축)     ✅ SPA 골격, 통신, 세션
     ↓
-Phase C2 (로그인)        ← 서버 연동 첫 테스트
+Phase C2 (로그인)        ✅ 서버 연동 첫 테스트
     ↓
-Phase C3 (마을 허브)     ← 중앙 화면, 데이터 로드
+Phase C3 (마을 허브)     ✅ 중앙 화면, 데이터 로드
     ↓
-Phase C4 (인벤토리)      ← 장비 관리 UI
+Phase C4 (인벤토리)      ✅ 장비 관리 UI
     ↓
-Phase C5 (전투 씬)       ← Phaser.js 핵심 / 가장 복잡
+Phase C5 (전투 씬)       ✅ Phaser.js 핵심 / 가장 복잡
     ↓
-Phase C6 (스테이지)      ← 진행 흐름 연결
+Phase C6 (스테이지)      ✅ 진행 흐름 연결
     ↓
-Phase C7 (방치 파밍)     ← 게임 루프 완성
+Phase C7 (방치 파밍)     ✅ 게임 루프 완성
     ↓
-Phase C8 (폴리싱/PWA)    ← 최종 마무리
+Phase C8 (폴리싱/PWA)    ✅ PWA, visibilitychange, 터치 피드백
 ```
 
 ## 서버-클라이언트 Phase 의존 관계

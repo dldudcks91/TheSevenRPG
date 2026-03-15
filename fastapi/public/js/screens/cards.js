@@ -6,6 +6,7 @@
 import { apiCall } from '../api.js';
 import { Store } from '../store.js';
 import { showLoading, hideLoading, escapeHtml } from '../utils.js';
+import { getMonsterName, getEquipName } from '../meta-data.js';
 
 const CardsScreen = {
     el: null,
@@ -139,7 +140,7 @@ const CardsScreen = {
                      data-action="select-card"
                      data-card-uid="${card.card_uid}">
                     <span class="card-icon">\u{1F0CF}</span>
-                    <span class="card-name">몬스터 #${card.monster_idx}</span>
+                    <span class="card-name">${escapeHtml(getMonsterName(card.monster_idx))}</span>
                     ${isEquipped ? '<span class="card-equipped-label">장착중</span>' : ''}
                 </div>
             `;
@@ -164,11 +165,11 @@ const CardsScreen = {
     _showDetail(card) {
         const isEquipped = !!card.equipped_item;
 
-        this.refs.detailName.textContent = `몬스터 카드 #${card.monster_idx}`;
+        this.refs.detailName.textContent = `${getMonsterName(card.monster_idx)} 카드`;
         this.refs.detailInfo.textContent = `카드 ID: ${card.card_uid.slice(0, 8)}...`;
 
         if (isEquipped) {
-            this.refs.detailEquip.textContent = `장착된 장비: ${card.equipped_item.slice(0, 8)}...`;
+            this.refs.detailEquip.textContent = `장착된 장비: ${card.equipped_item_name || card.equipped_item.slice(0, 8) + '...'}`;
         } else {
             this.refs.detailEquip.textContent = '미장착';
         }
@@ -206,7 +207,7 @@ const CardsScreen = {
         } else {
             this.refs.equipItems.innerHTML = items.map(item => `
                 <div class="card-equip-item" data-action="equip-to-item" data-item-uid="${item.item_uid}">
-                    <span>장비 #${item.base_item_id} [${item.equip_slot}]</span>
+                    <span>${escapeHtml(getEquipName(item.base_item_id))} [${item.equip_slot}]</span>
                     <span style="color:var(--text-muted)">+${item.item_level}</span>
                 </div>
             `).join('');

@@ -59,6 +59,24 @@
 | 3 | 머리 없는 전쟁귀 | 둘라한 (Dullahan) | 아일랜드 민속 | Undead | Skeleton | 목 없는 기사. 유명세★4 연관도★4. 전장+묘지 테마 양쪽 커버. Skeleton=해골 기마 전사 |
 | 보스 | 불의 심복 | 몰록 (Moloch) | 구약 레위기·열왕기 | Demon | Gargoyle | 아이를 불에 태워 바치게 한 우상. 유명세★4 연관도★4. 실낙원에서 사탄의 측근. 자발적 추종자=사탄의 문지기. Gargoyle=날개+뿔의 거대한 악마 |
 
+**보스 스테이지 — 사탄의 제단 (Demon)**
+
+> 배경: 사탄에게 향하는 몰록의 제단. 불꽃과 제물의 잔해가 널린 의식의 장소.
+> 배경 아트 프롬프트: `16-bit pixel art background, dark hellish sacrificial altar at the end of a burning battlefield, massive stone altar stained with blood and ash at center, towering Moloch idol statue with bull horns in the background engulfed in flames, rows of burning braziers lining a path of blackened stone leading to the altar, scattered bones and charred offerings on the ground, rivers of molten lava flowing beneath cracked floor, blood-red sky filled with smoke and embers, oppressive atmosphere of dread and fire, dark fantasy RPG battle stage`
+
+| monster_idx | 이름 | monster_type | monster_base | size_type | 역할 | 리소스명 |
+|------------|------|-------------|-------------|-----------|------|---------|
+| 1401 | 제단의 화염마 | Demon | Imp | 1 | 소형. 제단의 불꽃을 관리하는 임프. 장난스럽고 날렵 | `ch1_imp_firetender` |
+| 1402 | 몰록의 제물관 | Demon | Imp | 2 | 중형. 의식을 집행하는 임프 사제. 횃불과 의복 착용 | `ch1_imp_offerings` |
+| 1403 | 몰록의 심판관 | Demon | Imp | 3 | 대형. 제물의 자격을 판결하는 대임프. 위압적인 상위 개체 | `ch1_imp_judge` |
+
+**몬스터 아트 프롬프트**
+- 제단의 화염마: `16-bit pixel art, tiny imp fire tender crouching beside a burning brazier, blowing flames with puffed cheeks, carrying an iron fire poker, body glowing orange-red like living coal, small bat wings flickering with sparks, mischievous grin with sharp teeth, white background, fantasy RPG enemy sprite`
+- 몰록의 제물관: `16-bit pixel art, small demonic imp priest wearing tattered crimson robes, holding a burning ritual torch, horns curved like a ram, face illuminated by hellfire glow, ash and embers floating around, charred skin with glowing cracks, white background, fantasy RPG enemy sprite`
+- 몰록의 심판관: `16-bit pixel art, tall imposing arch-imp judge standing upright with arms crossed, wearing ornate black and gold ceremonial armor with Moloch burning sigil on chest, crown of twisted iron horns wreathed in dark flames, glowing molten eyes staring down with cold authority, holding a massive flaming gavel in one hand, long spiked tail coiled behind, taller and more muscular than lesser imps, radiating an aura of hellfire, white background, fantasy RPG enemy sprite`
+
+**챕터 보스**: 사탄 (Demon)
+
 ---
 
 ### Chapter 2 — 시기 「뒤틀린 숲」

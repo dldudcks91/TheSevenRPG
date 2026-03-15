@@ -124,6 +124,19 @@ const TownScreen = {
         }
     },
 
+    /** 탭 비활성 → 방치 타이머 정지 */
+    onPause() {
+        if (this._idleTimerInterval) {
+            clearInterval(this._idleTimerInterval);
+            this._idleTimerInterval = null;
+        }
+    },
+
+    /** 탭 활성 → 데이터 다시 로드 (서버 기준 시각 보정) */
+    onResume() {
+        this.loadData();
+    },
+
     handleEvent(e) {
         const target = e.target.closest('[data-action]');
         if (!target) return;

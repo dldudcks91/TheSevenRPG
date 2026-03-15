@@ -6,6 +6,7 @@
 import { apiCall } from '../api.js';
 import { Store } from '../store.js';
 import { showLoading, hideLoading, formatGold, escapeHtml } from '../utils.js';
+import { getEquipName, getEquipSlot } from '../meta-data.js';
 
 // 장착 슬롯 정의
 const EQUIP_SLOTS = [
@@ -229,8 +230,7 @@ const InventoryScreen = {
     },
 
     _isWeapon(item) {
-        // base_item_id 10xxxx = weapon
-        return item.base_item_id >= 100000 && item.base_item_id < 200000;
+        return getEquipSlot(item.base_item_id) === 'weapon';
     },
 
     // ── 아이템 그리드 렌더 ──
@@ -434,9 +434,8 @@ const InventoryScreen = {
     // ── 유틸 ──
 
     _getItemName(item) {
-        // base_item_id로 메타데이터 이름 매핑 (추후 개선)
-        // 현재는 suffix/set 포함 간단 표시
-        let name = `장비 #${item.base_item_id}`;
+        let name = getEquipName(item.base_item_id);
+        if (item.prefix_id) name = `${item.prefix_id} ${name}`;
         if (item.suffix_id) name += ` [${item.suffix_id}]`;
         return name;
     },
@@ -454,14 +453,7 @@ const InventoryScreen = {
     },
 
     _getDefaultSlot(item) {
-        if (this._isWeapon(item)) return 'weapon';
-        // 방어구는 base_item_id 기반 추정 (추후 메타데이터 매핑)
-        const id = item.base_item_id;
-        if (id >= 200000 && id < 300000) return 'armor';
-        if (id >= 300000 && id < 400000) return 'helmet';
-        if (id >= 400000 && id < 500000) return 'gloves';
-        if (id >= 500000 && id < 600000) return 'boots';
-        return 'armor'; // fallback
+        return getEquipSlot(item.base_item_id);
     },
 };
 
