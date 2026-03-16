@@ -1,5 +1,5 @@
 /* ============================================
-   TheSevenRPG — Stage Select Screen
+   TheSevenRPG — Stage Select Screen (레트로 RPG)
    챕터/스테이지 선택, 전투 결과
    ============================================ */
 
@@ -17,94 +17,98 @@
     justify-content: space-between;
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-primary);
-    min-height: 48px;
+    border-bottom: 2px solid var(--border-secondary);
+    min-height: 40px;
 }
 
 .stage-back-btn {
     background: none;
-    border: none;
+    border: 1px solid var(--border-primary);
     color: var(--text-primary);
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-md);
     cursor: pointer;
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 32px;
+    min-height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: var(--font-main);
 }
 
 .stage-header-title {
-    font-size: var(--font-size-lg);
-    font-weight: bold;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
     color: var(--text-primary);
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
 }
 
 .stage-header-right {
-    min-width: 44px;
+    min-width: 32px;
 }
 
-/* === 챕터 선택 영역 === */
+/* === 챕터 선택 영역 (RPG 탭 버튼) === */
 .chapter-selector {
     display: flex;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-md);
+    gap: 2px;
+    padding: var(--spacing-sm);
     overflow-x: auto;
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-primary);
+    border-bottom: 2px solid var(--border-secondary);
 }
 
 .chapter-btn {
     flex: 0 0 auto;
     padding: var(--spacing-xs) var(--spacing-sm);
-    border: 1px solid var(--border-secondary);
-    border-radius: var(--radius-md);
+    border: 2px solid var(--border-secondary);
     background: var(--bg-card);
     color: var(--text-muted);
     font-size: var(--font-size-xs);
     font-family: var(--font-main);
     cursor: pointer;
-    min-height: 36px;
-    min-width: 44px;
-    transition: all var(--transition-fast);
+    min-height: 32px;
+    min-width: 40px;
     white-space: nowrap;
 }
 
 .chapter-btn.active {
     color: #fff;
-    font-weight: bold;
+    font-family: var(--font-bold);
+    box-shadow:
+        inset -1px -1px 0 0 rgba(0,0,0,0.3),
+        inset 1px 1px 0 0 rgba(255,255,255,0.2);
 }
 
 .chapter-btn.locked {
-    opacity: 0.4;
+    opacity: 0.3;
     cursor: not-allowed;
 }
 
 /* 챕터별 테마 컬러 */
-.chapter-btn[data-chapter="1"].active { background: var(--color-wrath); border-color: var(--color-wrath); }
-.chapter-btn[data-chapter="2"].active { background: var(--color-sloth); border-color: var(--color-sloth); }
-.chapter-btn[data-chapter="3"].active { background: var(--color-greed); border-color: var(--color-greed); }
-.chapter-btn[data-chapter="4"].active { background: var(--color-envy); border-color: var(--color-envy); }
-.chapter-btn[data-chapter="5"].active { background: var(--color-gluttony); border-color: var(--color-gluttony); }
-.chapter-btn[data-chapter="6"].active { background: var(--color-lust); border-color: var(--color-lust); }
-.chapter-btn[data-chapter="7"].active { background: var(--color-pride); border-color: var(--color-pride); }
+.chapter-btn[data-chapter="1"].active { background: var(--color-wrath); border-color: #a02020; }
+.chapter-btn[data-chapter="2"].active { background: var(--color-sloth); border-color: #606878; }
+.chapter-btn[data-chapter="3"].active { background: var(--color-greed); border-color: #a08018; }
+.chapter-btn[data-chapter="4"].active { background: var(--color-envy); border-color: #208038; }
+.chapter-btn[data-chapter="5"].active { background: var(--color-gluttony); border-color: #b05818; }
+.chapter-btn[data-chapter="6"].active { background: var(--color-lust); border-color: #b02060; }
+.chapter-btn[data-chapter="7"].active { background: var(--color-pride); border-color: #6030b0; }
 
 /* === 챕터 정보 === */
 .chapter-info {
     padding: var(--spacing-md);
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-primary);
+    border-bottom: 2px solid var(--border-secondary);
 }
 
 .chapter-name {
-    font-size: var(--font-size-lg);
-    font-weight: bold;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
     color: var(--text-primary);
     margin-bottom: var(--spacing-xs);
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
 }
 
 .chapter-sin {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     color: var(--text-secondary);
 }
 
@@ -118,10 +122,10 @@
 .stage-list {
     flex: 1;
     overflow-y: auto;
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
 }
 
 .stage-card {
@@ -129,26 +133,24 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--spacing-md);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-md);
+    border: 2px solid var(--border-primary);
     background: var(--bg-card);
     cursor: pointer;
-    transition: border-color var(--transition-fast), background var(--transition-fast);
-    min-height: 60px;
+    min-height: 52px;
 }
 
 .stage-card:hover {
     background: var(--bg-tertiary);
-    border-color: var(--border-highlight);
+    border-color: var(--border-secondary);
 }
 
 .stage-card.locked {
-    opacity: 0.4;
+    opacity: 0.3;
     cursor: not-allowed;
 }
 
 .stage-card.cleared {
-    border-left: 3px solid var(--color-success);
+    border-left: 4px solid var(--color-success);
 }
 
 .stage-card-left {
@@ -158,8 +160,8 @@
 }
 
 .stage-card-name {
-    font-size: var(--font-size-md);
-    font-weight: bold;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-sm);
     color: var(--text-primary);
 }
 
@@ -185,15 +187,22 @@
 
 .stage-enter-btn {
     background: var(--text-accent);
-    border: none;
-    border-radius: var(--radius-md);
+    border: 2px solid #a02020;
+    box-shadow:
+        inset -1px -1px 0 0 #801818,
+        inset 1px 1px 0 0 #f06060;
     color: #fff;
-    font-size: var(--font-size-sm);
-    font-family: var(--font-main);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-bold);
     padding: var(--spacing-xs) var(--spacing-md);
     cursor: pointer;
-    min-height: 36px;
-    font-weight: bold;
+    min-height: 28px;
+}
+
+.stage-enter-btn:active {
+    box-shadow:
+        inset 1px 1px 0 0 #801818,
+        inset -1px -1px 0 0 #f06060;
 }
 
 /* === 전투 결과 오버레이 === */
@@ -217,13 +226,14 @@
 }
 
 .battle-result-title {
+    font-family: var(--font-bold);
     font-size: var(--font-size-xxl);
-    font-weight: bold;
     margin-bottom: var(--spacing-lg);
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.8);
 }
 
 .battle-result-title.victory {
-    color: var(--color-success);
+    color: var(--color-warning);
 }
 
 .battle-result-title.defeat {
@@ -236,7 +246,7 @@
 }
 
 .battle-result-rewards div {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm);
     color: var(--text-secondary);
     margin-bottom: var(--spacing-xs);
 }

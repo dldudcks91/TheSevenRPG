@@ -1,5 +1,5 @@
 /* ============================================
-   TheSevenRPG — Inventory Screen
+   TheSevenRPG — Inventory Screen (레트로 RPG)
    장비 목록, 장착 슬롯, 아이템 상세, 액션
    ============================================ */
 
@@ -11,47 +11,53 @@
     background: var(--bg-primary);
 }
 
-/* === 헤더 === */
+/* === 헤더 (RPG 윈도우 타이틀) === */
 .inv-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-primary);
-    min-height: 48px;
+    border-bottom: 2px solid var(--border-secondary);
+    min-height: 40px;
 }
 
 .inv-back-btn {
     background: none;
-    border: none;
+    border: 1px solid var(--border-primary);
     color: var(--text-primary);
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-md);
     cursor: pointer;
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 32px;
+    min-height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: var(--font-main);
+}
+
+.inv-back-btn:active {
+    filter: brightness(0.7);
 }
 
 .inv-title {
-    font-size: var(--font-size-lg);
-    font-weight: bold;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
     color: var(--text-primary);
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
 }
 
 .inv-gold {
-    color: var(--color-warning);
+    color: var(--rarity-rare);
     font-size: var(--font-size-sm);
-    font-weight: bold;
+    font-family: var(--font-bold);
 }
 
-/* === 장착 슬롯 영역 === */
+/* === 장착 슬롯 영역 (RPG 장비 패널) === */
 .inv-equip-area {
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-primary);
+    border-bottom: 2px solid var(--border-secondary);
 }
 
 .inv-equip-label {
@@ -69,17 +75,16 @@
 
 .equip-slot {
     flex: 0 0 auto;
-    width: 56px;
-    height: 56px;
-    border: 1px solid var(--border-secondary);
-    border-radius: var(--radius-md);
-    background: var(--bg-tertiary);
+    width: 52px;
+    height: 52px;
+    border: 2px solid var(--border-secondary);
+    box-shadow: var(--rpg-border-inset);
+    background: var(--bg-input);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: border-color var(--transition-fast);
     position: relative;
 }
 
@@ -89,24 +94,25 @@
 
 .equip-slot.filled {
     border-color: var(--border-highlight);
+    background: var(--bg-tertiary);
 }
 
 .equip-slot .slot-icon {
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1;
 }
 
 .equip-slot .slot-label {
-    font-size: 9px;
+    font-size: 8px;
     color: var(--text-muted);
     margin-top: 2px;
 }
 
 .equip-slot .slot-item-name {
-    font-size: 9px;
+    font-size: 8px;
     color: var(--text-secondary);
     margin-top: 1px;
-    max-width: 50px;
+    max-width: 46px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -118,30 +124,34 @@
 .equip-slot.rarity-rare   { border-color: var(--rarity-rare); }
 .equip-slot.rarity-unique { border-color: var(--rarity-unique); }
 
-/* === 탭 바 === */
+/* === 탭 바 (RPG 커맨드 탭) === */
 .inv-tab-bar {
     display: flex;
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-primary);
+    border-bottom: 2px solid var(--border-secondary);
 }
 
 .inv-tab {
     flex: 1;
     padding: var(--spacing-sm);
-    background: none;
+    background: var(--bg-card);
     border: none;
-    border-bottom: 2px solid transparent;
+    border-right: 1px solid var(--border-primary);
     color: var(--text-muted);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     font-family: var(--font-main);
     cursor: pointer;
-    min-height: 44px;
-    transition: color var(--transition-fast), border-color var(--transition-fast);
+    min-height: 36px;
+}
+
+.inv-tab:last-child {
+    border-right: none;
 }
 
 .inv-tab.active {
     color: var(--text-primary);
-    border-bottom-color: var(--text-accent);
+    background: var(--bg-tertiary);
+    border-bottom: 2px solid var(--text-accent);
 }
 
 /* === 아이템 그리드 === */
@@ -153,8 +163,8 @@
 
 .inv-item-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: var(--spacing-sm);
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: var(--spacing-xs);
 }
 
 .inv-item-empty {
@@ -164,19 +174,18 @@
     font-size: var(--font-size-sm);
 }
 
-/* === 아이템 카드 === */
+/* === 아이템 카드 (RPG 아이템 슬롯) === */
 .item-card {
     padding: var(--spacing-sm);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-md);
+    border: 2px solid var(--border-primary);
     background: var(--bg-card);
     cursor: pointer;
-    transition: border-color var(--transition-fast), background var(--transition-fast);
-    min-height: 44px;
+    min-height: 40px;
 }
 
 .item-card:hover {
     background: var(--bg-tertiary);
+    border-color: var(--border-secondary);
 }
 
 .item-card.selected {
@@ -191,30 +200,29 @@
 .item-card.equipped::after {
     content: 'E';
     position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 18px;
-    height: 18px;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
     background: var(--color-success);
-    color: #fff;
-    font-size: 10px;
-    font-weight: bold;
-    border-radius: 50%;
+    color: #000;
+    font-size: 9px;
+    font-family: var(--font-bold);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* 등급 테두리 */
+/* 등급 테두리 (좌측 바) */
 .item-card.rarity-normal { border-left: 3px solid var(--rarity-normal); }
 .item-card.rarity-magic  { border-left: 3px solid var(--rarity-magic); }
 .item-card.rarity-rare   { border-left: 3px solid var(--rarity-rare); }
 .item-card.rarity-unique { border-left: 3px solid var(--rarity-unique); }
 
 .item-card-name {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     color: var(--text-primary);
-    font-weight: bold;
+    font-family: var(--font-bold);
     margin-bottom: 2px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -234,10 +242,12 @@
     margin-top: 2px;
 }
 
-/* === 아이템 상세 패널 === */
+/* === 아이템 상세 패널 (RPG 윈도우) === */
 .inv-detail-panel {
     background: var(--bg-secondary);
-    border-top: 1px solid var(--border-primary);
+    border: 2px solid var(--border-secondary);
+    box-shadow: var(--rpg-border-outset);
+    margin: var(--spacing-xs);
     padding: var(--spacing-md);
     display: none;
 }
@@ -254,8 +264,8 @@
 }
 
 .detail-name {
-    font-size: var(--font-size-lg);
-    font-weight: bold;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
 }
 
 .detail-name.rarity-normal { color: var(--rarity-normal); }
@@ -265,37 +275,42 @@
 
 .detail-close {
     background: none;
-    border: none;
+    border: 1px solid var(--border-primary);
     color: var(--text-muted);
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-md);
     cursor: pointer;
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 28px;
+    min-height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: var(--font-main);
 }
 
 .detail-info {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     color: var(--text-secondary);
     margin-bottom: var(--spacing-sm);
 }
 
 .detail-options {
     margin-bottom: var(--spacing-md);
+    background: var(--bg-input);
+    border: 1px solid var(--border-primary);
+    padding: var(--spacing-sm);
 }
 
 .detail-option-row {
     display: flex;
     justify-content: space-between;
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     padding: 2px 0;
     color: var(--text-secondary);
 }
 
 .detail-option-row .option-value {
     color: var(--color-success);
+    font-family: var(--font-bold);
 }
 
 .detail-actions {
@@ -305,7 +320,7 @@
 
 .detail-actions .btn {
     flex: 1;
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
 }
 
 /* === 하단 인벤 정보 === */
@@ -315,19 +330,27 @@
     justify-content: space-between;
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--bg-secondary);
-    border-top: 1px solid var(--border-primary);
-    font-size: var(--font-size-sm);
+    border-top: 2px solid var(--border-secondary);
+    font-size: var(--font-size-xs);
     color: var(--text-secondary);
 }
 
 .inv-expand-btn {
     background: var(--bg-card);
-    border: 1px solid var(--border-secondary);
-    border-radius: var(--radius-md);
+    border: 2px solid var(--border-secondary);
+    box-shadow:
+        inset -1px -1px 0 0 var(--border-dark),
+        inset 1px 1px 0 0 var(--border-highlight);
     color: var(--text-primary);
     font-size: var(--font-size-xs);
     font-family: var(--font-main);
     padding: var(--spacing-xs) var(--spacing-sm);
     cursor: pointer;
-    min-height: 36px;
+    min-height: 28px;
+}
+
+.inv-expand-btn:active {
+    box-shadow:
+        inset 1px 1px 0 0 var(--border-dark),
+        inset -1px -1px 0 0 var(--border-highlight);
 }

@@ -1,5 +1,5 @@
 /* ============================================
-   TheSevenRPG — Idle Farm Screen
+   TheSevenRPG — Idle Farm Screen (레트로 RPG)
    방치 파밍 ON/OFF, 보상 수령
    ============================================ */
 
@@ -17,31 +17,33 @@
     justify-content: space-between;
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-primary);
-    min-height: 48px;
+    border-bottom: 2px solid var(--border-secondary);
+    min-height: 40px;
 }
 
 .idle-back-btn {
     background: none;
-    border: none;
+    border: 1px solid var(--border-primary);
     color: var(--text-primary);
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-md);
     cursor: pointer;
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 32px;
+    min-height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: var(--font-main);
 }
 
 .idle-header-title {
-    font-size: var(--font-size-lg);
-    font-weight: bold;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
     color: var(--text-primary);
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
 }
 
 .idle-header-right {
-    min-width: 44px;
+    min-width: 32px;
 }
 
 /* === 메인 컨텐츠 === */
@@ -55,38 +57,38 @@
     gap: var(--spacing-lg);
 }
 
-/* === 타이머 디스플레이 === */
+/* === 타이머 디스플레이 (RPG 카운터) === */
 .idle-timer-display {
     text-align: center;
 }
 
 .idle-timer-value {
-    font-size: 48px;
-    font-weight: bold;
-    font-family: var(--font-mono);
+    font-size: 36px;
+    font-family: var(--font-bold);
     color: var(--text-primary);
-    letter-spacing: 2px;
+    letter-spacing: 4px;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.8);
 }
 
 .idle-timer-label {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     color: var(--text-muted);
     margin-top: var(--spacing-xs);
 }
 
-/* === 상태 표시 === */
+/* === 상태 표시 (RPG 윈도우) === */
 .idle-status-box {
     text-align: center;
     padding: var(--spacing-md);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-lg);
-    background: var(--bg-card);
+    border: 2px solid var(--border-secondary);
+    box-shadow: var(--rpg-border-outset);
+    background: var(--bg-secondary);
     width: 100%;
     max-width: 300px;
 }
 
 .idle-status-text {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm);
     color: var(--text-secondary);
     margin-bottom: var(--spacing-sm);
 }
@@ -96,7 +98,7 @@
 }
 
 .idle-stage-info {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     color: var(--text-muted);
 }
 
@@ -107,7 +109,7 @@
 }
 
 .idle-stage-label {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     color: var(--text-secondary);
     margin-bottom: var(--spacing-sm);
     text-align: center;
@@ -122,27 +124,36 @@
 
 .idle-stage-nav {
     background: var(--bg-card);
-    border: 1px solid var(--border-secondary);
-    border-radius: var(--radius-md);
+    border: 2px solid var(--border-secondary);
+    box-shadow:
+        inset -1px -1px 0 0 var(--border-dark),
+        inset 1px 1px 0 0 var(--border-highlight);
     color: var(--text-primary);
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-md);
+    font-family: var(--font-main);
     cursor: pointer;
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 36px;
+    min-height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
+.idle-stage-nav:active {
+    box-shadow:
+        inset 1px 1px 0 0 var(--border-dark),
+        inset -1px -1px 0 0 var(--border-highlight);
+}
+
 .idle-stage-current {
-    font-size: var(--font-size-lg);
-    font-weight: bold;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
     color: var(--text-primary);
     min-width: 60px;
     text-align: center;
 }
 
-/* === 액션 버튼 === */
+/* === 액션 버튼 (RPG 커맨드) === */
 .idle-actions {
     display: flex;
     flex-direction: column;
@@ -154,47 +165,67 @@
 .idle-toggle-btn {
     width: 100%;
     padding: var(--spacing-md);
-    border: none;
-    border-radius: var(--radius-md);
-    font-size: var(--font-size-lg);
-    font-family: var(--font-main);
-    font-weight: bold;
+    border: 2px solid;
+    font-size: var(--font-size-md);
+    font-family: var(--font-bold);
     cursor: pointer;
-    min-height: 52px;
-    transition: background var(--transition-fast);
+    min-height: 44px;
+    letter-spacing: 2px;
 }
 
 .idle-toggle-btn.start {
     background: var(--color-success);
+    border-color: #208040;
+    box-shadow:
+        inset -2px -2px 0 0 #106030,
+        inset 2px 2px 0 0 #60f0a0;
     color: #fff;
+}
+
+.idle-toggle-btn.start:active {
+    box-shadow:
+        inset 2px 2px 0 0 #106030,
+        inset -2px -2px 0 0 #60f0a0;
 }
 
 .idle-toggle-btn.stop {
     background: var(--color-error);
+    border-color: #b03030;
+    box-shadow:
+        inset -2px -2px 0 0 #802020,
+        inset 2px 2px 0 0 #f07070;
     color: #fff;
+}
+
+.idle-toggle-btn.stop:active {
+    box-shadow:
+        inset 2px 2px 0 0 #802020,
+        inset -2px -2px 0 0 #f07070;
 }
 
 .idle-collect-btn {
     width: 100%;
     padding: var(--spacing-md);
-    border: 1px solid var(--color-warning);
-    border-radius: var(--radius-md);
-    background: transparent;
+    border: 2px solid var(--color-warning);
+    background: var(--bg-card);
     color: var(--color-warning);
-    font-size: var(--font-size-md);
-    font-family: var(--font-main);
-    font-weight: bold;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-bold);
     cursor: pointer;
-    min-height: 48px;
+    min-height: 40px;
 }
 
-/* === 보상 결과 === */
+.idle-collect-btn:hover {
+    background: var(--bg-tertiary);
+}
+
+/* === 보상 결과 (RPG 리절트 박스) === */
 .idle-reward-box {
     text-align: center;
     padding: var(--spacing-md);
-    border: 1px solid var(--color-warning);
-    border-radius: var(--radius-lg);
-    background: var(--bg-card);
+    border: 2px solid var(--color-warning);
+    box-shadow: var(--rpg-border-outset);
+    background: var(--bg-secondary);
     width: 100%;
     max-width: 300px;
     display: none;
@@ -205,14 +236,14 @@
 }
 
 .idle-reward-title {
-    font-size: var(--font-size-md);
-    font-weight: bold;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-sm);
     color: var(--color-warning);
     margin-bottom: var(--spacing-sm);
 }
 
 .idle-reward-detail {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     color: var(--text-secondary);
-    line-height: 1.6;
+    line-height: 1.8;
 }

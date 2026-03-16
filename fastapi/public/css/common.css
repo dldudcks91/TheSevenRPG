@@ -1,6 +1,6 @@
 /* ============================================
    TheSevenRPG — Common Styles
-   다크 테마 기본 레이아웃, 토스트, 공통 컴포넌트
+   레트로 도트 RPG 기본 레이아웃, 토스트, 공통 컴포넌트
    ============================================ */
 
 /* === Reset & Base === */
@@ -20,6 +20,11 @@ html, body {
     background-color: var(--bg-primary);
     -webkit-tap-highlight-color: transparent;
     user-select: none;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
 }
 
 /* === SPA 컨테이너 === */
@@ -39,7 +44,6 @@ html, body {
     display: flex;
     flex-direction: column;
     opacity: 0;
-    transition: opacity var(--transition-normal);
     pointer-events: none;
 }
 
@@ -48,52 +52,78 @@ html, body {
     pointer-events: auto;
 }
 
-/* === 공통 버튼 === */
+/* === RPG 윈도우 패널 (공통 사용) === */
+.rpg-panel {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-secondary);
+    box-shadow: var(--rpg-border-outset);
+    padding: var(--spacing-md);
+}
+
+.rpg-panel-inset {
+    background: var(--bg-input);
+    border: 2px solid var(--border-primary);
+    box-shadow: var(--rpg-border-inset);
+    padding: var(--spacing-md);
+}
+
+/* === 공통 버튼 (RPG 메뉴 스타일) === */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: var(--spacing-sm) var(--spacing-md);
-    border: 1px solid var(--border-secondary);
-    border-radius: var(--radius-md);
+    border: 2px solid var(--border-secondary);
     background: var(--bg-card);
+    box-shadow:
+        inset -1px -1px 0 0 var(--border-dark),
+        inset 1px 1px 0 0 var(--border-highlight);
     color: var(--text-primary);
     font-family: var(--font-main);
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm);
     cursor: pointer;
-    transition: background var(--transition-fast), border-color var(--transition-fast);
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 36px;
+    min-width: 36px;
+    line-height: 1;
 }
 
 .btn:hover {
     background: var(--bg-tertiary);
-    border-color: var(--border-highlight);
+    color: #fff;
 }
 
 .btn:active {
-    transform: scale(0.97);
+    box-shadow:
+        inset 1px 1px 0 0 var(--border-dark),
+        inset -1px -1px 0 0 var(--border-highlight);
 }
 
 .btn-primary {
     background: var(--text-accent);
-    border-color: var(--text-accent);
+    border-color: #a02020;
+    box-shadow:
+        inset -1px -1px 0 0 #801818,
+        inset 1px 1px 0 0 #f06060;
     color: #fff;
-    font-weight: bold;
+    font-family: var(--font-bold);
 }
 
 .btn-primary:hover {
-    background: #e53935;
-    border-color: #e53935;
+    background: #c02828;
+}
+
+.btn-primary:active {
+    box-shadow:
+        inset 1px 1px 0 0 #801818,
+        inset -1px -1px 0 0 #f06060;
 }
 
 .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
-    transform: none;
 }
 
-/* === 토스트 알림 === */
+/* === 토스트 알림 (RPG 메시지 박스) === */
 #toast-container {
     position: fixed;
     top: var(--spacing-md);
@@ -109,26 +139,41 @@ html, body {
 
 .toast {
     padding: var(--spacing-sm) var(--spacing-lg);
-    border-radius: var(--radius-md);
+    border: 2px solid;
+    font-family: var(--font-main);
     font-size: var(--font-size-sm);
     color: #fff;
     opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.3s, transform 0.3s;
     pointer-events: auto;
     max-width: 90vw;
     text-align: center;
+    box-shadow: 2px 2px 0 0 rgba(0,0,0,0.5);
 }
 
 .toast.show {
     opacity: 1;
-    transform: translateY(0);
 }
 
-.toast.success { background: var(--color-success); }
-.toast.warning { background: var(--color-warning); color: #333; }
-.toast.error   { background: var(--color-error); }
-.toast.info    { background: var(--color-info); }
+.toast.success {
+    background: #1a3020;
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+.toast.warning {
+    background: #302a10;
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+}
+.toast.error {
+    background: #301010;
+    border-color: var(--color-error);
+    color: var(--color-error);
+}
+.toast.info {
+    background: #101a30;
+    border-color: var(--color-info);
+    color: var(--color-info);
+}
 
 /* === 로딩 오버레이 === */
 #loading-overlay {
@@ -137,14 +182,13 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9998;
     opacity: 0;
     pointer-events: none;
-    transition: opacity var(--transition-fast);
 }
 
 #loading-overlay.show {
@@ -152,46 +196,50 @@ html, body {
     pointer-events: auto;
 }
 
+/* 픽셀 로딩 스피너 (점멸 도트) */
 .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border-secondary);
-    border-top-color: var(--text-accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    width: 8px;
+    height: 8px;
+    background: var(--text-accent);
+    box-shadow:
+        12px 0 0 0 var(--text-primary),
+        24px 0 0 0 var(--text-primary);
+    animation: pixelBlink 0.6s steps(3) infinite;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+@keyframes pixelBlink {
+    0%   { box-shadow: 12px 0 0 0 var(--text-muted), 24px 0 0 0 var(--text-muted); background: var(--text-primary); }
+    33%  { box-shadow: 12px 0 0 0 var(--text-primary), 24px 0 0 0 var(--text-muted); background: var(--text-muted); }
+    66%  { box-shadow: 12px 0 0 0 var(--text-muted), 24px 0 0 0 var(--text-primary); background: var(--text-muted); }
 }
 
-/* === 프로그레스 바 (HP/EXP/Cost 등 공통) === */
+/* === 프로그레스 바 (HP/EXP/Cost — 픽셀 세그먼트) === */
 .progress-bar {
     width: 100%;
-    height: 8px;
+    height: 10px;
     background: var(--bg-input);
-    border-radius: var(--radius-full);
+    border: 2px solid var(--border-primary);
+    box-shadow: var(--rpg-border-inset);
     overflow: hidden;
 }
 
 .progress-bar .fill {
     height: 100%;
-    border-radius: var(--radius-full);
-    transition: width var(--transition-normal);
 }
 
-/* === 스크롤바 커스텀 === */
+/* === 스크롤바 (픽셀 스타일) === */
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
+    border-left: 2px solid var(--border-primary);
 }
 
 ::-webkit-scrollbar-thumb {
     background: var(--border-secondary);
-    border-radius: var(--radius-full);
+    border: 1px solid var(--border-highlight);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -206,8 +254,7 @@ html, body {
 }
 
 [data-action]:active {
-    opacity: 0.75;
-    transition: opacity 0.05s ease;
+    filter: brightness(0.7);
 }
 
 /* === safe-area (노치 대응) === */
@@ -218,4 +265,28 @@ html, body {
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
     }
+}
+
+/* === RPG 텍스트 효과 === */
+.text-shadow-pixel {
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.8);
+}
+
+/* 스캔라인 오버레이 (선택적 CRT 효과) */
+.scanlines::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 1px,
+        rgba(0,0,0,0.08) 1px,
+        rgba(0,0,0,0.08) 2px
+    );
+    pointer-events: none;
+    z-index: 10;
 }

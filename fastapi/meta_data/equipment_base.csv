@@ -1,7 +1,16 @@
-﻿item_idx,item_base,main_group,sub_group,size_type,min_damage,max_damage,speed
-100101,글라디우스,weapon,sword,small,8,12,1.2
-100102,Katana,weapon,sword,medium,12,16,1.0
-100103,클레이모어,weapon,sword,big,16,20,0.8
-100201,워엑스,weapon,axe,small,4,16,1.2
-100202,토마호크,weapon,axe,medium,6,22,1.0
-100203,할버드,weapon,axe,big,8,28,0.8
+item_idx,item_base,main_group,sub_group,size_type,min_damage,max_damage,speed
+100101,Gladius,weapon,sword,small,7,10,1.25
+100102,Scimitar,weapon,sword,medium,9,13,1.10
+100103,Rapier,weapon,sword,large,13,17,0.95
+100201,Katana,weapon,greatsword,small,8,13,1.05
+100202,Zweihander,weapon,greatsword,medium,10,17,0.90
+100203,Colossus Blade,weapon,greatsword,large,14,23,0.75
+100301,Tomahawk,weapon,axe,small,9,19,1.00
+100302,Berserker Axe,weapon,axe,medium,12,25,0.85
+100303,Executioner,weapon,axe,large,16,34,0.70
+100401,Spear,weapon,spear,small,8,10,1.15
+100402,Halberd,weapon,spear,medium,10,14,1.00
+100403,Lance,weapon,spear,large,14,19,0.85
+100501,Club,weapon,mace,small,8,15,0.95
+100502,War Hammer,weapon,mace,medium,11,19,0.80
+100503,Maul,weapon,mace,large,15,26,0.65
