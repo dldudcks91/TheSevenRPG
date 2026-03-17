@@ -20,6 +20,8 @@ class GameDataManager:
         'uniques': [],
         'chapters': {},
         'stages': {},
+        'level_config': {},          # 레벨별 필요 XP + 보상 (CSV 미존재 시 BattleManager 폴백)
+        'spawn_grade_config': {},    # 스폰 등급별 배율 (CSV 미존재 시 BattleManager 폴백)
     }
 
     def __new__(cls):
@@ -119,6 +121,23 @@ class GameDataManager:
                     "stage_num": int(row["stage_num"]),
                     "monster_type": row["monster_type"],
                     "stage_name": row["stage_name"],
+                }
+
+            # 11. Level Config (optional)
+            for row in cls._read_csv(os.path.join(base_path, "level_exp_table.csv")):
+                lv = int(row["level"])
+                cls.REQUIRE_CONFIGS['level_config'][lv] = {
+                    "required_exp": int(row["required_exp"]),
+                    "stat_points": int(row.get("stat_points", 5)),
+                }
+
+            # 12. Spawn Grade Config (optional)
+            for row in cls._read_csv(os.path.join(base_path, "spawn_grade_config.csv")):
+                cls.REQUIRE_CONFIGS['spawn_grade_config'][row["grade"]] = {
+                    "hp_mult": float(row["hp_mult"]),
+                    "atk_mult": float(row["atk_mult"]),
+                    "exp_mult": float(row["exp_mult"]),
+                    "gold_mult": float(row["gold_mult"]),
                 }
 
             cls._loaded = True

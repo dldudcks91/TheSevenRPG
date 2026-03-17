@@ -2,6 +2,7 @@
 
 > 전투 흐름, 스탯 구조, 코스트 개념의 설계 원칙
 > 확정 데이터: [battle_design.md](battle_design.md)
+> 미정의 원칙: [undefined_principles.md](undefined_principles.md) — B(경직), C(상태이상), D(스탯/레벨업), E(코스트), I(스킬)
 
 ---
 

@@ -2,6 +2,7 @@
 
 > 장비 슬롯, 사이즈 상성, 베이스 레벨, 크래프팅, 세트 보너스의 설계 원칙
 > 확정 데이터: [equipment_design.md](equipment_design.md)
+> 미정의 원칙: [undefined_principles.md](undefined_principles.md) — E(코스트 엣지케이스), F(세트/빌드 계산규칙)
 
 ---
 

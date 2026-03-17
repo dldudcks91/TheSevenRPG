@@ -2,6 +2,7 @@
 
 > 아이템 종류, 등급 체계, 드롭 로직, 타겟 파밍의 설계 원칙
 > 확정 데이터: [item_design.md](item_design.md)
+> 미정의 원칙: [undefined_principles.md](undefined_principles.md) — G(드롭/파밍), J(경제/골드)
 
 ---
 

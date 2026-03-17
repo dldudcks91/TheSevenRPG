@@ -10,7 +10,7 @@
 ## 현황 요약
 
 ### 서버 상태
-서버 API 전체 완성 (Phase 1~6). 클라이언트 개발에 필요한 모든 API가 동작 중.
+서버 API 전체 완성 (Phase 1~5, 7~8). 클라이언트 개발에 필요한 모든 API가 동작 중.
 
 | api_code | 설명 | 상태 |
 |----------|------|------|
@@ -24,8 +24,6 @@
 | 3002 | 몬스터 킬 & 드롭 | ✅ |
 | 3003 | 스테이지 입장 | ✅ |
 | 3004 | 스테이지 클리어 | ✅ |
-| 3005 | 방치 파밍 ON/OFF | ✅ |
-| 3006 | 방치 파밍 보상 수령 | ✅ |
 
 ### 클라이언트 현재 상태
 
@@ -50,7 +48,6 @@
 | Inventory | `screens/inventory.js` | `css/components/inventory.css` | 2001~2005 | ✅ 완성 (메타데이터 이름 매핑 완료) |
 | StageSelect | `screens/stage-select.js` | `css/components/stage-select.css` | 3003 | ✅ 완성 (메타데이터 기반 챕터/스테이지) |
 | Battle | `screens/battle.js` | `css/components/battle.css` | 3001, 3004 | ✅ 완성 (Phaser.js 전투 연출, wave별 전투) |
-| IdleFarm | `screens/idle-farm.js` | `css/components/idle-farm.css` | 3005, 3006 | ✅ 완성 |
 | Collection | `screens/cards.js` | `css/components/cards.css` | 2007~2009 | ✅ 완성 (몬스터 이름 메타데이터 매핑 완료) |
 
 #### 참고사항
@@ -97,7 +94,6 @@ fastapi/public/
 │       ├── inventory.css
 │       ├── stage-select.css
 │       ├── battle.css
-│       ├── idle-farm.css
 │       └── cards.css
 ├── js/
 │   ├── app.js              # 앱 초기화, 화면 라우터
@@ -112,7 +108,6 @@ fastapi/public/
 │       ├── inventory.js
 │       ├── stage-select.js
 │       ├── battle.js       # Phaser.js BattleScene 내장
-│       ├── idle-farm.js
 │       └── cards.js
 └── assets/
     ├── backgrounds/        # 챕터/스테이지 배경
@@ -199,16 +194,12 @@ fastapi/public/
 
 1. **마을 메인 화면**
    - 어두운 톤 배경 (죄악의 성 테마)
-   - 기능 버튼: 스테이지 선택, 인벤토리, 캐릭터 정보, 방치 파밍
+   - 기능 버튼: 스테이지 선택, 인벤토리, 캐릭터 정보
 
 2. **캐릭터 정보 패널**
    - 레벨, 경험치 바, 골드 표시
    - 스탯 포인트 현황 (힘/민첩/체력/운/코스트)
    - 데이터 소스: 로그인 시 캐싱 또는 별도 API 필요 여부 확인
-
-3. **방치 파밍 상태 표시**
-   - 현재 방치 중인 스테이지, 경과 시간
-   - 보상 수령 버튼
 
 **서버 API 연동**
 - 1002: 앱 시작 시 게임 데이터 로드 (메모리 캐싱)
@@ -374,42 +365,7 @@ fastapi/public/
 
 ---
 
-### Phase C7 — 방치 파밍 UI ✅
-**목적**: 핵심 게임 루프 완성. 접속 없이도 보상이 쌓이는 구조의 UI.
-
-**작업 파일**
-- `public/js/screens/idle-farm.js` (신규)
-- `public/css/components/idle-farm.css` (신규)
-
-**작업 내용**
-
-1. **방치 파밍 패널**
-   - 클리어한 스테이지 목록에서 파밍 스테이지 선택
-   - ON/OFF 토글 (API 3005)
-   - 현재 경과 시간 표시 (서버 시각 기준, 클라이언트 타이머는 표시용)
-   - 최대 24시간 누적 안내
-
-2. **보상 수령**
-   - 수령 버튼 (API 3006)
-   - 보상 요약: 경과 시간, 킬 수, 골드 획득
-   - 수령 후 타이머 리셋 표시
-
-3. **마을 허브 연동**
-   - 마을 화면에서 방치 상태 미니 표시 (아이콘 + 경과 시간)
-   - 인벤 풀 알림
-
-**서버 API 연동**
-- 3005: 방치 파밍 ON/OFF
-- 3006: 보상 수령
-
-**완료 기준**
-- 스테이지 선택 후 방치 ON → 타이머 동작
-- 보상 수령 → 골드 증가 확인
-- 마을 화면에서 방치 상태 표시
-
----
-
-### Phase C8 — 폴리싱 & PWA ✅
+### Phase C7 — 폴리싱 & PWA ✅
 **목적**: 사용자 경험 완성, 모바일 대비.
 
 **작업 파일**
@@ -419,8 +375,7 @@ fastapi/public/
 - `public/js/app.js` (수정) ✅ SW 등록, visibilitychange, isAppHidden 내보내기
 - `public/css/common.css` (수정) ✅ 터치 피드백, safe-area 대응
 - `public/js/screens/battle.js` (수정) ✅ onPause/onResume (Phaser 일시정지)
-- `public/js/screens/town.js` (수정) ✅ onPause/onResume (방치 타이머)
-- `public/js/screens/idle-farm.js` (수정) ✅ onPause/onResume (방치 타이머)
+- `public/js/screens/town.js` (수정) ✅ onPause/onResume
 
 **구현 완료 항목**
 
@@ -433,7 +388,7 @@ fastapi/public/
 2. **성능 최적화** ✅
    - `visibilitychange`: app.js에서 전역 감지 → Screen별 onPause/onResume 호출
    - Battle: Phaser scene.pause/resume
-   - Town/IdleFarm: 타이머 정지/재시작 (서버 시각 기준 보정)
+   - Town: 타이머 정지/재시작
    - 메모리 릭 점검 완료: 모든 Screen에서 unmount 시 리스너/타이머/Phaser 정리 확인
 
 3. **UI/UX 폴리싱** ✅
@@ -465,9 +420,7 @@ Phase C5 (전투 씬)       ✅ Phaser.js 핵심 / 가장 복잡
     ↓
 Phase C6 (스테이지)      ✅ 진행 흐름 연결
     ↓
-Phase C7 (방치 파밍)     ✅ 게임 루프 완성
-    ↓
-Phase C8 (폴리싱/PWA)    ✅ PWA, visibilitychange, 터치 피드백
+Phase C7 (폴리싱/PWA)    ✅ PWA, visibilitychange, 터치 피드백
 ```
 
 ## 서버-클라이언트 Phase 의존 관계
@@ -479,8 +432,7 @@ Phase C8 (폴리싱/PWA)    ✅ PWA, visibilitychange, 터치 피드백
                             ├─→ 클라 C4 (인벤토리)    ← API 2001, 2002, 2003
                             ├─→ 클라 C5 (전투)        ← API 3001, 3002
                             ├─→ 클라 C6 (스테이지)    ← API 3003, 3004
-                            ├─→ 클라 C7 (방치 파밍)   ← API 3005, 3006
-                            └─→ 클라 C8 (폴리싱)
+                            └─→ 클라 C7 (폴리싱)
 ```
 
 > 서버 API가 전부 완성되어 있으므로, 클라이언트는 순차적으로 진행하면 된다.

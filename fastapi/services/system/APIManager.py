@@ -10,6 +10,8 @@ class APIManager:
         1002: (GameDataManager, GameDataManager.get_all_configs),
         1003: (UserInitManager, UserInitManager.create_new_user),
         1004: (UserInfoManager, UserInfoManager.get_user_info),
+        1005: (UserInfoManager, UserInfoManager.reset_stats),
+        1007: (UserInitManager, UserInitManager.login),
 
         # === RPG 인벤토리 API (2xxx) ===
         2001: (InventoryManager, InventoryManager.equip_item),

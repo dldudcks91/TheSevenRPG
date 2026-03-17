@@ -18,9 +18,13 @@ class ErrorCode(str, Enum):
     AUTH_FAILED         = "E1002"   # 세션 없음 또는 만료
     FORBIDDEN           = "E1003"   # 권한 없음
 
+    # ── E1xxx 추가 ────────────────────────────────────────
+    INVALID_REQUEST     = "E1004"   # 잘못된 요청 (범용)
+
     # ── E2xxx: 유저 ─────────────────────────────────────
     USER_NOT_FOUND      = "E2001"   # 유저 없음
     USER_ALREADY_EXISTS = "E2002"   # 이미 존재하는 유저
+    INVALID_PASSWORD    = "E2003"   # 비밀번호 불일치 또는 형식 오류
 
     # ── E3xxx: 인벤토리 ──────────────────────────────────
     ITEM_NOT_FOUND      = "E3001"   # 아이템 없음

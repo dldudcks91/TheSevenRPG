@@ -12,6 +12,7 @@ class User(Base):
 
     user_no = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_name = Column(String(50), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=func.now())
     last_login = Column(DateTime, default=func.now(), onupdate=func.now())
     status = Column(String(20), default="ACTIVE")

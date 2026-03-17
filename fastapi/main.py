@@ -27,7 +27,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # 세션 없이 접근 가능한 API 코드 목록
 PUBLIC_API_CODES = {
     1002,   # 게임 config 로드 (로그인 전 필요)
-    1003,   # 유저 생성/로그인 (세션 발급하는 쪽)
+    1003,   # 회원가입 (세션 발급)
+    1007,   # 로그인 (세션 발급)
 }
 
 

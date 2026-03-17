@@ -1,4 +1,4 @@
-prefix,prefix_korean,equipment_type,weight,stat_1,stat_1_type,stat_1_target,min_stat_1,max_stat_1,stat_2,stat_2_target,stat_2_type,min_stat_2,max_stat_2
+suffix,suffix_korean,equipment_type,weight,stat_1,stat_1_type,stat_1_target,min_stat_1,max_stat_1,stat_2,stat_2_target,stat_2_type,min_stat_2,max_stat_2
 wrath,분노,weapon,100,crit_rate,percentile,,3.0,25.0,-,,-,-,-
 wrath,분노,armor,100,reflect_damage,fixed,,5.0,50.0,-,,-,-,-
 wrath,분노,helmet,100,hp_bonus,percentile,,5.0,30.0,-,,-,-,-
