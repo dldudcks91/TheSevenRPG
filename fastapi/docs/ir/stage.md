@@ -12,15 +12,26 @@ status: partial
 ---
 
 ## 동작 규칙
-**스테이지 구조**
-- 일반 스테이지: 7챕터 × 3스테이지 = 21개 (stage_id: 1~21)
-- 챕터 보스: 7개 (stage_id: 101~107)
+
+**스테이지 구조 (stage_info.csv)**
+- stage_id: `{챕터}{스테이지번호}` 2자리 형식 (예: 101 = Ch1 Stage1)
+- 일반 스테이지: 7챕터 × 3스테이지 = 21개 (stage_num 1~3)
+- 챕터 보스 스테이지: 7개 (stage_num 4, 3스테이지 모두 클리어 후 개방)
+- stage_info.csv 컬럼: stage_id, chapter_id, stage_num, monster_type, stage_name, monster_pool, boss_id
+  - `monster_pool`: 해당 스테이지 일반 몬스터 목록 (콤마 구분 monster_idx)
+  - `boss_id`: 스테이지 보스 or 챕터 보스 monster_idx
+
+**웨이브 구조 (확정)**
+- 일반 스테이지(stage_num 1~3): [일반3+정예1] × 3웨이브 + 보스1(웨이브4) = 13마리
+- 챕터 보스 스테이지(stage_num 4): [일반3+정예1] × 3웨이브 + 챕터보스1(웨이브4) = 13마리
+- 스폰 순서: 종별 집중 (AAA→BBB→CCC)
+- 정예 = 일반 몬스터 + 런타임 정예 특성 부여 (Phase 15 구현)
 
 **3003 (enter_stage)**
 - 일반 스테이지: `stage_id ≤ user.current_stage` 검증
-- 챕터 보스(101~107): 해당 챕터 3스테이지 모두 클리어 필요 (`current_stage > chapter × 3`)
+- 챕터 보스(stage_num=4): 해당 챕터 stage_num 1~3 모두 클리어 필요
 - Redis에 진행 상태 저장 (TTL 24시간)
-- 몬스터 풀 생성: [일반4+정예1] × 2웨이브 + [일반4+정예1+보스1] 3웨이브 (랜덤 선택)
+- 몬스터 풀 반환: stage_info.csv의 monster_pool + boss_id 기반
 
 **3004 (clear_stage)**
 - Redis stage_progress에서 enter_stage 선행 여부 확인
@@ -75,3 +86,4 @@ status: partial
 | 날짜 | 내용 |
 |------|------|
 | 2026-03-16 | 최초 작성 (Phase 5) |
+| 2026-03-17 | stage_id 구조 수정 (1~21 → 101~104 형식), 웨이브 구성 수정 ([일반3+정예1]×3+보스), stage_info.csv monster_pool/boss_id 컬럼 반영 |
