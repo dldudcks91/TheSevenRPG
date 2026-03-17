@@ -239,7 +239,7 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 - `services/rpg/StageManager.py`
 
 **작업 내용**
-- `enter_stage` (API 3003): 해금 여부 검증, 스테이지 몬스터 풀 반환
+- `enter_stage` (API 3003): 해금 여부 검증, stage_info.csv의 monster_pool/boss_id 기반 몬스터 풀 반환
 - `clear_stage` (API 3004): 다음 스테이지 해금, 챕터 보스 해금 체크
 
 > Phase 14에서 웨이브/체크포인트/귀환/사망 시스템으로 대폭 개편 예정
