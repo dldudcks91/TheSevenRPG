@@ -114,14 +114,18 @@ class GameDataManager:
                     "boss_desc": row["boss_desc"],
                 }
 
-            # 10. Stage Info
+            # 10. Stage Info (웨이브별 행 → stage_idx 기준 집계)
             for row in cls._read_csv(os.path.join(base_path, "stage_info.csv")):
-                cls.REQUIRE_CONFIGS['stages'][int(row["stage_id"])] = {
-                    "chapter_id": int(row["chapter_id"]),
-                    "stage_num": int(row["stage_num"]),
-                    "monster_type": row["monster_type"],
-                    "stage_name": row["stage_name"],
-                }
+                stage_idx = int(row["stage_idx"])
+                wave = int(row["wave"])
+                if stage_idx not in cls.REQUIRE_CONFIGS['stages']:
+                    cls.REQUIRE_CONFIGS['stages'][stage_idx] = {
+                        "chapter": int(row["chapter"]),
+                        "stage_num": int(row["stage_num"]),
+                        "stage_name": row["stage_name"],
+                        "waves": {},
+                    }
+                cls.REQUIRE_CONFIGS['stages'][stage_idx]["waves"][wave] = int(row["monster_idx"])
 
             # 11. Level Config (optional)
             for row in cls._read_csv(os.path.join(base_path, "level_exp_table.csv")):

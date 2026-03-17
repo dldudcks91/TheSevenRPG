@@ -1,4 +1,3 @@
-import random
 import logging
 from database import SessionLocal
 from models import User
@@ -8,9 +7,10 @@ from services.system.ErrorCode import ErrorCode, error_response
 
 logger = logging.getLogger("RPG_SERVER")
 
-STAGES_PER_CHAPTER = 3
+STAGES_PER_CHAPTER = 4  # stage_num 1~3 일반 + 4 챕터보스
 TOTAL_CHAPTERS = 7
-MAX_STAGE = TOTAL_CHAPTERS * STAGES_PER_CHAPTER  # 21
+FIRST_STAGE = 101  # 최초 스테이지
+LAST_STAGE = 704   # 최종 스테이지
 
 
 class StageManager:
@@ -24,6 +24,11 @@ class StageManager:
         if stage_id is None:
             return error_response(ErrorCode.STAGE_NOT_FOUND, "stage_id가 필요합니다.")
 
+        # ── [2] 메타데이터 검증 ──
+        stages = GameDataManager.REQUIRE_CONFIGS.get("stages", {})
+        if stage_id not in stages:
+            return error_response(ErrorCode.STAGE_NOT_FOUND, f"존재하지 않는 스테이지: {stage_id}")
+
         # ── [3] DB 세션 + 상태 검증 ──
         db = SessionLocal()
         try:
@@ -31,18 +36,9 @@ class StageManager:
             if not user:
                 return error_response(ErrorCode.USER_NOT_FOUND, "유저를 찾을 수 없습니다.")
 
-            # 일반 스테이지 해금 검증
-            if 1 <= stage_id <= MAX_STAGE:
-                if stage_id > user.current_stage:
-                    return error_response(ErrorCode.STAGE_NOT_UNLOCKED, "아직 해금되지 않은 스테이지입니다.")
-            # 챕터 보스 (101~107): 해당 챕터 3스테이지 모두 클리어 필요
-            elif 101 <= stage_id <= 100 + TOTAL_CHAPTERS:
-                chapter = stage_id - 100
-                chapter_last = chapter * STAGES_PER_CHAPTER
-                if user.current_stage <= chapter_last:
-                    return error_response(ErrorCode.STAGE_NOT_UNLOCKED, "해당 챕터를 모두 클리어해야 합니다.")
-            else:
-                return error_response(ErrorCode.STAGE_NOT_FOUND, f"존재하지 않는 스테이지: {stage_id}")
+            # 해금 검증: current_stage 이하만 입장 가능
+            if stage_id > user.current_stage:
+                return error_response(ErrorCode.STAGE_NOT_UNLOCKED, "아직 해금되지 않은 스테이지입니다.")
         except Exception as e:
             logger.error(f"[StageManager] enter_stage 실패: {e}", exc_info=True)
             return error_response(ErrorCode.DB_ERROR, "스테이지 입장 중 오류가 발생했습니다.")
@@ -92,11 +88,13 @@ class StageManager:
             if not user:
                 return error_response(ErrorCode.USER_NOT_FOUND, "유저를 찾을 수 없습니다.")
 
-            # ── [4] 비즈니스 로직 ──
+            # ── [4] 비즈니스 로직: 다음 스테이지 해금 ──
             unlocked = False
-            if stage_id == user.current_stage and stage_id < MAX_STAGE:
-                user.current_stage = stage_id + 1
-                unlocked = True
+            if stage_id == user.current_stage and stage_id < LAST_STAGE:
+                next_stage = cls._next_stage_id(stage_id)
+                if next_stage:
+                    user.current_stage = next_stage
+                    unlocked = True
 
             current_stage = user.current_stage
 
@@ -128,42 +126,55 @@ class StageManager:
         }
 
     @classmethod
+    def _next_stage_id(cls, stage_id: int) -> int | None:
+        """현재 스테이지의 다음 스테이지 ID 계산
+        101→102→103→104→201→202→...→704(마지막)
+        """
+        chapter = stage_id // 100
+        stage_num = stage_id % 100
+
+        if stage_num < STAGES_PER_CHAPTER:
+            # 같은 챕터 다음 스테이지
+            return stage_id + 1
+        elif chapter < TOTAL_CHAPTERS:
+            # 다음 챕터 첫 스테이지
+            return (chapter + 1) * 100 + 1
+        return None
+
+    @classmethod
     def _generate_monster_pool(cls, stage_id: int) -> list:
         """
         스테이지 몬스터 풀 생성
-        stage_info.csv의 monster_pool, boss_id 기반
-        웨이브 구조: [일반4+정예1] × 2 + [일반4+정예1+보스1] = 16마리
+        stage_info.csv의 wave별 monster_idx 기반
+        웨이브 구조: [일반3+정예1] × 3웨이브 + 보스1(웨이브4) = 13마리
+        스폰 순서: 종별 집중 (AAA→BBB→CCC)
         """
         stages = GameDataManager.REQUIRE_CONFIGS.get("stages", {})
-        stage_info = stages.get(str(stage_id)) or stages.get(stage_id)
+        stage_info = stages.get(stage_id)
 
         if not stage_info:
             return []
 
-        # monster_pool에서 일반 몬스터 목록 추출
-        pool_str = stage_info.get("monster_pool", "")
-        if pool_str:
-            normal_ids = [int(x.strip()) for x in str(pool_str).split(",") if x.strip()]
-        else:
-            # 폴백: 전체 몬스터에서 랜덤
-            monsters = GameDataManager.REQUIRE_CONFIGS.get("monsters", {})
-            normal_ids = [int(k) for k in monsters.keys()] if monsters else []
-
-        boss_id = stage_info.get("boss_id")
-        if boss_id:
-            boss_id = int(boss_id)
-
-        if not normal_ids:
+        waves = stage_info.get("waves", {})
+        if not waves:
             return []
 
         pool = []
-        for wave in range(1, 4):
+
+        # 웨이브 1~3: 일반 몬스터 (일반3 + 정예1)
+        for wave_num in range(1, 4):
+            monster_idx = waves.get(wave_num)
+            if not monster_idx:
+                continue
             wave_data = []
-            for _ in range(4):
-                wave_data.append({"monster_idx": random.choice(normal_ids), "spawn_type": "일반"})
-            wave_data.append({"monster_idx": random.choice(normal_ids), "spawn_type": "정예"})
-            if wave == 3 and boss_id:
-                wave_data.append({"monster_idx": boss_id, "spawn_type": "보스"})
-            pool.append({"wave": wave, "monsters": wave_data})
+            for _ in range(3):
+                wave_data.append({"monster_idx": monster_idx, "spawn_type": "일반"})
+            wave_data.append({"monster_idx": monster_idx, "spawn_type": "정예"})
+            pool.append({"wave": wave_num, "monsters": wave_data})
+
+        # 웨이브 4: 보스
+        boss_idx = waves.get(4)
+        if boss_idx:
+            pool.append({"wave": 4, "monsters": [{"monster_idx": boss_idx, "spawn_type": "보스"}]})
 
         return pool

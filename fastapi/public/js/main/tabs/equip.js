@@ -215,11 +215,13 @@ const EquipTab = {
 
         const grid = this.el.querySelector('#eq-grid');
         if (filtered.length === 0) {
-            grid.innerHTML = '<div class="equip-grid-empty">장비가 없습니다</div>';
+            const MIN_EMPTY = 20;
+            grid.innerHTML = '<div class="eq-icon empty"></div>'.repeat(MIN_EMPTY);
             return;
         }
 
-        grid.innerHTML = filtered.map(item => {
+        const MIN_SLOTS = 20;
+        const itemsHtml = filtered.map(item => {
             const slot = getEquipSlot(item.base_item_id);
             const slotInfo = EQUIP_SLOTS.find(s => s.key === slot);
             const icon = slotInfo ? slotInfo.icon : '?';
@@ -235,6 +237,11 @@ const EquipTab = {
                 </div>
             `;
         }).join('');
+
+        const emptyCount = Math.max(0, MIN_SLOTS - filtered.length);
+        const emptyHtml = '<div class="eq-icon empty"></div>'.repeat(emptyCount);
+
+        grid.innerHTML = itemsHtml + emptyHtml;
 
         // 호버 이벤트 재연결
         grid.querySelectorAll('[data-action="item-click"]').forEach(el => {

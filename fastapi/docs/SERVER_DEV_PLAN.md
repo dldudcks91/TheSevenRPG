@@ -1,7 +1,7 @@
 # TheSevenRPG — 서버 개발 계획서
 
 > 최초 작성: 2026-03-12
-> 최종 업데이트: 2026-03-17 (도감/스킬/몬스터 밸런싱 기획 확정 반영)
+> 최종 업데이트: 2026-03-18 (기획서 교차 검증 — 방치파밍 제거, 카드 인벤토리화, ilvl/mlvl 체계, 사망패널티 10% 반영)
 > 기준 기획서: `fastapi/docs/game_design/GAME_DESIGN.md`
 
 ---
@@ -20,7 +20,7 @@
 | `SessionManager.py` | 완성 | Redis 세션 생성/검증/삭제 |
 | `RedisManager.py` | 완성 | 비동기 Redis 싱글톤 |
 | `GameDataManager.py` | 완성 | CSV → 메모리 로드 |
-| `ItemDropManager.py` | 완성 | 드롭 판정, 아이템 생성 로직 |
+| `ItemDropManager.py` | 완성 | 드롭 판정, 아이템 생성 로직 (⚠️ DB 미저장 — Phase 17에서 서버사이드 저장으로 전환) |
 | `APIManager.py` | 완성 | api_map 등록 |
 
 ### 재작성 완료 ✅
@@ -30,19 +30,20 @@
 | `UserInitManager.py` | ✅ 완료 | 회원가입(bcrypt 해싱) + 로그인(비밀번호 검증) |
 | `BattleManager.py` | ✅ 완료 | 전투 시뮬레이션 엔진, Redis 캐싱, 보상 지급 |
 | `InventoryManager.py` | ✅ 완료 | 장착/해제/조회/판매/인벤확장, 코스트 검증, Redis 무효화 |
-| `StageManager.py` | ✅ 신규 | 스테이지 입장/클리어, 해금 검증 |
-| `IdleFarmManager.py` | ✅ 신규 | 방치 파밍 ON/OFF, 보상 수령 |
-| `CollectionManager.py` | ✅ 신규 | 도감 조회/스킬 장착/해제, 카드 등록 |
-| `UserInfoManager.py` | ✅ 수정 | 스탯 리셋 API 추가 (Phase 12) |
+| `StageManager.py` | ✅ 완료 | 스테이지 입장/클리어, 해금 검증 (⚠️ 몬스터풀 16마리→13마리 수정 필요 — Phase 14) |
+| `CollectionManager.py` | ✅ 완료 | 도감 조회/스킬 장착/해제 (⚠️ 카드 인벤토리화 반영 필요 — Phase 18.5) |
+| `UserInfoManager.py` | ✅ 수정 | 스탯 리셋 API 추가 (Phase 12) (⚠️ idle_farm 참조 코드 제거 필요 — Phase 12.5) |
 | `EnhanceManager.py` | ⏸️ 보류 | 기획 보류 (api_map 미등록, 코드 보존) |
+| `IdleFarmManager.py` | ❌ 삭제 예정 | 기획에서 완전 제거 (2026-03-17) — Phase 12.5에서 정리 |
 
 ---
 
 ## API 코드 전체 목록
 
+### 활성 API
 | api_code | Manager | 메서드 | 설명 | 상태 |
 |----------|---------|--------|------|------|
-| 1002 | GameDataManager | `get_all_configs` | 클라이언트 초기 데이터 로드 | 완성 |
+| 1002 | GameDataManager | `get_all_configs` | 클라이언트 초기 데이터 로드 | ✅ 완성 |
 | 1003 | UserInitManager | `create_new_user` | 회원가입 (비밀번호 해싱 + 세션 발급) | ✅ 완성 |
 | 1004 | UserInfoManager | `get_user_info` | 유저 정보 조회 (스탯/골드) | ✅ 완성 |
 | 1005 | UserInfoManager | `reset_stats` | 스탯 리셋 (골드 소비) | ✅ 완성 |
@@ -52,30 +53,41 @@
 | 2003 | InventoryManager | `get_inventory` | 인벤토리 조회 | ✅ 완성 |
 | 2004 | InventoryManager | `sell_item` | 아이템 판매 | ✅ 완성 |
 | 2005 | InventoryManager | `expand_inventory` | 인벤토리 확장 | ✅ 완성 |
-| 2006 | EnhanceManager | `enhance_item` | 아이템 강화 | ⏸️ 보류 (기획 보류) |
 | 2007 | CollectionManager | `get_collection` | 도감 목록 조회 | ✅ 완성 |
 | 2008 | CollectionManager | `equip_skill` | 스킬 슬롯 장착 | ✅ 완성 |
 | 2009 | CollectionManager | `unequip_skill` | 스킬 슬롯 해제 | ✅ 완성 |
 | 3001 | BattleManager | `battle_result` | 전투 시뮬레이션 결과 | ✅ 완성 |
-| 3002 | ItemDropManager | `process_kill` | 몬스터 킬 & 드롭 처리 | 완성 |
+| 3002 | ItemDropManager | `process_kill` | 몬스터 킬 & 드롭 처리 | ✅ 완성 |
 | 3003 | StageManager | `enter_stage` | 스테이지 입장 (해금 검증) | ✅ 완성 |
 | 3004 | StageManager | `clear_stage` | 스테이지 클리어 (다음 해금) | ✅ 완성 |
-| 3005 | IdleFarmManager | `toggle_idle` | 방치 파밍 ON/OFF | ✅ 완성 |
-| 3006 | IdleFarmManager | `collect_idle` | 방치 파밍 보상 수령 | ✅ 완성 |
 
-### Phase 12~ 에서 추가 예정 API
+### 삭제 예정 API (Phase 12.5)
+| api_code | Manager | 메서드 | 사유 |
+|----------|---------|--------|------|
+| ~~3005~~ | ~~IdleFarmManager~~ | ~~`toggle_idle`~~ | 방치 파밍 기획 제거 |
+| ~~3006~~ | ~~IdleFarmManager~~ | ~~`collect_idle`~~ | 방치 파밍 기획 제거 |
+
+### 보류 API
+| api_code | Manager | 메서드 | 사유 |
+|----------|---------|--------|------|
+| 2006 | EnhanceManager | `enhance_item` | 기획 보류 (코드 보존, api_map 미등록) |
+
+### Phase 12.5~ 에서 추가 예정 API
 
 | api_code | Manager | 메서드 | 설명 | Phase |
 |----------|---------|--------|------|-------|
-| 1005 | UserInfoManager | `reset_stats` | 스탯 리셋 (골드 소비) | 12 |
 | 1006 | UserInfoManager | `select_basic_sin` | 베이직 죄종 선택 | 22 |
+| 2010 | InventoryManager | `disassemble_item` | 장비 분해 | 21 |
+| 2011 | MaterialManager | `use_potion` | 포션 사용 | 18 |
+| 2012 | CardManager | `get_cards` | 카드 인벤토리 조회 | 18.5 |
+| 2013 | CardManager | `disassemble_card` | 카드 분해 → 카드 영혼 | 18.5 |
+| 2014 | CardManager | `level_up_card` | 카드 레벨업 (동일카드N+영혼N) | 18.5 |
+| 2015 | MaterialManager | `get_materials` | 재료 인벤토리 조회 | 18 |
 | 3007 | StageManager | `return_to_town` | 귀환 (HP 보존) | 14 |
 | 3008 | StageManager | `get_battle_session` | 전투 세션 조회 | 14 |
 | 4001 | CraftingManager | `craft_item` | 크래프팅 | 19 |
 | 4002 | ShopManager | `buy_item` | 상인 구매 | 20 |
 | 4003 | QuestManager | `submit_quest` | 퀘스트 재료 납품 | 20 |
-| 2010 | InventoryManager | `disassemble_item` | 장비 분해 | 21 |
-| 2011 | InventoryManager | `use_potion` | 포션 사용 | 18 |
 
 ---
 
@@ -83,40 +95,48 @@
 
 ```
 === Phase 1~10.5 완료 (기본 시스템) ===
-Phase 1  (models.py)
-Phase 2  (UserInitManager)
-Phase 3  (InventoryManager)
-Phase 4  (BattleManager)
-Phase 5  (StageManager)
-Phase 6  (IdleFarmManager)
-Phase 7  (CollectionManager)
-Phase 8  (InventoryManager 확장)
-Phase 9  (EnhanceManager) ⏸️ 보류
-Phase 10 (Manager 컨벤션 리팩토링)
+Phase 1   (models.py)
+Phase 2   (UserInitManager)
+Phase 3   (InventoryManager)
+Phase 4   (BattleManager)
+Phase 5   (StageManager)
+Phase 6   (IdleFarmManager) ❌ 기획 제거
+Phase 7   (CollectionManager)
+Phase 8   (InventoryManager 확장)
+Phase 9   (EnhanceManager) ⏸️ 보류
+Phase 10  (Manager 컨벤션 리팩토링)
 Phase 10.5 (기획 동기화)
 
 === Phase 12~ (기획 확정 반영 — 시스템 고도화) ===
-Phase 12 (경험치/레벨업) ← 확정 공식 적용, 리팩토링 시작점
+Phase 12   (경험치/레벨업) ✅ 완료
     ↓
-Phase 13 (DB 모델 확장) ← BattleSession, 재료 아이템, basic_sin
+Phase 12.5 (코드 정리) ← IdleFarmManager 삭제, 기획 불일치 수정
     ↓
-Phase 14 (웨이브/체크포인트) ← StageManager + BattleManager 대폭 개편
+Phase 13   (DB 모델 확장) ← BattleSessions, Materials, Cards, Users 컬럼
     ↓
-Phase 15 (정예 몬스터 특성)
+Phase 14   (웨이브/체크포인트) ← StageManager + BattleManager 개편, 사망패널티 10%
     ↓
-Phase 16 (전투 엔진 v2) ← 경직/사이즈/마저항/상태이상/세트/스킬 ★핵심
+Phase 15   (정예 몬스터 특성)
     ↓
-Phase 17 (드롭 시스템 v2) ← 7종 드롭 + 등급별 분리
+Phase 16   (전투 엔진 v2) ← 경직/사이즈/마저항/상태이상/스킬발동 ★핵심
     ↓
-Phase 18 (재료 아이템 관리) ← 포션/광석/낙인/퀘스트재료
+Phase 17   (드롭 시스템 v2) ← ilvl/mlvl/dlvl 체계 + 7종 드롭
     ↓
-Phase 19 (크래프팅) ← 대장간
+Phase 18   (재료 아이템 관리) ← 포션/광석/낙인/퀘스트재료/카드영혼
     ↓
-Phase 20 (NPC 시설) ← 상인/퀘스트/흔적 조합소
+Phase 18.5 (카드 인벤토리 시스템) ← 카드=아이템, 수치랜덤, 분해, 레벨업
     ↓
-Phase 21 (장비 분해)
+Phase 19   (크래프팅) ← 대장간
     ↓
-Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
+Phase 20   (NPC 시설) ← 상인/퀘스트/흔적 조합소
+    ↓
+Phase 21   (장비 분해)
+    ↓
+Phase 22   (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
+
+=== Phase 23~ (엔드콘텐츠 — 추후) ===
+Phase 23   (PVP / 아레나) ← Lv20 이상, 6등급, 시즌제
+Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
 
 === Phase 11 (시뮬레이션 도구) — Phase 16 이후 착수 ===
 ```
@@ -169,7 +189,7 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 | 삭제 | `item_type` | | 장비 전용 테이블로 변경 |
 | 삭제 | `amount` | | 장비 전용 테이블로 변경 |
 
-**Collections 테이블 (도감 — 카드→도감 통합 개편)**
+**Collections 테이블 (도감)**
 | 컬럼 | 타입 | 키 | 설명 |
 |------|------|-----|------|
 | `user_no` | BigInteger | PK/FK → Users | 소유자 (복합 PK) |
@@ -242,24 +262,25 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 - `enter_stage` (API 3003): 해금 여부 검증, stage_info.csv의 monster_pool/boss_id 기반 몬스터 풀 반환
 - `clear_stage` (API 3004): 다음 스테이지 해금, 챕터 보스 해금 체크
 
+> ⚠️ **코드 불일치**: 현재 코드는 [normal4+elite1]×3+boss=16마리 생성. 기획 확정은 [일반3+정예1]×3+보스=13마리. Phase 14에서 수정.
 > Phase 14에서 웨이브/체크포인트/귀환/사망 시스템으로 대폭 개편 예정
 
 ---
 
-### Phase 6 — 방치 파밍 (IdleFarm) ✅
-**목적**: 핵심 게임 루프 완성. 접속 없이도 아이템이 쌓이는 구조.
+### Phase 6 — 방치 파밍 (IdleFarm) ❌ 기획 제거
+**목적**: ~~핵심 게임 루프 완성. 접속 없이도 아이템이 쌓이는 구조.~~
+**상태**: ❌ **기획에서 완전 제거** (2026-03-17). 스토리 모드 단일 진행 + 클리어 후 재입장 파밍으로 확정.
 
-**신규 파일**
-- `services/rpg/IdleFarmManager.py`
-
-**작업 내용**
-- `toggle_idle` (API 3005): 방치 ON → Redis 타이머 시작, OFF → 타이머 삭제
-- `collect_idle` (API 3006): 경과 시간 계산 → 드롭 시뮬레이션 → 인벤 지급
+**삭제 대상 (Phase 12.5에서 처리)**
+- `services/rpg/IdleFarmManager.py` — 파일 삭제
+- `APIManager.py` — api_map에서 3005, 3006 제거
+- `UserInfoManager.py` — idle_farm Redis 조회 코드 제거
+- Redis 키 `user:{no}:idle_farm` 관련 코드 전체 정리
 
 ---
 
-### Phase 7 — 도감 시스템 ✅ (카드→도감 통합 개편)
-**목적**: 몬스터 카드 수집 → 도감 자동 등록 → 스킬 해금 → 스킬 슬롯 장착.
+### Phase 7 — 도감 시스템 ✅
+**목적**: 몬스터 카드 최초 획득 → 도감 자동 등록 → 스킬 해금 → 스킬 슬롯 장착.
 
 **신규 파일**
 - `services/rpg/CollectionManager.py` (CardManager.py 대체)
@@ -270,11 +291,11 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 - `unequip_skill` (API 2009): 스킬 슬롯에서 해제
 - `register_card` (내부 전용): 카드 드롭 시 도감 등록 (신규/중복 처리)
 
-**미구현 (기획 확정됨 — 구현 대기)**
-- 도감 레벨업 로직 — **확정**: 3단계(Lv1/2/3), 일반=1/3/10장, 보스=1/2/4장, Lv2=발동확률↑, Lv3=능력치↑
-- 도감 그룹 시스템 — **확정**: 스테이지 노말3+보스1=1그룹, 합산 레벨(3/5/7/10)로 4단계 패시브
-- 카드 스킬 전투 발동 — **확정**: Ch1 17종 스킬 수치 1차 확정 (card_skill.csv)
-- 관련 CSV: `collection_group.csv`, `collection_group_bonus.csv`, `card_skill.csv`
+**기획 변경 사항 (Phase 18.5에서 반영)**
+- ~~도감 레벨업 로직~~ → **폐기**. 도감은 수집 기록 역할만 (첫 획득=자동 등록+스킬 해금)
+- ~~도감 그룹 시스템~~ → **재설계 필요**. 기존 도감 레벨 합산 방식 폐기, 새 기준 미확정
+- 카드 스킬 전투 발동 — **확정**: Ch1 17종 스킬 수치 1차 확정 (card_skill.csv) → Phase 16에서 구현
+- **카드 = 인벤토리 아이템**으로 변경됨 → Phase 18.5에서 별도 카드 시스템 구현
 
 ---
 
@@ -347,8 +368,21 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 - [x] 경험치 필요량 테이블 — CSV 우선, 폴백: 기준10 × 1.3^(lv-1) / 그라인드 ×2.0
 - [x] `_grant_rewards`에 몬스터 등급별 XP 계산 적용 (exp_reward × grade.exp_mult)
 - [x] 레벨업 판정 + 스탯 포인트 지급 (CSV stat_points 또는 기본 5)
-- [ ] 사망 패널티: 현재 경험치 5% 차감 — Phase 14(웨이브 시스템)에서 구현
+- [ ] 사망 패널티: 현재 레벨 내 경험치 **10%** 차감 — Phase 14(웨이브 시스템)에서 구현
 - [x] 스탯 리셋 API (1005): 골드 소비 (레벨 × 100), 5종 스탯 초기화, 포인트 전부 회수
+
+---
+
+### Phase 12.5 — 코드 정리 (기획 불일치 해소)
+**목적**: 기획 제거/변경으로 인한 데드코드 정리 및 불일치 수정.
+**상태**: [ ] 미착수
+
+**작업 내용**
+- [ ] `IdleFarmManager.py` 파일 삭제
+- [ ] `APIManager.py`에서 API 3005, 3006 제거
+- [ ] `UserInfoManager.get_user_info`에서 idle_farm Redis 조회 코드 제거
+- [ ] `main.py` 등 IdleFarm 관련 import/참조 전체 정리
+- [ ] IR 문서 `idle_farm.md` 상태를 `removed`로 변경
 
 ---
 
@@ -360,10 +394,10 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 - `models.py` (수정)
 
 **Users 테이블 추가 컬럼**
-| 컬럼 | 타입 | 설명 |
-|------|------|------|
-| `basic_sin` | String(20), nullable | 베이직 죄종 선택 (세트포인트 +1) |
-| `unlocked_facilities` | Integer, default=0 | 해금된 시설 비트마스크 |
+| 컬럼 | 타입 | 설명 | 사용 Phase |
+|------|------|------|-----------|
+| `basic_sin` | String(20), nullable | 베이직 죄종 선택 (세트포인트 +1) | Phase 22 |
+| `unlocked_facilities` | Integer, default=0 | 해금된 시설 비트마스크 | Phase 20 |
 
 **BattleSessions 테이블 (신규)**
 | 컬럼 | 타입 | 키 | 설명 |
@@ -382,9 +416,21 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 |------|------|-----|------|
 | `id` | BIGINT | PK | 자동 증가 |
 | `user_no` | BIGINT | FK | 소유자 |
-| `material_type` | String(20) | | potion / ore / stigma / quest_material |
+| `material_type` | String(20) | | potion / ore / stigma / quest_material / card_soul |
 | `material_id` | INT | | 메타데이터 참조 (포션 종류, 광석 등급, 죄종 등) |
 | `amount` | INT | | 수량 (스택 가능) |
+
+**Cards 테이블 (신규 — 카드 인벤토리)**
+| 컬럼 | 타입 | 키 | 설명 |
+|------|------|-----|------|
+| `card_uid` | VARCHAR(36) | PK | UUID |
+| `user_no` | BIGINT | FK | 소유자 |
+| `monster_idx` | INT | | 몬스터 종류 (card_skill.csv 참조) |
+| `card_level` | INT | | 카드 레벨 (기본 1) |
+| `card_stats` | JSON | | 랜덤 부여 수치 (드롭 시 결정) |
+| `is_equipped` | BOOLEAN | | 스킬 슬롯 장착 여부 |
+| `skill_slot` | INT | nullable | 장착된 스킬 슬롯 (1~4) |
+| `created_at` | DATETIME | | 획득 시각 |
 
 ---
 
@@ -399,23 +445,22 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 
 **기획 (확정)**
 ```
-스테이지 구성:
-- 일반스테이지: [일반3+정예1]×3웨이브 + 보스1 = 13마리
-- 보스스테이지: [일반3+정예1]×2 + [일반3+스테이지보스1] + 챕터보스1 = 12마리
-- 스폰 순서: 종별 집중 (AAA→BBB→CCC)
+스테이지 구성: [일반3+정예1]×3웨이브 + 보스(웨이브4) = 13마리
+스폰 순서: 종별 집중 (AAA→BBB→CCC)
 
 체크포인트: 웨이브 클리어마다 저장
-귀환: HP 보존, 재입장 시 해당 웨이브부터
-사망: 경험치 5% 차감, 현재 웨이브 처음 재시작, 드롭 유지
+귀환: HP 보존, 재입장 시 해당 웨이브 처음부터 (웨이브 내부 진행 리셋)
+사망: 현재 레벨 내 경험치 10% 차감 (0% 하한, 레벨다운 없음), 현재 웨이브 처음 재시작, 드롭 유지
+포션: 웨이브 클리어 후 사용 가능 (전투 중 불가), 지참 개수 제한 (수치 미확정)
 ```
 
 **작업 내용**
-- [ ] `enter_stage` 개편: BattleSession 생성, 웨이브1 몬스터 풀 반환
+- [ ] `enter_stage` 개편: BattleSession 생성, 웨이브1 몬스터 풀 반환, 몬스터 풀 [3+1]×3+보스=13마리로 수정
 - [ ] `battle_result` 개편: 유닛 단위 전투 → 웨이브 진행 업데이트
 - [ ] 체크포인트: 웨이브 클리어 시 BattleSession 업데이트
-- [ ] `return_to_town` (API 3007): HP 보존 귀환, 세션 유지
+- [ ] `return_to_town` (API 3007): HP 보존 귀환, 세션 유지, 귀환 버튼 → 현재 유닛 전투 후 귀환
 - [ ] `get_battle_session` (API 3008): 재접속 시 진행 복구
-- [ ] 사망 처리: 경험치 5% 차감, 웨이브 처음 재시작
+- [ ] 사망 처리: 경험치 10% 차감, 웨이브 처음 재시작
 - [ ] `clear_stage` 개편: 웨이브4(보스) 클리어 시 스테이지 완료 처리
 
 **어뷰징 방지**
@@ -484,37 +529,51 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 데미지 공식:
 - 최종 데미지 = ATK × (1 - 방어감소율) × 사이즈보정 × 치명타배율
 - 사이즈보정: 대형↔대형 +10%, 대형↔소형 -10%, 중형 보정 없음
+
+경직 (확정):
+- 경직 조건: 단타 피해 > 최대HP ÷ 10
+- 경직 중: 평타 쿨 멈춤 (공격 불가)
+- 둔기: 경직 시간 추가
+- FHR: 경직시간 × (1 - FHR%)
 ```
 
 **작업 내용**
 - [ ] 스탯 계산기 리팩토링 (통합 계수 적용)
-- [ ] 경직 시스템: 피격 경직 + 둔기 추가 경직 + FHR
+- [ ] 경직 시스템: 피격 경직 조건(단타>최대HP÷10) + 둔기 추가 경직 + FHR 감소
 - [ ] 사이즈 보정: 무기 사이즈 vs 갑옷 사이즈
 - [ ] 마법 저항: 별도 감소율 계산
 - [ ] 상태이상 7종 전투 적용:
-  - 화상: 체력회복 감소
-  - 중독: 매 초 고정 데미지
-  - 스턴: 일정 시간 공격 불가
-  - 빙결: 공격속도 감소
-  - 침식: 피격마다 방어력 영구 감소 (스택)
-  - 매혹: 명중률 대폭 감소
-  - 심판: 카드 스킬 발동 확률 0%
-- [ ] 카드 스킬 발동: 공격 시/적중 시/피격 시 n% 자동 발동
+  - 화상(4s): 체력회복 감소
+  - 중독(4s): 매 초 고정 데미지
+  - 스턴(1s): 공격 불가
+  - 빙결(3s): 공격속도 감소
+  - 침식(영구): 피격마다 방어력 영구 감소 (스택)
+  - 매혹(4s): 명중률 대폭 감소
+  - 심판(2s): 카드 스킬 발동 확률 0%
+  - 중첩: 갱신(타이머 리셋), 침식만 스택형
+  - 다른 종류 동시 적용 가능
+- [ ] 카드 스킬 발동: 7종 트리거 (on_attack/on_hit/on_being_hit/on_cooldown_ready/every_n_hit/on_evade/every_n_seconds)
 - [ ] 세트 보너스 전투 적용 (Phase 22 세트 계산 결과 반영)
 - [ ] 전투 리포트: 피해량/명중률/회피율/치명타/경직/상태이상/잔여HP
 
 ---
 
 ### Phase 17 — 드롭 시스템 v2
-**목적**: 장비 전용이던 드롭을 7종 아이템으로 확장. 스폰 등급별 드롭 분리.
+**목적**: 장비 전용이던 드롭을 7종 아이템으로 확장. ilvl/mlvl/dlvl 체계 적용. 서버사이드 DB 저장.
 **상태**: [ ] 미착수
-**의존성**: Phase 13 (Materials 테이블), Phase 14 (웨이브 시스템)
+**의존성**: Phase 13 (Materials/Cards 테이블), Phase 14 (웨이브 시스템)
 
 **변경 파일**
 - `services/rpg/ItemDropManager.py` (대폭 개편)
 
-**기획 (확정 — item_design.md)**
+**기획 (확정)**
 ```
+ilvl/mlvl/dlvl 체계 (D2 구조):
+- dlvl = 스테이지별 던전 레벨 (수치 배분 미확정 — 3안 중 선택 필요)
+- mlvl 보정: 일반=dlvl / 정예=dlvl+2 / 스테이지보스=dlvl+3 / 챕터보스=고정(cap 50)
+- ilvl = 드롭 몬스터의 mlvl
+- mlvl↑ → 상위 등급 드롭 확률↑ + 접사 수치 상한↑
+
 스폰 등급별 드롭:
 | 등급 | 골드 | 포션 | 광석 | 퀘재 | 카드 | 장비 | 낙인 |
 |------|------|------|------|------|------|------|------|
@@ -530,30 +589,80 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 ```
 
 **작업 내용**
-- [ ] 드롭 판정 로직: 등급별 7종 아이템 개별 확률
+- [ ] ilvl/mlvl 계산 로직 구현
+- [ ] 드롭 판정 로직: 등급별 7종 아이템 개별 확률 (mlvl 기반)
 - [ ] 장비 드롭: 지역 죄종 편향 + 몬스터 베이스 부위 편향
-- [ ] 카드 드롭: CollectionManager.register_card 연동
+- [ ] 카드 드롭: Cards 테이블에 저장 + CollectionManager.register_card 연동 (도감 자동 등록)
 - [ ] 재료 드롭: Materials 테이블에 스택 추가
 - [ ] 낙인 드롭: 챕터 보스 전용
+- [ ] **서버사이드 DB 저장**: process_kill이 직접 DB에 저장 (현재 클라이언트 신뢰 구조 → 제거)
 - [ ] 드롭 CSV 메타데이터 확장
+
+**기획 확정 대기 항목**
+- dlvl 스테이지별 배분 수치 (A-동행형 / B-선형형 / C-계단형 중 선택)
+- mlvl별 등급 드롭 확률 테이블
+- 접사 qlvl(수치 요구 레벨) 체계
+- 골드 드롭량 공식
+- 낙인 드롭률 수치
+- 카드 드롭률 수치 (일반 vs 보스 차등)
 
 ---
 
 ### Phase 18 — 재료 아이템 관리
-**목적**: 포션/광석/낙인/퀘스트재료의 인벤토리 관리 및 사용.
+**목적**: 포션/광석/낙인/퀘스트재료/카드영혼의 인벤토리 관리 및 사용.
 **상태**: [ ] 미착수
 **의존성**: Phase 13 (Materials 테이블), Phase 17 (드롭)
 
 **변경 파일**
 - `services/rpg/MaterialManager.py` (신규)
-- `services/rpg/InventoryManager.py` (수정 — 포션 사용)
 
 **작업 내용**
-- [ ] 재료 조회 API (MaterialManager)
-- [ ] 포션 사용 API (2011): 웨이브 클리어 후 HP 회복 (전투 중 불가)
+- [ ] `get_materials` (API 2015): 재료 인벤토리 조회
+- [ ] `use_potion` (API 2011): 웨이브 클리어 후 HP 회복 (전투 중 불가)
   - 지참 개수 제한 (수치 미확정 → 밸런싱 시)
 - [ ] 광석 등급 계층: 합성 로직 (수치 미확정)
-- [ ] 재료 인벤토리 UI용 조회
+- [ ] 카드 영혼: 카드 분해 시 획득하는 범용 재료 (카드 종류 무관)
+
+---
+
+### Phase 18.5 — 카드 인벤토리 시스템 (신규)
+**목적**: 카드 = 인벤토리 아이템 체계 구현. 카드 수치 랜덤, 분해, 레벨업.
+**상태**: [ ] 미착수
+**의존성**: Phase 13 (Cards 테이블), Phase 18 (카드 영혼 재료)
+
+**변경 파일**
+- `services/rpg/CardManager.py` (신규 — 기존 CollectionManager의 카드 로직 분리)
+- `services/rpg/CollectionManager.py` (수정 — 도감은 수집 기록만)
+
+**기획 (확정)**
+```
+카드 시스템:
+- 카드 = 인벤토리 아이템 (카드 전용 탭)
+- 드롭 시 랜덤 수치 부여 (같은 카드도 수치 다름)
+- 더 좋은 수치의 카드로 교체 가능
+- 첫 획득 시 도감 자동 등록 + 스킬 해금
+
+카드 레벨업:
+- 같은 카드 N장 + 카드 영혼 N개 소모 (수치는 밸런싱 단계 확정)
+
+카드 분해:
+- 카드 분해 → 카드 영혼 획득 (범용 재료, 카드 종류 무관)
+
+카드 옵션 방향:
+- 아이템에서 얻을 수 없는 고유 옵션 (경험치, 골드, 속성저항 등)
+
+스킬 슬롯:
+- 4개 점진적 해금: Lv1→1슬롯, Lv5→2, Lv15→3, Lv30→4
+- 같은 카드 1개만 장착 가능
+- 종족별 스킬 유형: Demon=공격스킬, Normal=자기버프, Undead=디버프/방해
+```
+
+**작업 내용**
+- [ ] `get_cards` (API 2012): 카드 인벤토리 조회
+- [ ] `disassemble_card` (API 2013): 카드 분해 → 카드 영혼 획득
+- [ ] `level_up_card` (API 2014): 동일 카드 N장 + 카드 영혼 N개 → 레벨업
+- [ ] CollectionManager 리팩토링: equip_skill이 Cards 테이블의 카드를 참조하도록 변경
+- [ ] 도감 등록 로직 수정: 카드 최초 획득 시 Collections에 기록 (수집 기록만)
 
 ---
 
@@ -580,6 +689,10 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 - [ ] 시설 해금 검증 (Ch1 클리어 여부)
 - [ ] 낙인 소모 + 광석 소모 + 골드 소모
 
+**기획 확정 대기 항목**
+- 크래프팅 광석/골드 소모 공식
+- 크래프트 전용 옵션 목록
+
 ---
 
 ### Phase 20 — NPC 시설 시스템
@@ -600,7 +713,7 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 | Ch4 클리어 | 흔적 조합소 | 흔적 현황 확인, 슬롯 조정 |
 
 **작업 내용**
-- [ ] 시설 해금 체크 로직 (챕터 클리어 기반)
+- [ ] 시설 해금 체크 로직 (챕터 클리어 기반, `unlocked_facilities` 비트마스크)
 - [ ] `buy_item` (API 4002): 상인 상품 구매
 - [ ] `submit_quest` (API 4003): 퀘스트 재료 납품 → 보상
 - [ ] 흔적 조합소 (상세 기획 미확정)
@@ -637,16 +750,17 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 세트포인트 구조:
 - 접두/접미 각 1포인트 기여 (5슬롯 최대 10포인트)
 - 베이직 죄종 선택: 플레이어가 1죄종 선택 → 해당 죄종 +1
-- 세트레벨 상한: 7 (초기 구현 5)
+- 세트레벨 상한: 7 (초기 구현 5), 장비5+베이직1=6 도달 가능
 - 브레이크포인트: 2/4/6 (폭식·오만 제외)
 - 2세트 = 챕터 상태이상 부여
+- 한 장비에서 같은 죄종 중복 불가
 
 확정된 세트 보너스:
 - 분노 2/4/6: 화상 / 잃은체력 비례 공격력 / 최후의 저항(1회 생존+체력40%)
 - 시기 2/4/6: 중독 / 적 버프 1개 제거 / 약자멸시(HP30%↓ 방무)
 - 색욕 2/4/6: 매혹 / 갈취(적 공방 흡수) / 지배(n% 마법피해 변환)
 - 탐욕 2/4/6: 스턴 / 접사 상위 굴림 / 약탈왕(보스 2드롭)
-- 폭식: 독립형 (2+부터 스탯 감소 패널티)
+- 폭식: 독립형 (2+부터 스탯 감소 패널티: 2세트-10%, 3세트-20%, 4세트이상-35%)
 - 오만 6: 완전무결(상태이상 면역 + 상태이상 적 20% 추가피해)
 - 나태 2: 빙결 20% (4/6 미확정)
 ```
@@ -656,6 +770,45 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 - [ ] 세트포인트 계산: 장착 장비 접두/접미 + 베이직 죄종
 - [ ] 세트 보너스 전투 적용 (Phase 16 전투 엔진에 연동)
 - [ ] Redis battle_stats에 세트 정보 포함
+
+**기획 확정 대기 항목**
+- 나태 세트 4/6세트 효과
+- 오만 세트 2/4세트 (별도 구조 검토 중)
+
+---
+
+### Phase 23 — PVP / 아레나 (엔드콘텐츠)
+**목적**: 1:1 실시간 대전. 랭킹 시스템.
+**상태**: [ ] 미착수 (엔드콘텐츠)
+**의존성**: Phase 16 (전투 엔진 v2)
+
+**기획 (확정)**
+```
+PVP 규칙:
+- 1:1 자동전투, 양측 동시 공격
+- 60초 시간 제한 (초과 시 HP% 비교)
+- 레벨 보정 없음
+- Lv20 이상 참가 가능
+
+아레나:
+- 6등급: 청동/은/금/백금/다이아/챔피언
+- 시즌제 (시즌 보상)
+```
+
+---
+
+### Phase 24 — 연맹 (엔드콘텐츠)
+**목적**: 길드 시스템. 공동 버프.
+**상태**: [ ] 미착수 (엔드콘텐츠)
+**의존성**: Phase 23 이후
+
+**기획 (확정)**
+```
+연맹:
+- 최대 15명
+- 연맹 레벨 1~10
+- 경험치/골드/드롭률 버프 (전투 스탯 직접 상승 없음)
+```
 
 ---
 
@@ -692,59 +845,72 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 
 ### Users (유저 계정)
 
-| 컬럼 | 타입 | 키 | 설명 |
-|------|------|-----|------|
-| user_no | BIGINT | PK | 계정 고유 번호 (자동 증가) |
-| user_name | VARCHAR(50) | Unique | 유저 닉네임 |
-| password_hash | VARCHAR(255) | | bcrypt 해싱된 비밀번호 |
-| gold | BIGINT | | 보유 재화 |
-| current_stage | INT | | 진행 중인 최고 스테이지 |
-| max_inventory | INT | | 인벤토리 최대 칸 수 (기본 100) |
-| basic_sin | VARCHAR(20) | | 베이직 죄종 선택 (Nullable) — Phase 22 |
-| unlocked_facilities | INT | | 해금 시설 비트마스크 — Phase 20 |
-| created_at | DATETIME | | 계정 생성일 |
+| 컬럼 | 타입 | 키 | 설명 | 상태 |
+|------|------|-----|------|------|
+| user_no | BIGINT | PK | 계정 고유 번호 (자동 증가) | ✅ 구현 |
+| user_name | VARCHAR(50) | Unique | 유저 닉네임 | ✅ 구현 |
+| password_hash | VARCHAR(255) | | bcrypt 해싱된 비밀번호 | ✅ 구현 |
+| gold | BIGINT | | 보유 재화 | ✅ 구현 |
+| current_stage | INT | | 진행 중인 최고 스테이지 | ✅ 구현 |
+| max_inventory | INT | | 인벤토리 최대 칸 수 (기본 100) | ✅ 구현 |
+| basic_sin | VARCHAR(20) | | 베이직 죄종 선택 (Nullable) | Phase 13 |
+| unlocked_facilities | INT | | 해금 시설 비트마스크 | Phase 13 |
+| created_at | DATETIME | | 계정 생성일 | ✅ 구현 |
 
 ### UserStats (캐릭터 스탯)
 
-| 컬럼 | 타입 | 키 | 설명 |
-|------|------|-----|------|
-| user_no | BIGINT | PK/FK | 소유자 (Users 참조, 1:1) |
-| level | INT | | 캐릭터 레벨 (최대 50) |
-| exp | BIGINT | | 누적 경험치 |
-| stat_points | INT | | 잔여 스탯 포인트 |
-| stat_str | INT | | 힘 (공격력 +0.5%/pt) |
-| stat_dex | INT | | 민첩 (공속 +0.3%, 명중 +5/pt) |
-| stat_vital | INT | | 체력 (HP +10/pt) |
-| stat_luck | INT | | 운 (치확 +5, 회피 +5/pt) |
-| stat_cost | INT | | 코스트 (최대코스트 +2/pt) |
+| 컬럼 | 타입 | 키 | 설명 | 상태 |
+|------|------|-----|------|------|
+| user_no | BIGINT | PK/FK | 소유자 (Users 참조, 1:1) | ✅ 구현 |
+| level | INT | | 캐릭터 레벨 (최대 50) | ✅ 구현 |
+| exp | BIGINT | | 누적 경험치 | ✅ 구현 |
+| stat_points | INT | | 잔여 스탯 포인트 | ✅ 구현 |
+| stat_str | INT | | 힘 (공격력 +0.5%/pt) | ✅ 구현 |
+| stat_dex | INT | | 민첩 (공속 +0.3%, 명중 +5/pt) | ✅ 구현 |
+| stat_vit | INT | | 체력 (HP +10/pt) | ✅ 구현 |
+| stat_luck | INT | | 운 (치확 +5, 회피 +5/pt) | ✅ 구현 |
+| stat_cost | INT | | 코스트 (최대코스트 +2/pt) | ✅ 구현 |
 
 ### Items (장비 인스턴스)
 
+| 컬럼 | 타입 | 키 | 설명 | 상태 |
+|------|------|-----|------|------|
+| item_uid | VARCHAR(36) | PK | UUID | ✅ 구현 |
+| user_no | BIGINT | FK | 소유자 | ✅ 구현 |
+| base_item_id | INT | | equipment_base 메타데이터 참조 | ✅ 구현 |
+| item_level | INT | | 장비 레벨 = ilvl (드롭 몬스터 mlvl) | ✅ 구현 |
+| rarity | VARCHAR(20) | | magic / rare / craft / unique | ✅ 구현 |
+| item_score | INT | | 몬스터 킬 점수 기반 품질 | ✅ 구현 |
+| item_cost | INT | | 계산된 코스트 값 | ✅ 구현 |
+| prefix_id | VARCHAR(50) | | 접두사 ID (Nullable) | ✅ 구현 |
+| suffix_id | VARCHAR(50) | | 접미사 ID (Nullable) | ✅ 구현 |
+| set_id | VARCHAR(50) | | 7죄종 세트 ID (Nullable) | ✅ 구현 |
+| dynamic_options | JSON | | 랜덤 부여 스탯 | ✅ 구현 |
+| is_equipped | BOOLEAN | | 장착 여부 (인덱스 필수) | ✅ 구현 |
+| equip_slot | VARCHAR(20) | | 장착 부위 (장착 시만 존재) | ✅ 구현 |
+
+### Collections (도감 — 수집 기록)
+
+| 컬럼 | 타입 | 키 | 설명 | 상태 |
+|------|------|-----|------|------|
+| user_no | BIGINT | PK/FK | 소유자 (복합 PK) | ✅ 구현 |
+| monster_idx | INT | PK | 몬스터 종류 (복합 PK) | ✅ 구현 |
+| card_count | INT | | 누적 획득 카드 수 | ✅ 구현 |
+| collection_level | INT | | ~~도감 레벨~~ → 미사용 (도감 레벨업 폐기) | ✅ 구현 (리팩토링 예정) |
+| skill_slot | INT | | ~~스킬슬롯~~ → Cards 테이블로 이관 예정 | ✅ 구현 (리팩토링 예정) |
+
+### Cards (카드 인벤토리) — Phase 13 신규
+
 | 컬럼 | 타입 | 키 | 설명 |
 |------|------|-----|------|
-| item_uid | VARCHAR(36) | PK | UUID |
+| card_uid | VARCHAR(36) | PK | UUID |
 | user_no | BIGINT | FK | 소유자 |
-| base_item_id | INT | | equipment_base 메타데이터 참조 |
-| item_level | INT | | 장비 레벨 (숨김, 옵션 풀 결정) |
-| rarity | VARCHAR(20) | | magic / rare / craft / unique |
-| item_score | INT | | 몬스터 킬 점수 기반 품질 |
-| item_cost | INT | | 계산된 코스트 값 |
-| prefix_id | VARCHAR(50) | | 접두사 ID (Nullable) |
-| suffix_id | VARCHAR(50) | | 접미사 ID (Nullable) |
-| set_id | VARCHAR(50) | | 7죄종 세트 ID (Nullable) |
-| dynamic_options | JSON | | 랜덤 부여 스탯 |
-| is_equipped | BOOLEAN | | 장착 여부 (인덱스 필수) |
-| equip_slot | VARCHAR(20) | | 장착 부위 (장착 시만 존재) |
-
-### Collections (도감)
-
-| 컬럼 | 타입 | 키 | 설명 |
-|------|------|-----|------|
-| user_no | BIGINT | PK/FK | 소유자 (복합 PK) |
-| monster_idx | INT | PK | 몬스터 종류 (복합 PK) |
-| card_count | INT | | 누적 획득 카드 수 |
-| collection_level | INT | | 도감 레벨 (1~5) |
-| skill_slot | INT | | 장착된 스킬 슬롯 1~4 (Nullable) |
+| monster_idx | INT | | 몬스터 종류 (card_skill.csv 참조) |
+| card_level | INT | | 카드 레벨 (기본 1) |
+| card_stats | JSON | | 랜덤 부여 수치 (드롭 시 결정) |
+| is_equipped | BOOLEAN | | 스킬 슬롯 장착 여부 |
+| skill_slot | INT | nullable | 장착된 스킬 슬롯 (1~4) |
+| created_at | DATETIME | | 획득 시각 |
 
 ### BattleSessions (전투 세션) — Phase 13 신규
 
@@ -765,7 +931,7 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 |------|------|-----|------|
 | id | BIGINT | PK | 자동 증가 |
 | user_no | BIGINT | FK | 소유자 |
-| material_type | VARCHAR(20) | | potion / ore / stigma / quest_material |
+| material_type | VARCHAR(20) | | potion / ore / stigma / quest_material / card_soul |
 | material_id | INT | | 메타데이터 참조 |
 | amount | INT | | 수량 (스택 가능) |
 
@@ -780,38 +946,68 @@ Phase 22 (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
 
 ## 미결정 기획 항목 (개발 전 확정 필요)
 
-### 확정 완료 ✅ (이번 업데이트에서 Phase에 반영)
+### 확정 완료 ✅ (Phase에 반영됨)
 | 항목 | 반영 Phase | 비고 |
 |------|-----------|------|
 | ~~경험치 곡선~~ | Phase 12 | 기준10, ×1.3/×2.0 확정 |
 | ~~데미지 공식~~ | Phase 16 | ATK×(1-방감)×사이즈×치명타 확정 |
 | ~~몬스터 XP 배율~~ | Phase 12 | 1x/3x/10x/20x 확정 |
-| ~~상태이상 7종~~ | Phase 16 | 화상/중독/스턴/빙결/침식/매혹/심판 확정 |
+| ~~상태이상 7종~~ | Phase 16 | 화상/중독/스턴/빙결/침식/매혹/심판 + 지속시간/효과 확정 |
 | ~~세트 보너스~~ | Phase 22 | 분노/시기/색욕/탐욕/폭식/오만 확정 |
-| ~~경직 시스템~~ | Phase 16 | 기본경직 + 둔기 추가 + FHR 확정 |
+| ~~경직 시스템~~ | Phase 16 | 조건(단타>HP÷10) + 둔기 추가 + FHR 확정 |
 | ~~정예 특성~~ | Phase 15 | 죄종 7종 + 공통 16종 확정 |
+| ~~방치 파밍~~ | Phase 12.5 | 기획에서 완전 제거 (2026-03-17) |
+| ~~카드=인벤토리 아이템~~ | Phase 18.5 | 수치랜덤, 분해→영혼, 레벨업 확정 |
+| ~~ilvl/mlvl/dlvl 체계~~ | Phase 17 | D2 구조, mlvl 보정 확정 |
+| ~~사망 패널티~~ | Phase 14 | 현재 레벨 내 경험치 10% 차감 확정 |
+| ~~스킬 트리거 7종~~ | Phase 16 | on_attack/on_hit 등 7종 확정 |
+| ~~PVP 기본 규칙~~ | Phase 23 | 1:1 자동, 60초, Lv20+, 6등급 확정 |
+| ~~연맹~~ | Phase 24 | 최대 15명, 버프형 확정 |
 
 ### 미확정 (기획 필요)
 | 항목 | 영향 Phase | 비고 |
 |------|-----------|------|
+| dlvl 스테이지별 배분 수치 | Phase 17 | 3안 중 선택 필요 (A-동행 / B-선형 / C-계단) |
+| mlvl별 등급 드롭 확률 테이블 | Phase 17 | 미기획 |
+| 접사 qlvl 체계 | Phase 17 | 미기획 |
 | 골드 드롭 공식 | Phase 17 | 미기획 |
-| ~~몬스터 스탯 수치~~ | Phase 14, 16 | Ch1 1차 밸런싱 완료 (ATK 40~50% 하향), Ch2~7 미수정 |
+| 카드 드롭률 수치 | Phase 17 | 일반 vs 보스 차등, 미기획 |
+| 낙인 드롭률 수치 | Phase 17 | 미기획 |
 | 포션 종류/효과/가격/지참 제한 | Phase 18 | 밸런싱 시 확정 |
 | 광석 등급 계층/합성 비율 | Phase 18 | 미기획 |
-| 낙인 드롭률 수치 | Phase 17 | 미기획 |
-| 퀘스트 재료 종류/NPC 보상 | Phase 20 | 미기획 |
+| 카드 레벨업 소모량 (동일카드 N장, 영혼 N개) | Phase 18.5 | 미기획 |
 | 크래프팅 광석/골드 소모 공식 | Phase 19 | 미기획 |
+| 크래프트 전용 옵션 목록 | Phase 19 | 미기획 |
+| 퀘스트 재료 종류/NPC 보상 | Phase 20 | 미기획 |
 | 장비 분해 광석 회수량 | Phase 21 | 미기획 |
-| 코스트 등급배율 세부 수치 | Phase 16 | 시뮬레이션 후 튜닝 |
-| ~~카드 48종 스킬 효과~~ | Phase 16 | Ch1 17종 확정 + 수치 1차 확정 (card_skill.csv) |
-| ~~도감 레벨업 테이블~~ | Phase 7 보완 | ✅ 확정: 3단계, 일반1/3/10, 보스1/2/4 |
 | 나태 세트 4/6세트 | Phase 22 | 미확정 |
 | 오만 세트 2/4세트 | Phase 22 | 별도 구조 검토 중 |
-| 크래프트 전용 옵션 목록 | Phase 19 | 미기획 |
+| 코스트 등급배율 세부 수치 | Phase 16 | 시뮬레이션 후 튜닝 |
 | 유니크 고정 효과 설계 | Phase 17 | 미기획 |
 | 방어구 base_def 수치 | Phase 16 | 미기획 |
 | 정예 특성 수치 밸런싱 | Phase 15 | 시뮬레이션 후 튜닝 |
+| 나태 죄종 접사 (무기/신발) | Phase 16 | 미확정 |
+| 신발 공통 옵션풀 | Phase 16 | 미확정 |
+| 도감 그룹 보너스 재설계 | Phase 18.5 | 기존 방식 폐기, 새 기준 미확정 |
+| 마일스톤 레벨 보상 | Phase 12 보완 | Lv10/20/40/50 보너스 미확정 |
+| Ch5~Ch7 몬스터 인스턴스 | Phase 15+ | 미설계 |
+| Ch2~Ch7 카드 스킬 매칭 | Phase 16 | Ch1만 확정 (17종) |
 
 ---
 
-*마지막 업데이트: 2026-03-17*
+## 기존 코드 vs 기획 불일치 (수정 추적)
+
+| 위치 | 불일치 내용 | 해결 Phase |
+|------|-----------|-----------|
+| `StageManager._generate_monster_pool` | [normal4+elite1]×3=16마리 → 기획 [3+1]×3+보스=13마리 | Phase 14 |
+| `IdleFarmManager.py` | 기획 제거됨, 코드 존재 | Phase 12.5 |
+| `APIManager.py` 3005/3006 | 삭제 대상 API 등록 중 | Phase 12.5 |
+| `UserInfoManager.get_user_info` | idle_farm Redis 참조 코드 | Phase 12.5 |
+| `ItemDropManager.process_kill` | DB 미저장 (클라이언트 신뢰) | Phase 17 |
+| `CollectionManager` | 도감 레벨업 전제 설계 + 스킬슬롯 | Phase 18.5 |
+| `Collections.collection_level` | 도감 레벨업 폐기됨, 컬럼 미사용 | Phase 18.5 |
+| `User.current_stage` default=101 | stage_id 1~21 범위와 불일치 가능성 | Phase 14에서 검증 |
+
+---
+
+*마지막 업데이트: 2026-03-18*

@@ -114,7 +114,7 @@ const StageSelectView = {
                      ${isUnlocked ? `data-action="enter-stage" data-stage-id="${stage.stageId}"` : ''}>
                     <div class="ssv-stage-left">
                         <span class="ssv-stage-name">${stage.stageName}</span>
-                        <span class="ssv-stage-type">${stage.monsterType || ''}</span>
+                        <span class="ssv-stage-type">Stage ${stage.stageNum}</span>
                     </div>
                     <div class="ssv-stage-right">
                         ${isCleared

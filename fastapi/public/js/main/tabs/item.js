@@ -9,12 +9,14 @@ const ItemTab = {
     mount(el) {
         this.el = el;
 
+        const MIN_SLOTS = 20;
         el.innerHTML = `
             <div class="tab-item">
-                <div class="item-placeholder">
-                    <span class="item-placeholder-icon">\u{1F392}</span>
-                    <span class="item-placeholder-text">아이템 탭</span>
-                    <span class="item-placeholder-sub">준비 중</span>
+                <div class="item-section">
+                    <div class="item-section-title">소지 아이템</div>
+                    <div class="item-grid">
+                        ${'<div class="item-icon empty"></div>'.repeat(MIN_SLOTS)}
+                    </div>
                 </div>
             </div>
         `;

@@ -67,13 +67,13 @@ html, body {
 }
 
 .main-left-panel {
-    width: 350px;
-    flex-shrink: 0;
+    flex: 25;
+    min-width: 0;
     overflow: hidden;
 }
 
 .main-right-view {
-    flex: 1;
+    flex: 75;
     min-width: 0;
     overflow-y: auto;
     background: var(--bg-primary);

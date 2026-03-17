@@ -337,7 +337,7 @@ class BattlePhaserScene extends Phaser.Scene {
         // 캐릭터 (좌측) — 이미지 있으면 스프라이트, 없으면 사각형
         if (this.textures.exists('player')) {
             this.playerSprite = this.add.image(cx - 180, bottom, 'player');
-            this.playerSprite.setScale(0.55);
+            this.playerSprite.setDisplaySize(240, 240);
             this.playerSprite.setOrigin(0.5, 1.0);
         } else {
             this.playerSprite = this.add.rectangle(cx - 180, bottom - 32, 50, 64, 0x42a5f5);
@@ -350,7 +350,7 @@ class BattlePhaserScene extends Phaser.Scene {
         // 몬스터 (우측) — 이미지 있으면 스프라이트, 없으면 사각형
         if (this.textures.exists('monster')) {
             this.monsterSprite = this.add.image(cx + 180, bottom, 'monster');
-            this.monsterSprite.setScale(0.3);
+            this.monsterSprite.setDisplaySize(240, 240);
             this.monsterSprite.setOrigin(0.5, 1.0);
         } else {
             this.monsterSprite = this.add.rectangle(cx + 180, bottom - 35, 56, 70, 0xe53935);

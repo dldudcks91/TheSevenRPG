@@ -132,16 +132,15 @@ export function getChapters() {
 /**
  * 특정 챕터의 스테이지 목록을 반환한다.
  * @param {number} chapterId
- * @returns {Array<{stageId, stageNum, monsterType, stageName}>}
+ * @returns {Array<{stageId, stageNum, stageName}>}
  */
 export function getStagesByChapter(chapterId) {
     const stages = _configs.stages || {};
     return Object.entries(stages)
-        .filter(([, s]) => s.chapter_id === chapterId)
+        .filter(([, s]) => s.chapter === chapterId)
         .map(([id, s]) => ({
             stageId: Number(id),
             stageNum: s.stage_num,
-            monsterType: s.monster_type,
             stageName: s.stage_name,
         }))
         .sort((a, b) => a.stageId - b.stageId);

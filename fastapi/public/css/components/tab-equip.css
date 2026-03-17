@@ -165,9 +165,15 @@
     position: relative;
 }
 
-.eq-icon:hover {
+.eq-icon:hover:not(.empty) {
     background: var(--bg-tertiary);
     border-color: var(--border-secondary);
+}
+
+.eq-icon.empty {
+    background: var(--bg-input);
+    border-style: dashed;
+    cursor: default;
 }
 
 .eq-icon.rarity-normal { border-color: var(--rarity-normal); }

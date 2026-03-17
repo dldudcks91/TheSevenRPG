@@ -183,7 +183,7 @@ const TownView = {
                      ${isUnlocked ? `data-action="enter-stage" data-stage-id="${stage.stageId}"` : ''}>
                     <div class="tv-popup-stage-left">
                         <span class="tv-popup-stage-name">${stage.stageName}</span>
-                        <span class="tv-popup-stage-type">${stage.monsterType || ''}</span>
+                        <span class="tv-popup-stage-type">Stage ${stage.stageNum}</span>
                     </div>
                     <div class="tv-popup-stage-right">
                         ${isCleared
