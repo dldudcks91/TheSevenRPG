@@ -1,0 +1,199 @@
+/* ============================================
+   TheSevenRPG — Stat Tab (스탯 탭)
+   ============================================ */
+
+.tab-stat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* 섹션 공통 */
+.stat-section {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-secondary);
+    box-shadow: var(--rpg-border-outset);
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.stat-section-title {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--border-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* SP 표시 */
+.stat-sp {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.stat-sp.has-points {
+    color: var(--color-warning);
+    font-family: var(--font-bold);
+}
+
+/* 캐릭터 정보 */
+.stat-info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stat-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    padding: 2px 0;
+}
+
+.stat-info-row .gold-text {
+    color: var(--rarity-rare);
+    font-family: var(--font-bold);
+}
+
+/* 스탯 배분 */
+.stat-alloc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stat-alloc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.stat-alloc-row:last-child {
+    border-bottom: none;
+}
+
+.stat-alloc-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.stat-alloc-label {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    min-width: 40px;
+}
+
+.stat-alloc-desc {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.stat-alloc-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.stat-alloc-value {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
+    color: var(--color-info);
+    min-width: 24px;
+    text-align: right;
+}
+
+.stat-add-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-success);
+    border: 2px solid #208040;
+    box-shadow:
+        inset -1px -1px 0 0 #106030,
+        inset 1px 1px 0 0 #60f0a0;
+    color: #fff;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+}
+
+.stat-add-btn:active {
+    box-shadow:
+        inset 1px 1px 0 0 #106030,
+        inset -1px -1px 0 0 #60f0a0;
+}
+
+.stat-add-btn.disabled {
+    background: var(--bg-card);
+    border-color: var(--border-primary);
+    box-shadow: none;
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+/* 전투 스탯 */
+.stat-combat-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stat-combat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    padding: 2px 0;
+}
+
+.stat-combat-value {
+    color: var(--text-primary);
+    font-family: var(--font-bold);
+}
+
+/* 세트 보너스 */
+.stat-set-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.stat-set-empty {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-align: center;
+    padding: var(--spacing-sm);
+}
+
+/* 스탯 리셋 버튼 */
+.stat-reset-btn {
+    width: 100%;
+    padding: var(--spacing-sm);
+    background: var(--bg-card);
+    border: 2px solid var(--border-secondary);
+    box-shadow:
+        inset -1px -1px 0 0 var(--border-dark),
+        inset 1px 1px 0 0 var(--border-highlight);
+    color: var(--color-error);
+    font-family: var(--font-main);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    min-height: 32px;
+}
+
+.stat-reset-btn:active {
+    box-shadow:
+        inset 1px 1px 0 0 var(--border-dark),
+        inset -1px -1px 0 0 var(--border-highlight);
+}

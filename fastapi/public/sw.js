@@ -3,7 +3,7 @@
  * 오프라인 에셋 캐싱, 네트워크 우선 전략
  */
 
-const CACHE_NAME = 'theseven-v1';
+const CACHE_NAME = 'theseven-v2';
 
 /** 프리캐시 대상: 앱 셸 (HTML, CSS, JS) */
 const PRECACHE_URLS = [
@@ -12,25 +12,35 @@ const PRECACHE_URLS = [
     '/css/variables.css',
     '/css/common.css',
     '/css/components/login.css',
-    '/css/components/town.css',
-    '/css/components/inventory.css',
-    '/css/components/stage-select.css',
-    '/css/components/idle-farm.css',
-    '/css/components/cards.css',
-    '/css/components/battle.css',
+    '/css/components/top-bar.css',
+    '/css/components/left-panel.css',
+    '/css/components/tab-stat.css',
+    '/css/components/tab-equip.css',
+    '/css/components/tab-skill.css',
+    '/css/components/tab-collection.css',
+    '/css/components/popup.css',
+    '/css/components/town-view.css',
+    '/css/components/stage-select-view.css',
+    '/css/components/battle-view.css',
     '/js/app.js',
+    '/js/main.js',
+    '/js/popup.js',
     '/js/api.js',
     '/js/store.js',
     '/js/session.js',
     '/js/utils.js',
     '/js/meta-data.js',
     '/js/screens/login.js',
-    '/js/screens/town.js',
-    '/js/screens/inventory.js',
-    '/js/screens/stage-select.js',
-    '/js/screens/battle.js',
-    '/js/screens/idle-farm.js',
-    '/js/screens/cards.js',
+    '/js/main/top-bar.js',
+    '/js/main/left-panel.js',
+    '/js/main/tabs/stat.js',
+    '/js/main/tabs/equip.js',
+    '/js/main/tabs/item.js',
+    '/js/main/tabs/skill.js',
+    '/js/main/tabs/collection.js',
+    '/js/main/views/town-view.js',
+    '/js/main/views/stage-select-view.js',
+    '/js/main/views/battle-view.js',
 ];
 
 // ── install: 앱 셸 프리캐시 ──
@@ -66,7 +76,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         fetch(request)
             .then((response) => {
-                // 성공 응답만 캐시 갱신
                 if (response.ok) {
                     const clone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));

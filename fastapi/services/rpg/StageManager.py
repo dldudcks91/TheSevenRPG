@@ -131,22 +131,39 @@ class StageManager:
     def _generate_monster_pool(cls, stage_id: int) -> list:
         """
         스테이지 몬스터 풀 생성
+        stage_info.csv의 monster_pool, boss_id 기반
         웨이브 구조: [일반4+정예1] × 2 + [일반4+정예1+보스1] = 16마리
         """
-        monsters = GameDataManager.REQUIRE_CONFIGS.get("monsters", {})
-        if not monsters:
+        stages = GameDataManager.REQUIRE_CONFIGS.get("stages", {})
+        stage_info = stages.get(str(stage_id)) or stages.get(stage_id)
+
+        if not stage_info:
             return []
 
-        monster_ids = list(monsters.keys())
-        pool = []
+        # monster_pool에서 일반 몬스터 목록 추출
+        pool_str = stage_info.get("monster_pool", "")
+        if pool_str:
+            normal_ids = [int(x.strip()) for x in str(pool_str).split(",") if x.strip()]
+        else:
+            # 폴백: 전체 몬스터에서 랜덤
+            monsters = GameDataManager.REQUIRE_CONFIGS.get("monsters", {})
+            normal_ids = [int(k) for k in monsters.keys()] if monsters else []
 
+        boss_id = stage_info.get("boss_id")
+        if boss_id:
+            boss_id = int(boss_id)
+
+        if not normal_ids:
+            return []
+
+        pool = []
         for wave in range(1, 4):
             wave_data = []
             for _ in range(4):
-                wave_data.append({"monster_idx": random.choice(monster_ids), "spawn_type": "일반"})
-            wave_data.append({"monster_idx": random.choice(monster_ids), "spawn_type": "정예"})
-            if wave == 3:
-                wave_data.append({"monster_idx": random.choice(monster_ids), "spawn_type": "보스"})
+                wave_data.append({"monster_idx": random.choice(normal_ids), "spawn_type": "일반"})
+            wave_data.append({"monster_idx": random.choice(normal_ids), "spawn_type": "정예"})
+            if wave == 3 and boss_id:
+                wave_data.append({"monster_idx": boss_id, "spawn_type": "보스"})
             pool.append({"wave": wave, "monsters": wave_data})
 
         return pool

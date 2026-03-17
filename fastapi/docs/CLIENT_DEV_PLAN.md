@@ -1,7 +1,8 @@
 # TheSevenRPG — 클라이언트 개발 계획서
 
 > 최초 작성: 2026-03-13
-> 기준 기획서: `fastapi/docs/game_design/GAME_DESIGN.md`
+> 최종 업데이트: 2026-03-17 (좌우 분할 5탭 구조로 전면 개편)
+> 화면 기획서: `fastapi/docs/game_design/SCREEN_DESIGN.md`
 > 기준 서버 계획서: `fastapi/docs/SERVER_DEV_PLAN.md`
 > 개발 가이드: `.claude/skills/web-client/skill.md`
 
@@ -9,63 +10,66 @@
 
 ## 현황 요약
 
-### 서버 상태
-서버 API 전체 완성 (Phase 1~5, 7~8). 클라이언트 개발에 필요한 모든 API가 동작 중.
+### Phase C1~C7 (구 버전): ✅ 전체 완성 → ⚠️ 구조 개편 예정
+
+기존 구현은 **화면별 분리 구조** (Login/Town/Inventory/StageSelect/Battle/Cards 각각 독립 Screen).
+새 기획은 **좌우 분할 2화면 구조** (Login + Main)로 전면 개편.
+
+**기존 코드 중 재활용 가능한 것:**
+| 파일 | 재활용 | 비고 |
+|------|--------|------|
+| `api.js` | ✅ 그대로 | apiCall, 세션 인증, 재시도 |
+| `store.js` | ✅ 그대로 | pub/sub 상태 관리 |
+| `session.js` | ✅ 그대로 | localStorage 세션 |
+| `utils.js` | ✅ 그대로 | DOM 헬퍼, 포맷터 |
+| `meta-data.js` | ✅ 그대로 | 메타데이터 로드/룩업 |
+| `variables.css` | ✅ 그대로 | CSS 변수 |
+| `screens/login.js` | ✅ 거의 그대로 | 로그인 화면 |
+| `login.css` | ✅ 거의 그대로 | 로그인 스타일 |
+| `screens/battle.js` | ⚠️ 부분 재활용 | Phaser BattleScene 로직은 유지, 외부 래퍼 변경 |
+| `app.js` | ❌ 재작성 | 해시 라우터 → 2화면 전환으로 변경 |
+| `common.css` | ⚠️ 수정 | 좌우 분할 레이아웃 추가 |
+| `screens/town.js` | ❌ 재작성 | 마을 뷰 → 우측 메인뷰 컴포넌트로 변경 |
+| `screens/inventory.js` | ❌ 재작성 | 전체 화면 → 좌측 장비 탭으로 변경 |
+| `screens/stage-select.js` | ❌ 재작성 | 전체 화면 → 우측 마을 모드에 통합 |
+| `screens/cards.js` | ❌ 재작성 | 전체 화면 → 좌측 스킬/도감 탭으로 분리 |
+| `town.css` 외 컴포넌트 CSS | ❌ 재작성 | 레이아웃 전면 변경 |
+
+**삭제된 코드:**
+- `screens/idle-farm.js` — 삭제 완료
+- `css/components/idle-farm.css` — 삭제 완료
+
+### 서버 API 현황
 
 | api_code | 설명 | 상태 |
 |----------|------|------|
 | 1002 | 게임 데이터 로드 | ✅ |
-| 1003 | 유저 생성/로그인 | ✅ |
+| 1003 | 회원가입/로그인 | ✅ |
 | 1004 | 유저 정보 조회 | ✅ |
+| 1005 | 스탯 리셋 | ✅ |
 | 2001 | 장비 장착 | ✅ |
 | 2002 | 장비 해제 | ✅ |
 | 2003 | 인벤토리 조회 | ✅ |
+| 2004 | 아이템 판매 | ✅ |
+| 2005 | 인벤토리 확장 | ✅ |
+| 2007 | 도감 목록 조회 | ✅ |
+| 2008 | 스킬 장착 | ✅ |
+| 2009 | 스킬 해제 | ✅ |
 | 3001 | 전투 시뮬레이션 | ✅ |
 | 3002 | 몬스터 킬 & 드롭 | ✅ |
 | 3003 | 스테이지 입장 | ✅ |
 | 3004 | 스테이지 클리어 | ✅ |
 
-### 클라이언트 현재 상태
-
-#### 공통 모듈
-| 파일 | 상태 | 비고 |
-|------|------|------|
-| `public/index.html` | ✅ 완성 | SPA 엔트리, ES Module 단일 진입점 |
-| `public/js/app.js` | ✅ 완성 | 해시 기반 라우터, Screen 레지스트리, 메타데이터 초기 로드 |
-| `public/js/api.js` | ✅ 완성 | apiCall (재시도, 세션 인증) |
-| `public/js/store.js` | ✅ 완성 | 중앙 상태 관리 (pub/sub) |
-| `public/js/session.js` | ✅ 완성 | localStorage 세션 관리 |
-| `public/js/utils.js` | ✅ 완성 | DOM 헬퍼, 포맷터 |
-| `public/js/meta-data.js` | ✅ 완성 | API 1002 메타데이터 로드, 장비/몬스터/챕터/스테이지 룩업 |
-| `public/css/variables.css` | ✅ 완성 | CSS 변수 (테마, 등급, 공통) |
-| `public/css/common.css` | ✅ 완성 | 레이아웃, 타이포, 공통 요소 |
-
-#### Screen 구현 현황
-| Screen | JS 파일 | CSS 파일 | 사용 API | 상태 |
-|--------|---------|----------|----------|------|
-| Login | `screens/login.js` | `css/components/login.css` | 1003 | ✅ 완성 |
-| Town | `screens/town.js` | `css/components/town.css` | 1004 | ✅ 완성 |
-| Inventory | `screens/inventory.js` | `css/components/inventory.css` | 2001~2005 | ✅ 완성 (메타데이터 이름 매핑 완료) |
-| StageSelect | `screens/stage-select.js` | `css/components/stage-select.css` | 3003 | ✅ 완성 (메타데이터 기반 챕터/스테이지) |
-| Battle | `screens/battle.js` | `css/components/battle.css` | 3001, 3004 | ✅ 완성 (Phaser.js 전투 연출, wave별 전투) |
-| Collection | `screens/cards.js` | `css/components/cards.css` | 2007~2009 | ✅ 완성 (몬스터 이름 메타데이터 매핑 완료) |
-
-#### 참고사항
-- 아이템 이름: `meta-data.js`의 `getEquipName()` 사용 (equipment_base CSV 매핑)
-- 몬스터 이름: `meta-data.js`의 `getMonsterName()` 사용 (monster_info CSV 매핑)
-- 스테이지/챕터: `meta-data.js`의 `getChapters()`/`getStagesByChapter()` 사용
-- 장비 슬롯: weapon/armor/helmet/gloves/boots (서버 VALID_EQUIP_SLOTS와 일치)
-
 ### 그래픽 리소스 현황
-| 리소스 | 상태 | 비고 |
-|--------|------|------|
-| 챕터 배경 이미지 | 7종 보유 | `resources/background_chapter_*.png` |
-| 1챕터 스테이지 배경 | 3종 보유 | `resources/background_ch1_st*.png` |
-| 캐릭터 스프라이트 | 미작업 | |
-| 몬스터 스프라이트 (48종) | 미작업 | AI 생성 프롬프트만 존재 (`docs/art_prompt/monster.md`) |
-| 전투 이펙트 | 미작업 | |
-| NPC/시설 아트 | 미작업 | |
-| 사운드/BGM | 미기획 | |
+
+| 리소스 | 상태 |
+|--------|------|
+| 챕터 배경 이미지 7종 | ✅ 보유 |
+| 1챕터 스테이지 배경 3종 | ✅ 보유 |
+| 캐릭터/몬스터 스프라이트 | 미작업 |
+| 전투 이펙트 | 미작업 |
+| NPC/시설 아트 | 미작업 |
+| 사운드/BGM | 미기획 |
 
 ---
 
@@ -73,381 +77,259 @@
 
 | 영역 | 기술 | 용도 |
 |------|------|------|
-| 전투 화면 | Phaser.js | 스프라이트 애니메이션, 이펙트, battle_log 재생 |
-| UI | HTML/CSS | 인벤토리, 스탯, 메뉴, 스테이지 선택 등 |
-| 통신 | fetch API | `POST /api` 단일 게이트웨이, 세션 헤더 인증 |
-| 모바일 | PWA | manifest.json, Service Worker (향후) |
+| 전투 연출 | Phaser.js (CDN) | 스프라이트 애니메이션, battle_log 재생 |
+| UI | HTML/CSS | 좌측 패널 탭, 우측 메인뷰, 팝업 |
+| 통신 | fetch API | `POST /api` 단일 게이트웨이, 세션 헤더 |
+| PWA | manifest + SW | 오프라인 캐시 (향후) |
 
 ---
 
-## 디렉토리 구조
+## 새 디렉토리 구조
 
 ```
 fastapi/public/
-├── index.html              # SPA 엔트리
+├── index.html                    # SPA 엔트리 (2화면: Login + Main)
 ├── css/
-│   ├── variables.css       # CSS 변수 (테마/등급 컬러)
-│   ├── common.css          # 공통 레이아웃
-│   └── components/         # 컴포넌트별 CSS
-│       ├── login.css
-│       ├── town.css
-│       ├── inventory.css
-│       ├── stage-select.css
-│       ├── battle.css
-│       └── cards.css
+│   ├── variables.css             # CSS 변수 (재활용)
+│   ├── common.css                # 공통 + 좌우 분할 레이아웃
+│   └── components/
+│       ├── login.css             # Login 화면 (재활용)
+│       ├── top-bar.css           # 상단 바
+│       ├── left-panel.css        # 좌측 패널 공통 (탭 바, 스크롤)
+│       ├── tab-stat.css          # 스탯 탭
+│       ├── tab-equip.css         # 장비 탭
+│       ├── tab-item.css          # 아이템 탭
+│       ├── tab-skill.css         # 스킬 탭
+│       ├── tab-collection.css    # 도감 탭
+│       ├── popup.css             # 비교 팝업 / 단독 팝업 공통
+│       ├── town-view.css         # 우측 마을 모드
+│       └── battle-view.css       # 우측 전투 모드
 ├── js/
-│   ├── app.js              # 앱 초기화, 화면 라우터
-│   ├── api.js              # apiCall() 서버 통신
-│   ├── session.js          # 세션(localStorage) 관리
-│   ├── store.js            # 중앙 상태 관리 (pub/sub)
-│   ├── utils.js            # DOM 헬퍼, 포맷터
-│   ├── meta-data.js        # API 1002 메타데이터 캐싱, 룩업 함수
-│   └── screens/            # 화면별 JS (Phaser 포함)
-│       ├── login.js
-│       ├── town.js
-│       ├── inventory.js
-│       ├── stage-select.js
-│       ├── battle.js       # Phaser.js BattleScene 내장
-│       └── cards.js
-└── assets/
-    ├── backgrounds/        # 챕터/스테이지 배경
-    ├── sprites/            # 캐릭터/몬스터 스프라이트
-    └── effects/            # 이펙트 스프라이트
+│   ├── app.js                    # 앱 초기화 (2화면 전환: Login ↔ Main)
+│   ├── api.js                    # 서버 통신 (재활용)
+│   ├── session.js                # 세션 관리 (재활용)
+│   ├── store.js                  # 상태 관리 (재활용)
+│   ├── utils.js                  # DOM 헬퍼 (재활용)
+│   ├── meta-data.js              # 메타데이터 (재활용)
+│   ├── popup.js                  # 팝업 매니저 (호버/클릭/닫기 공통)
+│   ├── screens/
+│   │   └── login.js              # Login 화면 (재활용)
+│   ├── main/
+│   │   ├── top-bar.js            # 상단 바 컴포넌트
+│   │   ├── left-panel.js         # 좌측 패널 (탭 전환 관리)
+│   │   ├── tabs/
+│   │   │   ├── stat.js           # 스탯 탭
+│   │   │   ├── equip.js          # 장비 탭
+│   │   │   ├── item.js           # 아이템 탭
+│   │   │   ├── skill.js          # 스킬 탭
+│   │   │   └── collection.js     # 도감 탭
+│   │   └── views/
+│   │       ├── town-view.js      # 우측 마을 모드
+│   │       └── battle-view.js    # 우측 전투 모드 (Phaser 포함)
+│   └── main.js                   # Main 화면 조립 (상단바 + 좌측 + 우측)
+├── manifest.json
+└── sw.js
 ```
 
 ---
 
-## 개발 Phase
+## 개발 Phase (새 구조)
 
-### Phase C1 — 프로젝트 기반 구축 ✅
-**목적**: SPA 골격, 공통 모듈, 서버 통신 레이어 완성. 이후 모든 Phase의 기반.
-
-**작업 파일**
-- `public/index.html` (재작성)
-- `public/css/variables.css` (신규)
-- `public/css/common.css` (신규)
-- `public/js/app.js` (신규)
-- `public/js/api.js` (신규)
-- `public/js/session.js` (신규)
+### Phase C8 — 레이아웃 기반 재구축
+**목적**: 좌우 분할 레이아웃 골격 완성. 2화면(Login/Main) 전환.
+**상태**: [x] 완료
 
 **작업 내용**
-
-1. **SPA 엔트리** (`index.html`)
-   - Phaser.js CDN 로드
-   - 화면 전환용 컨테이너 (`<div id="app">`)
-   - CSS/JS 로드 순서 정리
-
-2. **화면 라우터** (`app.js`)
-   - 해시 기반 SPA 라우팅 (`#login`, `#town`, `#inventory`, `#battle` 등)
-   - 화면 전환 매니저 (현재 화면 언마운트 → 새 화면 마운트)
-   - 세션 없으면 자동으로 `#login`으로 리다이렉트
-
-3. **서버 통신** (`api.js`)
-   - `apiCall(apiCode, data)` — `POST /api` + `Authorization: Bearer` 헤더
-   - 에러 핸들링: 네트워크 에러 시 3회 재시도 (지수 백오프)
-   - `E1002`(세션 만료) → 로그인 화면 리다이렉트
-   - 그 외 에러 → UI 토스트 메시지
-
-4. **세션 관리** (`session.js`)
-   - `session_id` localStorage 저장/조회/삭제
-   - `user_no`, `user_name` 캐싱
-
-5. **CSS 변수** (`variables.css`)
-   - 죄종 테마 컬러 7종
-   - 아이템 등급 컬러 5종 (normal/magic/rare/craft/unique)
-   - 공통 간격, 폰트, 다크 테마 기본색
+- `app.js` 재작성: 해시 라우터 제거, Login ↔ Main 2화면 전환
+- `main.js` 신규: Main 화면 조립 (상단바 + 좌측 패널 + 우측 뷰)
+- `common.css` 수정: 좌우 분할 레이아웃 (좌측 350px 고정 + 우측 flex)
+- `top-bar.js/css` 신규: 상단 바 (닉네임/레벨/스탯칩/EXP바/골드/로그아웃)
+- `left-panel.js/css` 신규: 5탭 바 + 탭 내용 컨테이너 (빈 상태)
+- `login.js` 수정: `#town` 이동 → Main 화면 전환으로 변경
 
 **완료 기준**
-- `#login` 해시로 빈 로그인 화면 표시
-- `apiCall(1002, {})` 호출 시 서버 응답 콘솔 출력
-- 세션 없는 상태에서 `#town` 접근 시 `#login`으로 리다이렉트
+- 로그인 → Main 전환 동작
+- 상단 바에 유저 정보 표시 (API 1004)
+- 좌측 5탭 클릭 시 활성 탭 전환 (내용은 빈 상태)
+- 우측 영역 빈 상태로 표시
 
 ---
 
-### Phase C2 — 로그인 화면 ✅
-**목적**: 서버 API 1003과 연동. 게임 진입점.
-
-**작업 파일**
-- `public/js/screens/login.js` (신규)
-- `public/css/components/login.css` (신규)
+### Phase C9 — 좌측 스탯 탭
+**목적**: 스탯 배분 + 전투 스탯 + 세트 보너스 상세.
+**상태**: [x] 완료
 
 **작업 내용**
-- 닉네임 입력 폼 (게임 테마에 맞는 다크 UI)
-- API 1003 호출 → 신규 생성 or 기존 로그인
-- `session_id`를 localStorage에 저장
-- 성공 시 `#town`으로 이동
-- 에러 표시: 닉네임 중복(E2002) 등
+- `tabs/stat.js` + `tab-stat.css` 신규
+- 캐릭터 정보 (레벨/경험치/골드)
+- 스탯 배분 UI: 5종 스탯 + [+] 버튼 (SP 차감)
+- 전투 스탯: 장비 반영된 최종 수치
+- 세트 보너스: 죄종별 포인트 바 + 브레이크포인트 효과 (활성=초록/미활성=회색)
+- [스탯 리셋] 버튼 → 확인 팝업 → API 1005
 
-**완료 기준**
-- 닉네임 입력 → 세션 발급 → 마을 화면 전환 확인
+**연동 API**: `1004`, `1005`
 
 ---
 
-### Phase C3 — 마을 허브 (죄악의 성) ✅
-**목적**: 게임의 중앙 화면. 모든 기능의 진입점.
-
-**작업 파일**
-- `public/js/screens/town.js` (신규)
-- `public/css/components/town.css` (신규)
+### Phase C10 — 좌측 장비 탭
+**목적**: 장착 슬롯 + 아이콘 그리드 + 비교 팝업.
+**상태**: [x] 완료
 
 **작업 내용**
+- `tabs/equip.js` + `tab-equip.css` 신규
+- `popup.js` + `popup.css` 신규 (공통 팝업 매니저)
+- 장착 슬롯 5개 (일자, 등급 보더)
+- 코스트 바 (현재/최대)
+- 세트 포인트 요약 한 줄
+- 필터 탭 (전체/무기/방어구)
+- 미장착 장비 정사각형 아이콘 그리드 (부위 아이콘 + 등급 보더 + 레벨)
+- 비교 팝업: 미장착 호버 → 착용중 vs 미착용 나란히, 수치 상승=초록/하락=빨강
+- 단독 팝업: 장착 슬롯 클릭 → 착용 장비 상세 + [해제][판매]
+- 인벤토리 카운트 + [인벤 확장]
 
-1. **마을 메인 화면**
-   - 어두운 톤 배경 (죄악의 성 테마)
-   - 기능 버튼: 스테이지 선택, 인벤토리, 캐릭터 정보
-
-2. **캐릭터 정보 패널**
-   - 레벨, 경험치 바, 골드 표시
-   - 스탯 포인트 현황 (힘/민첩/체력/운/코스트)
-   - 데이터 소스: 로그인 시 캐싱 또는 별도 API 필요 여부 확인
-
-**서버 API 연동**
-- 1002: 앱 시작 시 게임 데이터 로드 (메모리 캐싱)
-- 2003: 인벤토리 로드 (장착 장비 확인)
-
-**완료 기준**
-- 로그인 후 마을 화면 표시, 캐릭터 정보 렌더링
-- 각 기능 버튼 클릭 시 해당 화면으로 전환
+**연동 API**: `2001`~`2005`
 
 ---
 
-### Phase C4 — 인벤토리 & 장비 UI ✅
-**목적**: 장비 관리. 코어 게임 루프의 "장비 교체" 단계.
-
-**작업 파일**
-- `public/js/screens/inventory.js` (신규)
-- `public/css/components/inventory.css` (신규)
+### Phase C11 — 좌측 스킬 탭
+**목적**: 스킬 슬롯 장착/해제. 장비 탭과 동일한 UI 패턴.
+**상태**: [x] 완료
 
 **작업 내용**
+- `tabs/skill.js` + `tab-skill.css` 신규
+- 장착 스킬 슬롯 4개 (일자, 해금/잠김/빈)
+- 미장착 스킬 아이콘 그리드 (⚡ + 약어)
+- 비교 팝업: 미장착 호버 → 장착중 vs 미장착 나란히
+- 단독 팝업: 슬롯 클릭 → 장착 스킬 상세 + [해제]
+- 잠김 슬롯 클릭 → "Lv.N에 해금됩니다" 토스트
 
-1. **인벤토리 그리드**
-   - API 2003으로 아이템 목록 로드
-   - 등급별 테두리 색상 (normal 회색, magic 파랑, rare 노랑, craft 초록, unique 보라)
-   - 아이템 아이콘은 `base_item_id` → 장비 부위 아이콘으로 매핑
-
-2. **장착 슬롯 표시 (5슬롯)**
-   - weapon / armor / helmet / gloves / boots
-   - 현재 장착된 아이템 강조
-   - 슬롯 클릭 → 해당 부위 아이템 필터링
-
-3. **아이템 상세 팝업**
-   - 기본 스탯 (base_atk, base_def 등)
-   - 접두/접미사 옵션 (dynamic_options)
-   - 코스트, 세트 정보
-   - 장착/해제 버튼
-
-4. **코스트 게이지**
-   - `최대 코스트 = (레벨 × 1) + (코스트스탯 × 2)`
-   - `현재 코스트 = Σ 장착 장비의 item_cost`
-   - 시각적 바 표시, 초과 시 장착 불가 안내
-
-5. **세트 보너스 현황**
-   - 현재 활성 세트 포인트 표시
-   - 죄종별 색상으로 구분
-
-**서버 API 연동**
-- 2003: 인벤토리 조회
-- 2001: 장비 장착 (코스트 초과 시 E3003)
-- 2002: 장비 해제
-
-**완료 기준**
-- 아이템 목록 그리드 렌더링
-- 아이템 클릭 → 상세 팝업 → 장착/해제 동작
-- 코스트 게이지 실시간 갱신
+**연동 API**: `2007`, `2008`, `2009`
 
 ---
 
-### Phase C5 — 전투 씬 (Phaser.js) ✅
-**목적**: 핵심 연출. 서버 battle_log를 애니메이션으로 재생.
-
-**작업 파일**
-- `public/js/phaser/BootScene.js` (신규)
-- `public/js/phaser/BattleScene.js` (신규)
-- `public/js/phaser/ResultScene.js` (신규)
-- `public/js/screens/battle.js` (신규)
-- `public/css/components/battle.css` (신규)
+### Phase C12 — 좌측 도감 탭
+**목적**: 카드 수집 현황 열람 (순수 열람). 도감 그룹/패시브 확인.
+**상태**: [x] 완료
 
 **작업 내용**
+- `tabs/collection.js` + `tab-collection.css` 신규
+- 챕터 필터 탭
+- 도감 그룹 (스테이지별 노말3+보스1)
+  - 합산 Lv, 패시브 단계 표시
+- 카드 아이콘: 몬스터명, 도감 Lv, 카드수/필요수, 미수집=??
+- 카드 클릭 팝업: 도감 레벨, Lv별 스킬/보너스
+- 그룹 패시브 클릭 팝업: 단계별 효과, 활성/미달성
 
-1. **BootScene — 에셋 프리로드**
-   - 챕터/스테이지 배경 이미지
-   - 캐릭터/몬스터 스프라이트시트
-   - 이펙트 스프라이트
-   - 로딩 진행률 바
-
-2. **BattleScene — 전투 연출**
-   - 배경 렌더링 (스테이지별)
-   - 캐릭터 & 몬스터 스프라이트 배치 (1:1)
-   - HP 바 (플레이어/몬스터)
-   - `battle_log[]` 순차 재생 엔진:
-     ```
-     각 턴: { turn, actor, action, damage, crit, target_hp }
-     → attack: 공격 모션 + 데미지 텍스트 + HP 바 갱신
-     → miss: "MISS" 텍스트 팝업
-     → crit: 크게 빨간 데미지 텍스트 + 강조 이펙트
-     ```
-   - 전투 속도 조절: 1x / 2x / 스킵
-
-3. **ResultScene — 전투 결과**
-   - 승/패 연출
-   - 보상 표시: 경험치(+바), 골드, 레벨업 효과
-   - "계속" 버튼 → 다음 몬스터 or 마을 귀환
-
-**서버 API 연동**
-- 3001: 전투 시뮬레이션 요청 → battle_log + rewards 수신
-- 3002: 전투 승리 시 드롭 처리
-
-**그래픽 의존성**
-- 캐릭터 스프라이트 (미작업 — 임시 플레이스홀더로 시작 가능)
-- 몬스터 스프라이트 48종 (미작업 — 임시 플레이스홀더로 시작 가능)
-- 배경 이미지 (1챕터 3종 보유)
-
-**완료 기준**
-- battle_log 재생 시 공격/미스/치명타 애니메이션 동작
-- HP 바 실시간 감소
-- 전투 결과 화면에서 보상 표시
+**연동 API**: `2007`
 
 ---
 
-### Phase C6 — 스테이지 선택 & 진행 UI ✅
-**목적**: 콘텐츠 해금 흐름 시각화. 스토리 모드 진행.
-
-**작업 파일**
-- `public/js/screens/stage-select.js` (신규)
-- `public/css/components/stage-select.css` (신규)
+### Phase C13 — 우측 마을 모드
+**목적**: 마을 허브 + 스테이지 선택. 우측 메인뷰의 기본 상태.
+**상태**: [x] 완료
 
 **작업 내용**
+- `views/town-view.js` + `town-view.css` 신규
+- 마을 타이틀 + 배경 이미지 영역
+- NPC 시설 버튼 영역 (Phase 20까지 비활성 또는 숨김)
+- 챕터 선택 탭 (7개, 죄종별 테마 컬러, 잠김 처리)
+- 챕터 정보 (지역명/죄종/보스)
+- 스테이지 리스트 (클리어/진행중/잠김)
+- [입장] 클릭 → 우측 뷰를 전투 모드로 전환
 
-1. **스테이지 선택 화면**
-   - 7챕터 × 3스테이지 맵 표시
-   - 해금/미해금 상태 시각적 구분 (잠금 아이콘, 어둡게 처리)
-   - 챕터 보스 (101~107) 표시 (3스테이지 클리어 후 해금)
-   - 챕터별 테마 컬러 적용
-
-2. **스테이지 진행 화면**
-   - 웨이브 진행 표시 (1/3, 2/3, 3/3)
-   - 현재 웨이브의 몬스터 목록 (일반/정예/보스 아이콘 구분)
-   - 몬스터 하나씩 전투 → Phase C5 전투 씬으로 전환
-   - 웨이브 내 모든 몬스터 처치 → 다음 웨이브
-
-3. **스테이지 클리어 연출**
-   - 클리어 배너
-   - 다음 스테이지 해금 알림
-   - 챕터 보스 해금 알림 (3스테이지 모두 클리어 시)
-
-4. **포탈 귀환** (스토리 모드)
-   - 진행 중 귀환 버튼 → 마을로 이동
-   - 재입장 시 서버가 저장한 진행 위치부터 재개
-
-**서버 API 연동**
-- 3003: 스테이지 입장 → 웨이브/몬스터 목록 수신
-- 3001: 각 몬스터와 전투
-- 3002: 전투 승리 시 드롭
-- 3004: 전체 클리어 시 스테이지 완료 → 다음 해금
-
-**게임 흐름**
-```
-스테이지 선택 → 3003 입장
-    ↓
-웨이브 1: 몬스터 5마리 순차 전투 (3001 × 5, 승리 시 3002 × 5)
-    ↓
-웨이브 2: 몬스터 5마리 순차 전투
-    ↓
-웨이브 3: 몬스터 6마리 순차 전투 (보스 포함)
-    ↓
-전체 클리어 → 3004 → 마을 귀환
-```
-
-**완료 기준**
-- 스테이지 맵에서 해금 상태 표시
-- 스테이지 입장 → 웨이브 진행 → 전투 → 클리어 전체 흐름 동작
-- 클리어 시 다음 스테이지 해금 확인
+**연동 API**: `3003`
 
 ---
 
-### Phase C7 — 폴리싱 & PWA ✅
-**목적**: 사용자 경험 완성, 모바일 대비.
+### Phase C14 — 우측 전투 모드
+**목적**: Phaser 전투 연출. 서버 battle_log 재생.
+**상태**: [x] 완료
 
-**작업 파일**
-- `public/manifest.json` (신규) ✅
-- `public/sw.js` (신규) ✅
-- `public/index.html` (수정) ✅ PWA 메타태그, manifest 링크
-- `public/js/app.js` (수정) ✅ SW 등록, visibilitychange, isAppHidden 내보내기
-- `public/css/common.css` (수정) ✅ 터치 피드백, safe-area 대응
-- `public/js/screens/battle.js` (수정) ✅ onPause/onResume (Phaser 일시정지)
-- `public/js/screens/town.js` (수정) ✅ onPause/onResume
+**작업 내용**
+- `views/battle-view.js` + `battle-view.css` 신규
+- 기존 `battle.js`의 Phaser BattleScene 로직 이식
+- 상단: 스테이지명 + Wave 진행
+- HUD: Player/Monster HP 바
+- Phaser 아레나: 공격 모션, 데미지/미스/크리티컬 팝업
+- 전투 로그: 턴별 기록 (모노폰트, 색상 구분)
+- 결과 오버레이: 승패 + EXP/골드/레벨업
+- [다음 전투] / [마을로] 버튼
+- 전투 중 좌측 패널 유지 (장비 변경은 서버 차단)
 
-**구현 완료 항목**
+**연동 API**: `3001`, `3004`
 
-1. **PWA** ✅
-   - `manifest.json`: 앱 이름, 아이콘, `display: standalone`, portrait 고정
-   - Service Worker: 앱 셸 프리캐시 + 네트워크 우선/캐시 폴백 전략
-   - `index.html`: theme-color, apple-mobile-web-app, manifest 링크
-   - SW 등록: `app.js`에서 자동 등록
+---
 
-2. **성능 최적화** ✅
-   - `visibilitychange`: app.js에서 전역 감지 → Screen별 onPause/onResume 호출
-   - Battle: Phaser scene.pause/resume
-   - Town: 타이머 정지/재시작
-   - 메모리 릭 점검 완료: 모든 Screen에서 unmount 시 리스너/타이머/Phaser 정리 확인
+### Phase C15 — 아이템 탭 (Phase 18 이후)
+**목적**: 스택형 아이템(포션/광석/낙인/퀘재) 관리.
+**상태**: [x] 스켈레톤 완료 ("준비 중" 표시) — 본격 구현은 서버 Phase 18 이후
 
-3. **UI/UX 폴리싱** ✅
-   - 화면 전환 트랜지션: CSS opacity transition (이미 C1에서 구현)
-   - 로딩 인디케이터: loading-overlay (이미 C1에서 구현)
-   - 토스트 알림: toast-container (이미 C1에서 구현)
-   - 터치 피드백: `[data-action]:active` opacity 피드백 + tap-highlight 제거
-   - safe-area: 노치 디바이스 대응 (env(safe-area-inset-*))
+**작업 내용**
+- `tabs/item.js` + `tab-item.css` 신규
+- 카테고리 필터 (포션/광석/낙인/퀘재)
+- 정사각형 아이콘 그리드 (아이템 아이콘 + 수량 뱃지)
+- 호버/클릭 팝업 (이름, 효과, 보유 수량, [사용])
+- Phase 18 전까지 "준비 중" 표시
 
-**미구현 (에셋 의존)**
-- 레이지 로딩: 스프라이트 에셋 미작업 상태라 적용 대상 없음
-- 오브젝트 풀링: 스프라이트 에셋 추가 시 적용 예정
-- PWA 아이콘: `assets/icons/icon-192.png`, `icon-512.png` 제작 필요
+**연동 API**: `(미정)`, `2011`
+
+---
+
+### Phase C16 — 통합 테스트 & 폴리싱
+**목적**: 전체 흐름 검증 + UI 다듬기.
+**상태**: [ ] 미착수
+
+**작업 내용**
+- 로그인 → Main → 스탯배분 → 장비장착 → 스테이지입장 → 전투 → 결과 전체 흐름
+- 좌측 탭 전환 시 데이터 유지/갱신 확인
+- 전투 중 좌측 패널 확인 전용 동작 검증
+- 팝업 호버/클릭/닫기 엣지 케이스
+- SW 프리캐시 목록 업데이트
+- 메모리 릭 점검 (Phaser 생성/파괴 반복)
 
 ---
 
 ## 개발 순서
 
 ```
-Phase C1 (기반 구축)     ✅ SPA 골격, 통신, 세션
+=== Phase C1~C7 (구 버전 — 완료, 개편 대상) ===
+
+=== Phase C8~ (새 구조 — 좌우 분할 5탭) ===
+Phase C8  (레이아웃 기반)     [x] 2화면 전환, 좌우 분할 골격
     ↓
-Phase C2 (로그인)        ✅ 서버 연동 첫 테스트
+Phase C9  (스탯 탭)          [x] 스탯 배분 + 전투스탯 + 세트보너스
     ↓
-Phase C3 (마을 허브)     ✅ 중앙 화면, 데이터 로드
+Phase C10 (장비 탭)          [x] 아이콘 그리드 + 비교 팝업  ★핵심
     ↓
-Phase C4 (인벤토리)      ✅ 장비 관리 UI
+Phase C11 (스킬 탭)          [x] 장비 탭과 동일 패턴
     ↓
-Phase C5 (전투 씬)       ✅ Phaser.js 핵심 / 가장 복잡
+Phase C12 (도감 탭)          [x] 열람 전용, 그룹 패시브
     ↓
-Phase C6 (스테이지)      ✅ 진행 흐름 연결
+Phase C13 (마을 모드)        [x] 스테이지 선택 + NPC 영역
     ↓
-Phase C7 (폴리싱/PWA)    ✅ PWA, visibilitychange, 터치 피드백
+Phase C14 (전투 모드)        [x] Phaser 이식 + 결과 오버레이
+    ↓
+Phase C15 (아이템 탭)        [x] 스켈레톤 (서버 Phase 18 이후 본격)
+    ↓
+Phase C16 (통합/폴리싱)      [ ] 전체 흐름 검증
 ```
+
+---
 
 ## 서버-클라이언트 Phase 의존 관계
 
 ```
-서버 Phase 1~6 (전체 완성) ─┬─→ 클라 C1 (기반)
-                            ├─→ 클라 C2 (로그인)      ← API 1003
-                            ├─→ 클라 C3 (마을)        ← API 1002, 2003
-                            ├─→ 클라 C4 (인벤토리)    ← API 2001, 2002, 2003
-                            ├─→ 클라 C5 (전투)        ← API 3001, 3002
-                            ├─→ 클라 C6 (스테이지)    ← API 3003, 3004
-                            └─→ 클라 C7 (폴리싱)
-```
+서버 Phase 1~12 (완성) ──┬──→ 클라 C8  (레이아웃)    ← API 1004
+                         ├──→ 클라 C9  (스탯 탭)     ← API 1004, 1005
+                         ├──→ 클라 C10 (장비 탭)     ← API 2001~2005
+                         ├──→ 클라 C11 (스킬 탭)     ← API 2007~2009
+                         ├──→ 클라 C12 (도감 탭)     ← API 2007
+                         ├──→ 클라 C13 (마을 모드)   ← API 3003
+                         └──→ 클라 C14 (전투 모드)   ← API 3001, 3004
 
-> 서버 API가 전부 완성되어 있으므로, 클라이언트는 순차적으로 진행하면 된다.
-> 각 Phase 완료 시 해당 API와 즉시 통합 테스트 가능.
+서버 Phase 18 (재료) ────→ 클라 C15 (아이템 탭)   ← API (미정), 2011
+```
 
 ---
 
-## 미결정 사항 (개발 전 확정 필요)
-
-| 항목 | 영향 Phase | 비고 |
-|------|-----------|------|
-| 캐릭터 스프라이트 | C5 | 미작업. 임시 플레이스홀더로 시작 가능 |
-| 몬스터 스프라이트 48종 | C5 | AI 생성 프롬프트만 존재 |
-| 전투 이펙트 스프라이트 | C5 | 미작업 |
-| 상태이상 시각 이펙트 7종 | C5 | 화상/중독/스턴/빙결/침식/매혹/심판 |
-| NPC/시설 아트 | C3 | 마을 배경 |
-| 사운드/BGM | 전체 | 미기획 |
-| ~~캐릭터 정보 조회 API~~ | ~~C3~~ | ✅ 해결 — API 1004 추가 완료 |
+*마지막 업데이트: 2026-03-17*

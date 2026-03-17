@@ -35,7 +35,8 @@ html, body {
     overflow: hidden;
 }
 
-.screen {
+/* === View (Login / Main 2화면) === */
+.view {
     width: 100%;
     height: 100%;
     position: absolute;
@@ -47,9 +48,35 @@ html, body {
     pointer-events: none;
 }
 
-.screen.active {
+.view.active {
     opacity: 1;
     pointer-events: auto;
+}
+
+/* === Main 화면 좌우 분할 === */
+.main-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.main-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.main-left-panel {
+    width: 350px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.main-right-view {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    background: var(--bg-primary);
 }
 
 /* === RPG 윈도우 패널 (공통 사용) === */

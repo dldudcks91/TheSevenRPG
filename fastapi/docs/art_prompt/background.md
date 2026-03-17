@@ -1,8 +1,47 @@
-# TheSevenRPG — 배경 픽셀아트 프롬프트 (21 스테이지)
+# TheSevenRPG — 배경 픽셀아트 프롬프트
 
 > 공통 스타일: `pixel art`, `16-bit style`, `side-scroll background`
 > 비율 옵션: `--ar 16:9` (미드저니/SD)
 > 스테이지 진행: 외곽 → 내부 → 심부 (깊어질수록 어둡고 위험)
+
+---
+
+## 마을 — 죄악의 성 (Castle of Sins)
+
+### 마을 메인 (게임 내 기본 배경)
+
+```
+pixel art, interior courtyard of a dark gothic castle viewed from below,
+massive stone castle walls and battlements visible at the top of the image,
+a large iron portcullis gate set into the upper wall leading to the outside world,
+faint red glow seeping through the gate from the dangerous lands beyond,
+below the walls a cobblestone courtyard with three distinct areas,
+left side: a blacksmith forge with anvil and glowing hot coals under a stone archway,
+center: a merchant stall with wooden counter displaying potions and ores under a tattered awning,
+right side: a wooden quest board covered with parchment notices nailed to a stone pillar,
+iron torch sconces on the walls casting warm amber pools of light,
+seven deadly sin banners hanging from the upper battlements in different colors,
+dark atmospheric sky with blood-red moon above the castle walls,
+cobblestone ground with faint crimson cracks glowing from below,
+color palette: dark stone gray, torch amber, forge orange, deep crimson glow, shadow black,
+16-bit style, side-scroll background, --ar 16:9
+```
+
+**레이아웃 구성:**
+```
+┌──────────────────────────────────────────────┐
+│  ████ 성벽 ██████ [출정문] ██████ 성벽 ████  │ ← 상단: 성벽 + 출정문
+│                                              │
+│     🔨              💰              📋       │ ← 중단: NPC 시설들
+│    대장간           상인            게시판     │
+│                                              │
+│            (성 안뜰 바닥)                     │ ← 하단: 코블스톤 바닥
+└──────────────────────────────────────────────┘
+```
+
+---
+
+## 스테이지 배경 (21 스테이지)
 
 ---
 

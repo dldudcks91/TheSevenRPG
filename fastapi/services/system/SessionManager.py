@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 from config import settings
 from services.redis_manager.RedisManager import RedisManager, RedisUnavailable
 
@@ -23,7 +24,7 @@ class SessionManager:
         return session_id
 
     @classmethod
-    async def get_user_no(cls, session_id: str) -> int | None:
+    async def get_user_no(cls, session_id: str) -> Optional[int]:
         """
         Authorization 헤더의 세션 검증
         반환: user_no (유효) / None (세션 없음 또는 만료)

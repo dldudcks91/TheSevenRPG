@@ -1,0 +1,203 @@
+/* ============================================
+   TheSevenRPG — Battle View (우측 전투 모드)
+   ============================================ */
+
+.bv-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 상단 바 */
+.bv-top-bar {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-secondary);
+    text-align: center;
+}
+
+.bv-stage-name {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.bv-wave-info {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+/* HUD */
+.bv-hud {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-secondary);
+}
+
+.bv-hud-player, .bv-hud-monster { flex: 1; }
+
+.bv-vs {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
+    color: var(--text-muted);
+    padding: 0 var(--spacing-xs);
+}
+
+.bv-hud-name {
+    font-size: var(--font-size-xs);
+    margin-bottom: 2px;
+}
+
+.bv-hud-name.player { color: #80b0f8; }
+.bv-hud-name.monster { color: #f08080; text-align: right; }
+
+.bv-hp-bar {
+    height: 10px;
+    background: var(--hp-bar-bg);
+    border: 2px solid var(--border-primary);
+    box-shadow: var(--rpg-border-inset);
+    overflow: hidden;
+}
+
+.bv-hp-fill {
+    height: 100%;
+    background: var(--hp-bar);
+}
+
+.bv-hp-fill.monster { background: #e83030; }
+
+.bv-hp-text {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-family: var(--font-mono);
+}
+
+.bv-hud-monster .bv-hp-text { text-align: right; }
+
+/* 아레나 (Phaser) */
+.bv-arena {
+    flex: 1;
+    min-height: 200px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    border-top: 2px solid var(--border-primary);
+    border-bottom: 2px solid var(--border-primary);
+}
+
+.bv-arena canvas {
+    display: block;
+    image-rendering: pixelated;
+}
+
+/* 전투 로그 */
+.bv-log-area {
+    flex: 0 0 auto;
+    height: 200px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin: var(--spacing-xs);
+    margin-top: auto;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-secondary);
+    box-shadow: var(--rpg-border-outset);
+}
+
+.bv-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    line-height: 1.8;
+}
+
+.bv-log-entry { padding: 1px 0; color: var(--text-secondary); }
+.bv-log-entry.player { color: #80b0f8; }
+.bv-log-entry.monster { color: #f08080; }
+.bv-log-entry.crit { font-family: var(--font-bold); }
+.bv-log-entry.crit.player { color: #f8e830; }
+.bv-log-entry.crit.monster { color: #f86830; }
+.bv-log-entry.miss { color: var(--text-muted); }
+
+/* 결과 오버레이 */
+.bv-result-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.bv-result-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.bv-result-box {
+    text-align: center;
+    padding: var(--spacing-xl);
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-secondary);
+    box-shadow: var(--rpg-border-outset);
+    min-width: 240px;
+}
+
+.bv-result-box.victory { border-color: var(--color-warning); }
+.bv-result-box.defeat { border-color: var(--color-error); }
+
+.bv-result-title {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-xxl);
+    margin-bottom: var(--spacing-md);
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.8);
+}
+
+.bv-result-box.victory .bv-result-title { color: var(--color-warning); }
+.bv-result-box.defeat .bv-result-title { color: var(--color-error); }
+
+.bv-result-rewards { margin-bottom: var(--spacing-lg); }
+
+.bv-reward-row {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    padding: var(--spacing-xs) 0;
+}
+
+.bv-reward-row span {
+    color: var(--color-success);
+    font-family: var(--font-bold);
+    margin-left: var(--spacing-sm);
+}
+
+.bv-reward-row.level-up {
+    color: var(--color-warning);
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
+    animation: bvLevelUp 0.5s steps(2) infinite;
+}
+
+@keyframes bvLevelUp {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+.bv-result-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+}
+
+.bv-result-actions .btn { min-width: 90px; }

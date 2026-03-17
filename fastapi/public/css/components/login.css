@@ -85,8 +85,15 @@
     border-color: var(--border-highlight);
 }
 
-.login-btn {
+/* 버튼 영역 (로그인 + 회원가입) */
+.login-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
     width: 100%;
+}
+
+.login-btn {
+    flex: 1;
     padding: 12px;
     background: var(--text-accent);
     border: 2px solid #a02020;
@@ -114,6 +121,28 @@
 .login-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+}
+
+/* 회원가입 버튼 (서브 스타일) */
+.login-btn-sub {
+    background: var(--bg-card);
+    border: 2px solid var(--border-secondary);
+    box-shadow:
+        inset -2px -2px 0 0 var(--border-dark),
+        inset 2px 2px 0 0 var(--border-highlight);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    letter-spacing: 1px;
+}
+
+.login-btn-sub:hover {
+    background: var(--bg-tertiary);
+}
+
+.login-btn-sub:active {
+    box-shadow:
+        inset 2px 2px 0 0 var(--border-dark),
+        inset -2px -2px 0 0 var(--border-highlight);
 }
 
 .login-error {

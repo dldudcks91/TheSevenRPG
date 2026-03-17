@@ -1,5 +1,6 @@
 import random
 import logging
+from typing import Optional
 from database import SessionLocal
 from models import User, UserStat, Item
 from services.system.GameDataManager import GameDataManager
@@ -68,7 +69,7 @@ class BattleManager:
         return cls._exp_table_cache
 
     @classmethod
-    def _get_spawn_grade(cls, spawn_type: str) -> dict | None:
+    def _get_spawn_grade(cls, spawn_type: str) -> Optional[dict]:
         """스폰 등급 배율. CSV 우선, 없으면 폴백."""
         # 한글→영문 변환
         grade_en = cls._GRADE_KR_TO_EN.get(spawn_type, spawn_type)
@@ -148,7 +149,7 @@ class BattleManager:
     # ── 전투 스탯 로드 ─────────────────────────────────────
 
     @classmethod
-    async def _load_battle_stats(cls, user_no: int) -> dict | None:
+    async def _load_battle_stats(cls, user_no: int) -> Optional[dict]:
         """Redis 캐시 → DB 재계산 → Redis 저장"""
         cache_key = f"user:{user_no}:battle_stats"
 

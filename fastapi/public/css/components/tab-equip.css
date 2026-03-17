@@ -1,0 +1,199 @@
+/* ============================================
+   TheSevenRPG — Equip Tab (장비 탭)
+   ============================================ */
+
+.tab-equip {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* 섹션 */
+.equip-section {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-secondary);
+    box-shadow: var(--rpg-border-outset);
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.equip-section-title {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-xs);
+}
+
+/* 장착 슬롯 (일자) */
+.equip-slots {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.eq-slot {
+    width: 52px;
+    height: 52px;
+    border: 2px solid var(--border-secondary);
+    box-shadow: var(--rpg-border-inset);
+    background: var(--bg-input);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.eq-slot:hover {
+    border-color: var(--border-highlight);
+}
+
+.eq-slot.filled {
+    background: var(--bg-tertiary);
+}
+
+.eq-slot.rarity-normal { border-color: var(--rarity-normal); }
+.eq-slot.rarity-magic  { border-color: var(--rarity-magic); }
+.eq-slot.rarity-rare   { border-color: var(--rarity-rare); }
+.eq-slot.rarity-craft  { border-color: var(--rarity-craft); }
+.eq-slot.rarity-unique { border-color: var(--rarity-unique); }
+
+.eq-slot-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.eq-slot-label {
+    font-size: 8px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* 코스트 바 */
+.equip-cost-bar {
+    padding: var(--spacing-xs) var(--spacing-md);
+}
+
+.equip-cost-text {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.equip-cost-gauge {
+    width: 100%;
+    height: 8px;
+    background: var(--cost-bar-bg);
+    border: 1px solid var(--border-primary);
+    overflow: hidden;
+}
+
+.equip-cost-fill {
+    height: 100%;
+    background: var(--cost-bar);
+}
+
+/* 세트 요약 */
+.equip-set-summary {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    padding: 0 var(--spacing-md);
+    min-height: 14px;
+}
+
+/* 필터 바 */
+.equip-filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.equip-count {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.equip-filters {
+    display: flex;
+    gap: 2px;
+}
+
+.eq-filter {
+    padding: 2px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-main);
+    cursor: pointer;
+    min-height: 24px;
+}
+
+.eq-filter.active {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    border-color: var(--text-accent);
+}
+
+/* 아이콘 그리드 */
+.equip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+    gap: var(--spacing-xs);
+    min-height: 60px;
+}
+
+.equip-grid-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-lg);
+}
+
+/* 장비 아이콘 */
+.eq-icon {
+    width: 52px;
+    height: 52px;
+    border: 2px solid var(--border-primary);
+    background: var(--bg-card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+}
+
+.eq-icon:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-secondary);
+}
+
+.eq-icon.rarity-normal { border-color: var(--rarity-normal); }
+.eq-icon.rarity-magic  { border-color: var(--rarity-magic); }
+.eq-icon.rarity-rare   { border-color: var(--rarity-rare); }
+.eq-icon.rarity-craft  { border-color: var(--rarity-craft); }
+.eq-icon.rarity-unique { border-color: var(--rarity-unique); }
+
+.eq-icon-part {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.eq-icon-level {
+    font-size: 8px;
+    color: var(--text-secondary);
+    font-family: var(--font-bold);
+    margin-top: 2px;
+}
+
+/* 푸터 */
+.equip-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}

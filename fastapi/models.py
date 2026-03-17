@@ -18,7 +18,7 @@ class User(Base):
     status = Column(String(20), default="ACTIVE")
 
     gold = Column(BigInteger, default=0)
-    current_stage = Column(Integer, default=1)
+    current_stage = Column(Integer, default=101)
     max_inventory = Column(Integer, default=100)
 
     # 관계 설정
