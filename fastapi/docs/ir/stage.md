@@ -87,3 +87,4 @@ status: partial
 |------|------|
 | 2026-03-16 | 최초 작성 (Phase 5) |
 | 2026-03-17 | stage_id 구조 수정 (1~21 → 101~104 형식), 웨이브 구성 수정 ([일반3+정예1]×3+보스), stage_info.csv monster_pool/boss_id 컬럼 반영 |
+| 2026-03-18 | _generate_monster_pool 기획 반영: 종별 집중 배치(AAA→BBB→CCC), 13마리 구조, 웨이브4 보스 분리. stage_id 해금/진행 로직 개편 (101~704 형식 대응) |
