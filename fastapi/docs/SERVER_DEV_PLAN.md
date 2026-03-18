@@ -1,7 +1,7 @@
 # TheSevenRPG — 서버 개발 계획서
 
 > 최초 작성: 2026-03-12
-> 최종 업데이트: 2026-03-18 (기획서 교차 검증 — 방치파밍 제거, 카드 인벤토리화, ilvl/mlvl 체계, 사망패널티 10% 반영)
+> 최종 업데이트: 2026-03-18 (StageManager 몬스터풀 기획 반영 + 클라이언트 UI 개선)
 > 기준 기획서: `fastapi/docs/game_design/GAME_DESIGN.md`
 
 ---
@@ -262,7 +262,7 @@ Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
 - `enter_stage` (API 3003): 해금 여부 검증, stage_info.csv의 monster_pool/boss_id 기반 몬스터 풀 반환
 - `clear_stage` (API 3004): 다음 스테이지 해금, 챕터 보스 해금 체크
 
-> ⚠️ **코드 불일치**: 현재 코드는 [normal4+elite1]×3+boss=16마리 생성. 기획 확정은 [일반3+정예1]×3+보스=13마리. Phase 14에서 수정.
+> ✅ **2026-03-18**: 몬스터풀 기획 반영 완료 — 종별 집중 배치(AAA→BBB→CCC), [일반3+정예1]×3+보스=13마리, stage_id 101~704 해금 로직 개편
 > Phase 14에서 웨이브/체크포인트/귀환/사망 시스템으로 대폭 개편 예정
 
 ---
@@ -456,7 +456,7 @@ Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
 ```
 
 **작업 내용**
-- [ ] `enter_stage` 개편: BattleSession 생성, 웨이브1 몬스터 풀 반환, 몬스터 풀 [3+1]×3+보스=13마리로 수정
+- [ ] `enter_stage` 개편: BattleSession 생성, 웨이브1 몬스터 풀 반환 (**몬스터풀 13마리 구조는 2026-03-18 선행 수정 완료**)
 - [ ] `battle_result` 개편: 유닛 단위 전투 → 웨이브 진행 업데이트
 - [ ] 체크포인트: 웨이브 클리어 시 BattleSession 업데이트
 - [ ] `return_to_town` (API 3007): HP 보존 귀환, 세션 유지, 귀환 버튼 → 현재 유닛 전투 후 귀환
@@ -1000,7 +1000,7 @@ PVP 규칙:
 
 | 위치 | 불일치 내용 | 해결 Phase |
 |------|-----------|-----------|
-| `StageManager._generate_monster_pool` | [normal4+elite1]×3=16마리 → 기획 [3+1]×3+보스=13마리 | Phase 14 |
+| ~~`StageManager._generate_monster_pool`~~ | ~~[normal4+elite1]×3=16마리 → 기획 [3+1]×3+보스=13마리~~ | ✅ 2026-03-18 수정 완료 |
 | ~~`IdleFarmManager.py`~~ | ~~기획 제거됨, 코드 존재~~ | ✅ Phase 12.5 완료 |
 | ~~`APIManager.py` 3005/3006~~ | ~~삭제 대상 API 등록 중~~ | ✅ Phase 12.5 완료 |
 | ~~`UserInfoManager.get_user_info`~~ | ~~idle_farm Redis 참조 코드~~ | ✅ Phase 12.5 완료 |
