@@ -26,7 +26,7 @@
 ### 재작성 완료 ✅
 | 파일 | 상태 | 비고 |
 |------|------|------|
-| `models.py` | ✅ 완료 | User/UserStat/Item/Collection 4테이블, 기획서 기준 |
+| `models.py` | ✅ 완료 | User/UserStat/Item/Collection/BattleSession/Material/Card 7테이블 |
 | `UserInitManager.py` | ✅ 완료 | 회원가입(bcrypt 해싱) + 로그인(비밀번호 검증) |
 | `BattleManager.py` | ✅ 완료 | 전투 시뮬레이션 엔진, Redis 캐싱, 보상 지급 |
 | `InventoryManager.py` | ✅ 완료 | 장착/해제/조회/판매/인벤확장, 코스트 검증, Redis 무효화 |
@@ -34,7 +34,7 @@
 | `CollectionManager.py` | ✅ 완료 | 도감 조회/스킬 장착/해제 (⚠️ 카드 인벤토리화 반영 필요 — Phase 18.5) |
 | `UserInfoManager.py` | ✅ 수정 | 스탯 리셋 API 추가 (Phase 12) (⚠️ idle_farm 참조 코드 제거 필요 — Phase 12.5) |
 | `EnhanceManager.py` | ⏸️ 보류 | 기획 보류 (api_map 미등록, 코드 보존) |
-| `IdleFarmManager.py` | ❌ 삭제 예정 | 기획에서 완전 제거 (2026-03-17) — Phase 12.5에서 정리 |
+| `IdleFarmManager.py` | ❌ 삭제 완료 | 기획에서 완전 제거 (2026-03-17), Phase 12.5에서 정리 완료 |
 
 ---
 
@@ -373,22 +373,23 @@ Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
 
 ---
 
-### Phase 12.5 — 코드 정리 (기획 불일치 해소)
+### Phase 12.5 — 코드 정리 (기획 불일치 해소) ✅
 **목적**: 기획 제거/변경으로 인한 데드코드 정리 및 불일치 수정.
-**상태**: [ ] 미착수
+**상태**: ✅ 완료 (2026-03-18)
 
 **작업 내용**
-- [ ] `IdleFarmManager.py` 파일 삭제
-- [ ] `APIManager.py`에서 API 3005, 3006 제거
-- [ ] `UserInfoManager.get_user_info`에서 idle_farm Redis 조회 코드 제거
-- [ ] `main.py` 등 IdleFarm 관련 import/참조 전체 정리
-- [ ] IR 문서 `idle_farm.md` 상태를 `removed`로 변경
+- [x] `IdleFarmManager.py` 파일 삭제
+- [x] `APIManager.py`에서 API 3005, 3006 제거 + IdleFarmManager import 제거
+- [x] `services/rpg/__init__.py`에서 IdleFarmManager import 제거
+- [x] `UserInfoManager.get_user_info`에서 idle_farm Redis 조회 코드 제거 + `import time` 제거
+- [x] IR 문서 `idle_farm.md` 상태를 `removed`로 변경
+- [x] `.claude/rules/server.md`, `.claude/skills/` 내 idle_farm 관련 참조 정리
 
 ---
 
-### Phase 13 — DB 모델 확장
+### Phase 13 — DB 모델 확장 ✅
 **목적**: Phase 14~22에 필요한 신규 테이블과 컬럼 추가.
-**상태**: [ ] 미착수
+**상태**: ✅ 완료 (2026-03-18)
 
 **변경 파일**
 - `models.py` (수정)
@@ -1000,9 +1001,9 @@ PVP 규칙:
 | 위치 | 불일치 내용 | 해결 Phase |
 |------|-----------|-----------|
 | `StageManager._generate_monster_pool` | [normal4+elite1]×3=16마리 → 기획 [3+1]×3+보스=13마리 | Phase 14 |
-| `IdleFarmManager.py` | 기획 제거됨, 코드 존재 | Phase 12.5 |
-| `APIManager.py` 3005/3006 | 삭제 대상 API 등록 중 | Phase 12.5 |
-| `UserInfoManager.get_user_info` | idle_farm Redis 참조 코드 | Phase 12.5 |
+| ~~`IdleFarmManager.py`~~ | ~~기획 제거됨, 코드 존재~~ | ✅ Phase 12.5 완료 |
+| ~~`APIManager.py` 3005/3006~~ | ~~삭제 대상 API 등록 중~~ | ✅ Phase 12.5 완료 |
+| ~~`UserInfoManager.get_user_info`~~ | ~~idle_farm Redis 참조 코드~~ | ✅ Phase 12.5 완료 |
 | `ItemDropManager.process_kill` | DB 미저장 (클라이언트 신뢰) | Phase 17 |
 | `CollectionManager` | 도감 레벨업 전제 설계 + 스킬슬롯 | Phase 18.5 |
 | `Collections.collection_level` | 도감 레벨업 폐기됨, 컬럼 미사용 | Phase 18.5 |

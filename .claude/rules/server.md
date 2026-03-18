@@ -31,7 +31,6 @@ paths:
 ## Redis 캐시 키 네이밍
 ```
 user:{user_no}:battle_stats    # 전투 스탯 (장비 변경 시 무효화)
-user:{user_no}:idle_farm       # 방치형 타이머
 user:{user_no}:stage_progress  # 스테이지 진행
 session:{session_id}           # 세션 (TTL 7일)
 ```

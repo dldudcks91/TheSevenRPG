@@ -174,13 +174,11 @@ except RedisUnavailable:
 ```
 session:{session_id}              # 세션 (TTL: 7일)
 user:{user_no}:battle_stats       # 전투 스탯 캐시
-user:{user_no}:idle_farm          # 방치형 타이머
 user:{user_no}:stage_progress     # 스테이지 진행
 ```
 
 ### 무효화 규칙
 - 장비 장착/해제 → `user:{user_no}:battle_stats` 삭제
-- 파밍 결과 수령 → `user:{user_no}:idle_farm` 삭제
 
 ---
 

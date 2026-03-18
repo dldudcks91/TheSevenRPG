@@ -1,7 +1,7 @@
 from services.system import GameDataManager, UserInitManager, UserInfoManager
 from services.rpg import (
     InventoryManager, BattleManager, ItemDropManager,
-    StageManager, IdleFarmManager, CardManager,
+    StageManager, CardManager,
 )
 
 class APIManager:
@@ -29,6 +29,4 @@ class APIManager:
         3002: (ItemDropManager, ItemDropManager.process_kill),
         3003: (StageManager, StageManager.enter_stage),
         3004: (StageManager, StageManager.clear_stage),
-        3005: (IdleFarmManager, IdleFarmManager.toggle_idle),
-        3006: (IdleFarmManager, IdleFarmManager.collect_idle),
     }

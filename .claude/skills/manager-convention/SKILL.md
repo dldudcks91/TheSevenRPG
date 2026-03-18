@@ -187,7 +187,6 @@ except RedisUnavailable:
 | 아이템 강화 (장착된 장비) | `user:{user_no}:battle_stats` |
 | 아이템 판매 (장착된 장비) | `user:{user_no}:battle_stats` |
 | 레벨업 (스탯 변경) | `user:{user_no}:battle_stats` |
-| 방치형 수령 | `user:{user_no}:idle_farm` (타이머 리셋) |
 
 ### 캐시 무효화 조건 분기
 ```python

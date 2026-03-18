@@ -1,4 +1,3 @@
-import time
 import logging
 from database import SessionLocal
 from models import User, UserStat
@@ -20,7 +19,6 @@ class UserInfoManager:
         유저 캐릭터 정보 반환
         - User: gold, current_stage, max_inventory
         - UserStat: level, exp, stat_*
-        - Redis: 방치 파밍 상태
         """
         db = SessionLocal()
         try:
@@ -31,21 +29,6 @@ class UserInfoManager:
             stat = db.query(UserStat).filter(UserStat.user_no == user_no).first()
             if not stat:
                 return error_response(ErrorCode.USER_NOT_FOUND, "유저 스탯 정보가 없습니다.")
-
-            # 방치 파밍 상태 조회
-            idle_info = None
-            try:
-                idle_data = await RedisManager.hgetall(f"user:{user_no}:idle_farm")
-                if idle_data:
-                    start_time = int(idle_data["start_time"])
-                    elapsed = min(int(time.time()) - start_time, 86400)
-                    idle_info = {
-                        "active": True,
-                        "stage_id": int(idle_data["stage_id"]),
-                        "elapsed_seconds": elapsed,
-                    }
-            except RedisUnavailable:
-                logger.warning(f"[UserInfoManager] 방치 파밍 상태 조회 실패 - Redis 장애 (user_no={user_no})")
 
             return {
                 "success": True,
@@ -66,7 +49,6 @@ class UserInfoManager:
                         "cost": stat.stat_cost,
                     },
                     "stat_points": stat.stat_points,
-                    "idle_farm": idle_info,
                 },
             }
 
