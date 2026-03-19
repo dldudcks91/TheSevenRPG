@@ -82,6 +82,10 @@ class CombatUnit:
             return self.corrode_stacks > 0
         return self.status_effects.get(effect_name, 0) > 0
 
+    def has_any_status(self) -> bool:
+        """활성 상태이상이 하나라도 있는지"""
+        return bool(self.status_effects) or self.corrode_stacks > 0
+
     def tick_status(self, dt: float) -> dict:
         """dt초 경과. 상태이상 효과 처리. 반환: 이벤트 dict"""
         events = {}

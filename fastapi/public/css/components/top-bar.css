@@ -116,3 +116,90 @@
     height: 100%;
     background: var(--exp-bar);
 }
+
+/* 설정 버튼 */
+.top-bar-settings {
+    background: none;
+    border: 1px solid var(--border-secondary);
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 6px;
+    margin-right: var(--spacing-xs);
+    font-family: var(--font-main);
+}
+
+.top-bar-settings:hover {
+    color: var(--text-primary);
+    border-color: var(--border-highlight);
+}
+
+/* 설정 모달 */
+.settings-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9000;
+}
+
+.settings-box {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-secondary);
+    box-shadow: var(--rpg-border-outset);
+    padding: var(--spacing-lg);
+    min-width: 260px;
+    max-width: 320px;
+}
+
+.settings-title {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.settings-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.settings-lang-btns {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.settings-lang-btn {
+    padding: 4px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-main);
+    cursor: pointer;
+}
+
+.settings-lang-btn.active {
+    color: var(--text-primary);
+    border-color: var(--text-accent);
+    background: var(--bg-tertiary);
+}
+
+.settings-lang-btn:hover {
+    border-color: var(--border-highlight);
+}
+
+.settings-close {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+}

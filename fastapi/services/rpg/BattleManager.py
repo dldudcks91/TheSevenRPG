@@ -7,6 +7,7 @@ from models import User, UserStat, Item, BattleSession
 from services.system.GameDataManager import GameDataManager
 from services.redis_manager.RedisManager import RedisManager, RedisUnavailable
 from services.system.ErrorCode import ErrorCode, error_response
+from services.rpg.ItemDropManager import ItemDropManager
 
 logger = logging.getLogger("RPG_SERVER")
 
@@ -153,6 +154,8 @@ class BattleManager:
             wave_cleared = False
             stage_cleared = False
 
+            drops = []
+
             if result == "win":
                 # 킬 기록 업데이트
                 current_wave_kills.append({
@@ -163,6 +166,14 @@ class BattleManager:
                 session.wave_kills = wave_kills
                 flag_modified(session, "wave_kills")
                 session.current_hp = max(1, remaining_hp)
+
+                # 드롭 판정
+                drops = ItemDropManager.process_kill(session.stage_id, int(monster_idx), spawn_type)
+                if drops:
+                    pending = session.pending_drops or []
+                    pending.extend(drops)
+                    session.pending_drops = pending
+                    flag_modified(session, "pending_drops")
 
                 # 웨이브 클리어 판정
                 if len(current_wave_kills) >= expected_count:
@@ -233,6 +244,7 @@ class BattleManager:
                 "result": result,
                 "battle_log": battle_log,
                 "rewards": rewards,
+                "drops": drops,
                 "wave_cleared": wave_cleared,
                 "stage_cleared": stage_cleared,
                 "session": session_state,
@@ -286,6 +298,9 @@ class BattleManager:
                     base_wpn_atk  = opts.get("base_atk", 10.0)
                     base_wpn_aspd = opts.get("base_aspd", 1.0)
 
+            # 세트포인트 계산 (같은 DB 세션에서 basic_sin 조회)
+            set_points = cls._calc_set_points(equipped, user_no, db)
+
             battle = {
                 "level":      float(stat.level),
                 "max_hp":     (100 + stat.stat_vit * 10) * (1 + i_hp_pct / 100),
@@ -297,7 +312,23 @@ class BattleManager:
                 "crit_dmg":   1.5 + stat.stat_luck * 0.003 + i_crit_dmg,
                 "defense":    i_def,
                 "magic_def":  i_mdef,
+                "set_points": set_points,
             }
+
+            # 폭식 패널티: 2세트포인트 이상 시 스탯 감소
+            gluttony_pts = set_points.get("gluttony", 0)
+            if gluttony_pts >= 4:
+                penalty = 0.35
+            elif gluttony_pts >= 3:
+                penalty = 0.20
+            elif gluttony_pts >= 2:
+                penalty = 0.10
+            else:
+                penalty = 0
+            if penalty > 0:
+                battle["attack"] *= (1 - penalty)
+                battle["defense"] *= (1 - penalty)
+                battle["max_hp"] *= (1 - penalty)
 
             try:
                 await RedisManager.hmset(cache_key, {k: str(v) for k, v in battle.items()})
@@ -363,6 +394,31 @@ class BattleManager:
         # 사이즈 보정
         p_size_mult = get_size_correction(p_unit.size, m_unit.size)
         m_size_mult = get_size_correction(m_unit.size, p_unit.size)
+
+        # ── 세트 보너스 플래그 ──
+        set_points = player.get("set_points", {})
+        set_effects = cls._get_active_set_effects(set_points)
+        set_effect_ids = {e["effect_id"] for e in set_effects}
+
+        # 분노 2세트: 화상 부여 (타격 시)
+        has_set_burn = "burn" in set_effect_ids
+        # 분노 4세트: 잃은 체력 비례 공격력
+        has_set_lost_hp_atk = "lost_hp_atk" in set_effect_ids
+        # 분노 6세트: 최후의 저항
+        has_set_last_stand = "last_stand" in set_effect_ids
+        last_stand_used = False
+        # 시기 2세트: 중독 부여
+        has_set_poison = "poison" in set_effect_ids
+        # 시기 6세트: 약자멸시 (적 HP 30% 이하 방무)
+        has_set_weak_exec = "weak_execution" in set_effect_ids
+        # 탐욕 2세트: 스턴 부여
+        has_set_stun = "stun" in set_effect_ids
+        # 나태 2세트: 빙결 부여
+        has_set_freeze = "freeze" in set_effect_ids
+        # 색욕 2세트: 매혹 부여
+        has_set_charm = "charm" in set_effect_ids
+        # 오만 6세트: 상태이상 면역 + 상태이상 적 추가 피해
+        has_set_perfection = "perfection" in set_effect_ids
 
         # ── 정예 특성 플래그 ──
         has_wrath_rage = "wrath_rage" in traits
@@ -455,13 +511,30 @@ class BattleManager:
                 eff_crit_dmg = 1.5 if has_envy_deprive else p_unit.crit_dmg
                 gamble_mult = random.uniform(0.2, 1.8) if has_greed_gamble else 1.0
 
+                # 분노 4세트: 잃은 체력 비례 공격력 보너스
+                lost_hp_mult = 1.0
+                if has_set_lost_hp_atk and p_unit.max_hp > 0:
+                    lost_ratio = 1.0 - (p_unit.hp / p_unit.max_hp)
+                    lost_hp_mult = 1.0 + lost_ratio  # 최대 +100% (HP 0일 때)
+
+                # 시기 6세트: 약자멸시 (적 HP 30% 이하 방무)
+                eff_m_def = m_unit.defense
+                if has_set_weak_exec and m_unit.hp <= m_unit.max_hp * 0.3:
+                    eff_m_def = 0
+
                 entry = cls._attack_v2(
-                    "player", p_unit.atk * gamble_mult, p_unit.level, p_unit.acc,
-                    m_unit.defense, m_unit.eva, m_unit.level,
+                    "player", p_unit.atk * gamble_mult * lost_hp_mult, p_unit.level, p_unit.acc,
+                    eff_m_def, m_unit.eva, m_unit.level,
                     eff_crit, eff_crit_dmg, p_size_mult,
                 )
 
                 actual_dmg = entry["damage"]
+
+                # 오만 6세트: 상태이상 적에게 20% 추가 피해
+                if has_set_perfection and actual_dmg > 0 and m_unit.has_any_status():
+                    actual_dmg = int(actual_dmg * 1.2)
+                    entry["damage"] = actual_dmg
+
                 m_unit.hp -= actual_dmg
                 entry.update(turn=turn, target_hp=max(0, int(m_unit.hp)))
                 log.append(entry)
@@ -475,6 +548,18 @@ class BattleManager:
                     m_unit.apply_stagger(actual_dmg)
                     if m_unit.stagger_timer > 0:
                         report["m_staggers"] += 1
+
+                    # ── 세트 보너스: 타격 시 상태이상 부여 ──
+                    if has_set_burn and not m_unit.has_status("burn"):
+                        m_unit.apply_status("burn")
+                    if has_set_poison and not m_unit.has_status("poison"):
+                        m_unit.apply_status("poison")
+                    if has_set_stun and random.random() < 0.10 and not m_unit.has_status("stun"):
+                        m_unit.apply_status("stun")
+                    if has_set_freeze and random.random() < 0.20 and not m_unit.has_status("freeze"):
+                        m_unit.apply_status("freeze")
+                    if has_set_charm and not m_unit.has_status("charm"):
+                        m_unit.apply_status("charm")
                 else:
                     report["p_misses"] += 1
 
@@ -557,6 +642,12 @@ class BattleManager:
 
             elif m_timer >= 1.0 and m_unit.has_status("stun"):
                 m_timer -= 1.0
+
+        # ── 분노 6세트: 최후의 저항 (사망 시 1회 생존 + 체력 40% 회복) ──
+        if has_set_last_stand and not last_stand_used and p_unit.hp <= 0:
+            last_stand_used = True
+            p_unit.hp = int(p_unit.max_hp * 0.4)
+            log.append({"actor": "player", "action": "set_last_stand", "damage": 0, "crit": False, "turn": turn, "target_hp": int(p_unit.hp)})
 
         # ── 폭발하는 ──
         if has_exploding and m_unit.hp <= 0:
@@ -686,3 +777,53 @@ class BattleManager:
         penalty = int(stat.exp * DEATH_EXP_PENALTY_RATE)
         stat.exp = max(0, stat.exp - penalty)
         logger.info(f"[BattleManager] 사망 패널티 (user_no={user_no}, exp_lost={penalty}, remaining_exp={stat.exp})")
+
+    # ── 세트포인트 계산 ──
+
+    @classmethod
+    def _calc_set_points(cls, equipped_items, user_no: int, db=None) -> dict:
+        """
+        장착 장비의 prefix_id/suffix_id에서 세트포인트 합산.
+        한 장비에서 같은 죄종은 1로 카운트.
+        + basic_sin → +1
+        """
+        set_points = {}
+
+        for item in equipped_items:
+            item_sins = set()
+            if item.prefix_id:
+                item_sins.add(item.prefix_id.lower())
+            if item.suffix_id:
+                item_sins.add(item.suffix_id.lower())
+            for sin in item_sins:
+                set_points[sin] = set_points.get(sin, 0) + 1
+
+        # basic_sin 추가
+        if db:
+            user = db.query(User).filter(User.user_no == user_no).first()
+            if user and user.basic_sin:
+                sin = user.basic_sin.lower()
+                set_points[sin] = set_points.get(sin, 0) + 1
+
+        return set_points
+
+    # ── 세트 보너스 활성 효과 조회 ──
+
+    @classmethod
+    def _get_active_set_effects(cls, set_points: dict) -> list:
+        """세트포인트에서 활성화된 세트 효과 목록 반환"""
+        set_bonus_config = GameDataManager.REQUIRE_CONFIGS.get("set_bonus", {})
+        active = []
+
+        for sin, points in set_points.items():
+            sin_bonuses = set_bonus_config.get(sin, {})
+            for bp in sorted(sin_bonuses.keys()):
+                if points >= bp:
+                    effect = sin_bonuses[bp]
+                    if effect.get("status") == "confirmed":
+                        active.append({
+                            "sin": sin,
+                            "breakpoint": bp,
+                            **effect,
+                        })
+        return active

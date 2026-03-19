@@ -17,11 +17,17 @@ class GameDataManager:
         'rarity_config': {},
         'equip_bases': [],
         'prefixes': [],
+        'suffixes': [],
         'uniques': [],
         'chapters': {},
         'stages': {},
         'level_config': {},          # 레벨별 필요 XP + 보상 (CSV 미존재 시 BattleManager 폴백)
         'spawn_grade_config': {},    # 스폰 등급별 배율 (CSV 미존재 시 BattleManager 폴백)
+        'equip_drop_rate': [],       # mlvl 구간별 장비 등급 확률
+        'unique_drop_rate': {},      # 챕터보스별 유니크 드롭률
+        'gold_drop_config': {},      # 골드 드롭 공식 파라미터
+        'stigma_drop_config': {},    # 챕터보스별 낙인 드롭률
+        'set_bonus': {},             # 세트 보너스 (sin → breakpoint → effect)
     }
 
     def __new__(cls):
@@ -59,10 +65,11 @@ class GameDataManager:
             # 3. Drop Config
             for row in cls._read_csv(os.path.join(base_path, "monster_drop_config.csv")):
                 cls.REQUIRE_CONFIGS['drop_config'][int(row["monster_grade"])] = [
-                    ("Nodrop", int(row["Nodrop"])),
-                    ("gold", int(row["gold"])),
-                    ("equipment", int(row["equipment"])),
-                    ("etc", int(row["etc(Card/Mat)"]))
+                    ("Nodrop", float(row["Nodrop"])),
+                    ("gold", float(row["gold"])),
+                    ("equipment", float(row["equipment"])),
+                    ("card", float(row.get("card", 0))),
+                    ("etc", float(row.get("etc(Card/Mat)", row.get("etc", 0))))
                 ]
 
             # 4. Drop Equipment Weights (JSON 직렬화를 위해 튜플 대신 String Key 사용)
@@ -100,7 +107,10 @@ class GameDataManager:
             # 7. Equipment Prefix
             cls.REQUIRE_CONFIGS['prefixes'] = cls._read_csv(os.path.join(base_path, "equipment_prefix.csv"))
 
-            # 8. Equipment Unique
+            # 8. Equipment Suffix
+            cls.REQUIRE_CONFIGS['suffixes'] = cls._read_csv(os.path.join(base_path, "equipment_suffix.csv"))
+
+            # 8b. Equipment Unique
             cls.REQUIRE_CONFIGS['uniques'] = cls._read_csv(os.path.join(base_path, "equipment_unique.csv"))
 
             # 9. Chapter Info
@@ -119,10 +129,15 @@ class GameDataManager:
                 stage_idx = int(row["stage_idx"])
                 wave = int(row["wave"])
                 if stage_idx not in cls.REQUIRE_CONFIGS['stages']:
+                    dlvl = int(row.get("dlvl", 1)) if row.get("dlvl", "").strip() else 1
+                    ch_boss_mlvl_raw = row.get("chapter_boss_mlvl", "").strip()
+                    ch_boss_mlvl = int(ch_boss_mlvl_raw) if ch_boss_mlvl_raw else None
                     cls.REQUIRE_CONFIGS['stages'][stage_idx] = {
                         "chapter": int(row["chapter"]),
                         "stage_num": int(row["stage_num"]),
                         "stage_name": row["stage_name"],
+                        "dlvl": dlvl,
+                        "chapter_boss_mlvl": ch_boss_mlvl,
                         "waves": {},
                     }
                 cls.REQUIRE_CONFIGS['stages'][stage_idx]["waves"][wave] = int(row["monster_idx"])
@@ -142,6 +157,56 @@ class GameDataManager:
                     "atk_mult": float(row["atk_mult"]),
                     "exp_mult": float(row["exp_mult"]),
                     "gold_mult": float(row["gold_mult"]),
+                    "drop_roll": int(row.get("drop_roll", 1)) if row.get("drop_roll", "").strip() else 1,
+                }
+
+            # 13. Equip Drop Rate (mlvl 구간별 장비 등급 확률)
+            cls.REQUIRE_CONFIGS['equip_drop_rate'] = []
+            for row in cls._read_csv(os.path.join(base_path, "equip_drop_rate.csv")):
+                cls.REQUIRE_CONFIGS['equip_drop_rate'].append({
+                    "mlvl_min": int(row["mlvl_min"]),
+                    "mlvl_max": int(row["mlvl_max"]),
+                    "magic_rate": float(row["magic_rate"]),
+                    "rare_rate": float(row["rare_rate"]),
+                })
+
+            # 14. Unique Drop Rate (챕터보스별 유니크 드롭률)
+            for row in cls._read_csv(os.path.join(base_path, "unique_drop_rate.csv")):
+                cls.REQUIRE_CONFIGS['unique_drop_rate'][int(row["stage_idx"])] = {
+                    "mlvl": int(row["mlvl"]),
+                    "unique_rate": float(row["unique_rate"]) / 100.0,
+                }
+
+            # 15. Gold Drop Config
+            for row in cls._read_csv(os.path.join(base_path, "gold_drop_config.csv")):
+                cls.REQUIRE_CONFIGS['gold_drop_config'] = {
+                    "mlvl_mult": float(row["mlvl_base_multiplier"]),
+                    "base_constant": float(row["mlvl_base_constant"]),
+                    "random_min": float(row["random_min"]),
+                    "random_max": float(row["random_max"]),
+                }
+
+            # 16. Set Bonus
+            for row in cls._read_csv(os.path.join(base_path, "equipment_set_bonus.csv")):
+                set_id = row["set_id"]
+                bp = int(row["breakpoint"])
+                if set_id not in cls.REQUIRE_CONFIGS['set_bonus']:
+                    cls.REQUIRE_CONFIGS['set_bonus'][set_id] = {}
+                cls.REQUIRE_CONFIGS['set_bonus'][set_id][bp] = {
+                    "effect_type": row["effect_type"],
+                    "effect_id": row.get("effect_id", ""),
+                    "effect_name": row.get("effect_name", ""),
+                    "effect_desc": row.get("effect_desc", ""),
+                    "value_1": float(row["value_1"]) if row.get("value_1", "").strip() else 0,
+                    "value_2": float(row["value_2"]) if row.get("value_2", "").strip() else 0,
+                    "status": row.get("status", "confirmed"),
+                }
+
+            # 17. Stigma Drop Config (챕터보스별 낙인 드롭률)
+            for row in cls._read_csv(os.path.join(base_path, "stigma_drop_config.csv")):
+                cls.REQUIRE_CONFIGS['stigma_drop_config'][int(row["stage_idx"])] = {
+                    "sin_type": row["sin_type"],
+                    "stigma_rate": float(row["stigma_rate"]) / 100.0,
                 }
 
             cls._loaded = True

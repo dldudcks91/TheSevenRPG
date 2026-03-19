@@ -7,6 +7,7 @@ import EquipTab from './tabs/equip.js';
 import ItemTab from './tabs/item.js';
 import SkillTab from './tabs/skill.js';
 import CollectionTab from './tabs/collection.js';
+import { t } from '../i18n/index.js';
 
 const TAB_MODULES = {
     stat: StatTab,
@@ -17,11 +18,11 @@ const TAB_MODULES = {
 };
 
 const TABS = [
-    { key: 'stat',       icon: '\u{1F4CA}', label: '스탯' },
-    { key: 'equip',      icon: '\u2694',    label: '장비' },
-    { key: 'item',       icon: '\u{1F392}', label: '아이템' },
-    { key: 'skill',      icon: '\u26A1',    label: '스킬' },
-    { key: 'collection', icon: '\u{1F4D6}', label: '도감' },
+    { key: 'stat',       icon: '\u{1F4CA}', labelKey: 'tab_stat' },
+    { key: 'equip',      icon: '\u2694',    labelKey: 'tab_equip' },
+    { key: 'item',       icon: '\u{1F392}', labelKey: 'tab_item' },
+    { key: 'skill',      icon: '\u26A1',    labelKey: 'tab_skill' },
+    { key: 'collection', icon: '\u{1F4D6}', labelKey: 'tab_collection' },
 ];
 
 const LeftPanel = {
@@ -35,12 +36,12 @@ const LeftPanel = {
         el.innerHTML = `
             <div class="left-panel">
                 <div class="left-panel-tabs" id="lp-tabs">
-                    ${TABS.map(t => `
-                        <button class="lp-tab ${t.key === 'stat' ? 'active' : ''}"
-                                data-action="tab" data-tab="${t.key}"
-                                title="${t.label}">
-                            <span class="lp-tab-icon">${t.icon}</span>
-                            <span class="lp-tab-label">${t.label}</span>
+                    ${TABS.map(tab => `
+                        <button class="lp-tab ${tab.key === 'stat' ? 'active' : ''}"
+                                data-action="tab" data-tab="${tab.key}"
+                                title="${t(tab.labelKey)}">
+                            <span class="lp-tab-icon">${tab.icon}</span>
+                            <span class="lp-tab-label">${t(tab.labelKey)}</span>
                         </button>
                     `).join('')}
                 </div>
@@ -100,8 +101,8 @@ const LeftPanel = {
             module.mount(content);
         } else {
             this._activeModule = null;
-            const tab = TABS.find(t => t.key === tabKey);
-            content.innerHTML = `<div class="lp-tab-placeholder">${tab.label} 탭 (준비 중)</div>`;
+            const tab = TABS.find(tab => tab.key === tabKey);
+            content.innerHTML = `<div class="lp-tab-placeholder">${t(tab.labelKey)} ${t('tab_preparing')}</div>`;
         }
     },
 };

@@ -260,3 +260,113 @@
 }
 
 .bv-result-actions .btn { min-width: 90px; }
+
+/* ── 드롭 UI 개선 ── */
+
+.bv-drop-row {
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-xs) 0;
+}
+
+.bv-drop-gold {
+    color: var(--color-warning);
+    font-family: var(--font-bold);
+}
+
+.bv-drop-equip {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 3px var(--spacing-xs);
+    margin: 2px 0;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.bv-drop-equip:hover {
+    border-color: var(--border-secondary);
+    background: rgba(255,255,255,0.05);
+}
+
+.bv-drop-icon { font-size: var(--font-size-sm); flex-shrink: 0; }
+
+.bv-drop-name {
+    flex: 1;
+    font-size: var(--font-size-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bv-drop-tag {
+    font-size: 10px;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.08);
+    padding: 1px 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.bv-drop-card, .bv-drop-mat, .bv-drop-stigma {
+    font-size: var(--font-size-xs);
+    padding: 2px 0;
+}
+
+.bv-drop-card { color: #a78bfa; }
+.bv-drop-mat { color: var(--text-secondary); }
+.bv-drop-stigma { color: #f87171; font-family: var(--font-bold); }
+
+/* ── 아이템 상세 팝업 ── */
+
+.item-popup {
+    min-width: 200px;
+    max-width: 280px;
+}
+
+.ip-name {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.3;
+}
+
+.ip-meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--border-secondary);
+}
+
+.ip-options {
+    margin-bottom: var(--spacing-sm);
+}
+
+.ip-opt-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-xs);
+    padding: 2px 0;
+}
+
+.ip-opt-name { color: var(--text-secondary); }
+
+.ip-opt-val {
+    color: var(--color-success);
+    font-family: var(--font-mono);
+}
+
+.ip-affix {
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 1px 0;
+}
+
+.ip-set {
+    font-size: var(--font-size-xs);
+    color: var(--color-warning);
+    margin-top: var(--spacing-xs);
+    padding-top: var(--spacing-xs);
+    border-top: 1px solid var(--border-secondary);
+}

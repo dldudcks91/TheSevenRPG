@@ -96,10 +96,13 @@ class UserInitManager:
             starter_weapon = Item(
                 item_uid=str(uuid.uuid4()),
                 user_no=new_user.user_no,
-                base_item_id=1,
+                base_item_id=100101,
                 item_level=1,
-                rarity="normal",
+                rarity="magic",
                 item_cost=0,
+                prefix_id=None,
+                suffix_id=None,
+                dynamic_options={"base_atk": 8.0, "base_aspd": 1.25},
                 equip_slot="weapon",
                 is_equipped=True,
             )

@@ -1,8 +1,9 @@
 import logging
 from datetime import datetime
+from typing import Optional
 from sqlalchemy.orm.attributes import flag_modified
 from database import SessionLocal
-from models import User, UserStat, BattleSession
+from models import User, UserStat, BattleSession, Item, Card, Material, Collection
 from services.system.GameDataManager import GameDataManager
 from services.redis_manager.RedisManager import RedisManager, RedisUnavailable
 from services.system.ErrorCode import ErrorCode, error_response
@@ -54,12 +55,13 @@ class StageManager:
             if stage_id > user.current_stage:
                 return error_response(ErrorCode.STAGE_NOT_UNLOCKED, "아직 해금되지 않은 스테이지입니다.")
 
-            # 기존 세션 확인 (with_for_update로 동시 생성 방지)
+            # 기존 세션이 있으면 삭제 (재입장 허용)
             existing = db.query(BattleSession).filter(
                 BattleSession.user_no == user_no
             ).with_for_update().first()
             if existing:
-                return error_response(ErrorCode.BATTLE_SESSION_EXISTS, "이미 진행 중인 전투가 있습니다.")
+                logger.info(f"[StageManager] 기존 세션 삭제 (user_no={user_no}, old_stage={existing.stage_id})")
+                db.delete(existing)
 
             # 유저 전투 스탯에서 max_hp 계산
             stat = db.query(UserStat).filter(UserStat.user_no == user_no).first()
@@ -141,7 +143,9 @@ class StageManager:
             if not user:
                 return error_response(ErrorCode.USER_NOT_FOUND, "유저를 찾을 수 없습니다.")
 
-            # ── [4] 비즈니스 로직: 다음 스테이지 해금 + 세션 삭제 ──
+            # ── [4] 비즈니스 로직: pending_drops → DB 저장 + 해금 + 세션 삭제 ──
+            saved_drops = cls._save_pending_drops(db, user_no, user, session.pending_drops or [])
+
             unlocked = False
             if stage_id == user.current_stage and stage_id < LAST_STAGE:
                 next_stage = cls._next_stage_id(stage_id)
@@ -177,6 +181,7 @@ class StageManager:
                 "stage_id": stage_id,
                 "unlocked_next": unlocked,
                 "current_stage": current_stage,
+                "saved_drops": saved_drops,
             },
         }
 
@@ -284,7 +289,7 @@ class StageManager:
     # ── 헬퍼: 다음 스테이지 ID 계산 ──
 
     @classmethod
-    def _next_stage_id(cls, stage_id: int) -> int | None:
+    def _next_stage_id(cls, stage_id: int) -> Optional[int]:
         """101→102→103→104→201→202→...→704(마지막)"""
         chapter = stage_id // 100
         stage_num = stage_id % 100
@@ -335,6 +340,137 @@ class StageManager:
             pool.append({"wave": 4, "monsters": [{"monster_idx": boss_idx, "spawn_type": boss_type}]})
 
         return pool
+
+    # ── 헬퍼: pending_drops → DB 저장 ──
+
+    @classmethod
+    def _save_pending_drops(cls, db, user_no: int, user: User, pending_drops: list) -> dict:
+        """
+        pending_drops를 DB에 일괄 저장.
+        - gold → Users.gold 합산
+        - equipment → Items INSERT
+        - card → Cards INSERT + Collections 도감 등록
+        - material/stigma → Materials UPSERT
+        """
+        summary = {"gold": 0, "equipment": 0, "card": 0, "material": 0, "stigma": 0}
+
+        items_to_add = []
+        cards_to_add = []
+        total_gold = 0
+
+        # 인벤토리 현재 수 확인
+        current_item_count = db.query(Item).filter(Item.user_no == user_no).count()
+        max_inv = user.max_inventory
+
+        for drop in pending_drops:
+            drop_type = drop.get("type")
+
+            if drop_type == "gold":
+                total_gold += drop.get("amount", 0)
+                summary["gold"] += drop.get("amount", 0)
+
+            elif drop_type == "equipment":
+                # 인벤 가득 차면 장비 무시
+                if current_item_count + len(items_to_add) >= max_inv:
+                    continue
+                equip_data = drop.get("data", {})
+                if not equip_data:
+                    continue
+                item = Item(
+                    item_uid=equip_data.get("item_uid"),
+                    user_no=user_no,
+                    base_item_id=equip_data.get("base_item_id", 0),
+                    item_level=equip_data.get("item_level", 1),
+                    rarity=equip_data.get("rarity", "magic"),
+                    item_score=equip_data.get("item_score", 0),
+                    item_cost=equip_data.get("item_cost", 0),
+                    prefix_id=equip_data.get("prefix_id"),
+                    suffix_id=equip_data.get("suffix_id"),
+                    set_id=equip_data.get("set_id"),
+                    dynamic_options=equip_data.get("dynamic_options", {}),
+                    is_equipped=False,
+                    equip_slot=None,
+                )
+                items_to_add.append(item)
+                summary["equipment"] += 1
+
+            elif drop_type == "card":
+                monster_idx = drop.get("monster_idx")
+                if not monster_idx:
+                    continue
+                import uuid
+                card = Card(
+                    card_uid=str(uuid.uuid4()),
+                    user_no=user_no,
+                    monster_idx=int(monster_idx),
+                    card_level=1,
+                    card_stats={},
+                    is_equipped=False,
+                    skill_slot=None,
+                )
+                cards_to_add.append(card)
+                summary["card"] += 1
+
+                # 도감 등록 (첫 획득 시 자동 등록)
+                existing_col = db.query(Collection).filter(
+                    Collection.user_no == user_no,
+                    Collection.monster_idx == int(monster_idx),
+                ).first()
+                if not existing_col:
+                    col = Collection(
+                        user_no=user_no,
+                        monster_idx=int(monster_idx),
+                        card_count=1,
+                        collection_level=1,
+                    )
+                    db.add(col)
+                else:
+                    existing_col.card_count += 1
+
+            elif drop_type == "material":
+                mat_type = drop.get("material_type", "ore")
+                mat_id = drop.get("material_id", 1)
+                amount = drop.get("amount", 1)
+                cls._upsert_material(db, user_no, mat_type, mat_id, amount)
+                summary["material"] += amount
+
+            elif drop_type == "stigma":
+                sin_type = drop.get("sin_type", "")
+                if sin_type:
+                    # 낙인은 material_type="stigma", material_id는 죄종 번호
+                    sin_id_map = {"wrath": 1, "envy": 2, "greed": 3, "sloth": 4, "gluttony": 5, "lust": 6, "pride": 7}
+                    mat_id = sin_id_map.get(sin_type, 0)
+                    cls._upsert_material(db, user_no, "stigma", mat_id, 1)
+                    summary["stigma"] += 1
+
+        # bulk 저장
+        if total_gold > 0:
+            user.gold += total_gold
+        if items_to_add:
+            db.add_all(items_to_add)
+        if cards_to_add:
+            db.add_all(cards_to_add)
+
+        logger.info(f"[StageManager] _save_pending_drops (user_no={user_no}, gold={summary['gold']}, equip={summary['equipment']}, card={summary['card']}, mat={summary['material']}, stigma={summary['stigma']})")
+        return summary
+
+    @classmethod
+    def _upsert_material(cls, db, user_no: int, material_type: str, material_id: int, amount: int):
+        """재료 UPSERT — 기존이면 amount 증가, 없으면 INSERT"""
+        existing = db.query(Material).filter(
+            Material.user_no == user_no,
+            Material.material_type == material_type,
+            Material.material_id == material_id,
+        ).first()
+        if existing:
+            existing.amount += amount
+        else:
+            db.add(Material(
+                user_no=user_no,
+                material_type=material_type,
+                material_id=material_id,
+                amount=amount,
+            ))
 
     # ── 헬퍼: 최대 HP 계산 ──
 

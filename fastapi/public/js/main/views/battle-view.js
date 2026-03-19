@@ -6,7 +6,9 @@ import { apiCall } from '../../api.js';
 import { Store } from '../../store.js';
 import { showLoading, hideLoading } from '../../utils.js';
 import { getMonsterName, getStageName } from '../../meta-data.js';
+import { t, sinName, rarityName, slotName } from '../../i18n/index.js';
 import MainScreen from '../../main.js';
+import Popup from '../../popup.js';
 
 /** stage_id → 배경 이미지 경로 */
 function getStageBgUrl(stageId) {
@@ -97,10 +99,15 @@ const BattleView = {
 
         switch (target.dataset.action) {
             case 'battle-again':
+                Popup.hide();
                 this._startBattle();
                 break;
             case 'battle-back':
+                Popup.hide();
                 MainScreen.switchRightView('town');
+                break;
+            case 'show-drop-detail':
+                this._showDropPopup(target);
                 break;
         }
     },
@@ -143,6 +150,20 @@ const BattleView = {
         this.refs.arena.style.backgroundSize = 'cover';
         this.refs.arena.style.backgroundPosition = 'center';
 
+        // 서버에 스테이지 재입장 (3003) — 새 BattleSession 생성
+        showLoading();
+        try {
+            const enterResult = await apiCall(3003, { stage_id: stageId });
+            if (!enterResult?.success) {
+                console.error('[Battle] enter_stage failed:', enterResult);
+                MainScreen.switchRightView('town');
+                return;
+            }
+            Store.set('battle.monster_pool', enterResult.data.monsters);
+        } finally {
+            hideLoading();
+        }
+
         const monsterPool = Store.get('battle.monster_pool');
         if (!monsterPool || monsterPool.length === 0) {
             MainScreen.switchRightView('town');
@@ -177,13 +198,14 @@ const BattleView = {
                 let data;
                 try {
                     const result = await apiCall(3001, { monster_idx: monsterIdx, spawn_type: spawnType });
+                    console.log('[Battle] 3001 response:', result?.success, result?.error_code, result?.message);
                     if (!result?.success) { finalResult = 'lose'; break; }
                     data = result.data;
                 } finally {
                     hideLoading();
                 }
 
-                await this._playBattleLog(data, monsterIdx);
+                await this._playBattleLog(data, monsterIdx, spawnType);
 
                 const rw = data.rewards || {};
                 totalRewards.exp_gained += rw.exp_gained || 0;
@@ -206,7 +228,7 @@ const BattleView = {
 
     // ── battle_log 재생 ──
 
-    _playBattleLog(data, monsterIdx) {
+    _playBattleLog(data, monsterIdx, spawnType) {
         return new Promise((resolve) => {
             const log = data.battle_log || [];
 
@@ -221,7 +243,7 @@ const BattleView = {
             this.refs.playerHp.style.width = '100%';
             this.refs.monsterHp.style.width = '100%';
 
-            this._initPhaser(monsterIdx);
+            this._initPhaser(monsterIdx, spawnType);
 
             let i = 0;
             const delay = 350;
@@ -289,68 +311,133 @@ const BattleView = {
 
         this.refs.result.innerHTML = `
             <div class="bv-result-box ${isVictory ? 'victory' : 'defeat'}">
-                <div class="bv-result-title">${isVictory ? '\u2694\uFE0F 승리!' : '\u{1F480} 패배...'}</div>
+                <div class="bv-result-title">${isVictory ? '\u2694\uFE0F ' + t('battle_victory') : '\u{1F480} ' + t('battle_defeat')}</div>
                 ${isVictory ? `
                     <div class="bv-result-rewards">
                         ${rewards.exp_gained ? `<div class="bv-reward-row">EXP <span>+${rewards.exp_gained}</span></div>` : ''}
                         ${rewards.gold_gained ? `<div class="bv-reward-row">Gold <span>+${rewards.gold_gained}</span></div>` : ''}
-                        ${rewards.leveled_up ? '<div class="bv-reward-row level-up">LEVEL UP!</div>' : ''}
+                        ${rewards.leveled_up ? `<div class="bv-reward-row level-up">${t('battle_level_up')}</div>` : ''}
                         ${dropsHtml ? `<div class="bv-drops-section">${dropsHtml}</div>` : ''}
                     </div>
                 ` : ''}
                 <div class="bv-result-actions">
-                    <button class="btn btn-primary" data-action="battle-again">재도전</button>
-                    <button class="btn" data-action="battle-back">마을로</button>
+                    <button class="btn btn-primary" data-action="battle-again">${t('battle_retry')}</button>
+                    <button class="btn" data-action="battle-back">${t('battle_back')}</button>
                 </div>
             </div>
         `;
         this.refs.result.classList.add('show');
     },
 
+    /** 드롭 저장 (팝업용) */
+    _lastDrops: [],
+
     _formatDrops(drops) {
         if (!drops || drops.length === 0) return '';
+        this._lastDrops = drops;
 
-        const grouped = {};
-        drops.forEach(d => {
-            const key = d.type;
-            if (!grouped[key]) grouped[key] = [];
-            grouped[key].push(d);
+        let totalGold = 0;
+        const equipDrops = [];
+        const cardDrops = [];
+        const matDrops = [];
+        const stigmaDrops = [];
+
+        drops.forEach((d, idx) => {
+            if (d.type === 'gold') totalGold += (d.amount || 0);
+            else if (d.type === 'equipment') equipDrops.push({ ...d, _idx: idx });
+            else if (d.type === 'card') cardDrops.push(d);
+            else if (d.type === 'material') matDrops.push(d);
+            else if (d.type === 'stigma') stigmaDrops.push(d);
         });
 
         let html = '<div class="bv-drops-list">';
 
-        if (grouped.equipment) {
-            html += '<div class="bv-drop-category">⚔️ 장비</div>';
-            grouped.equipment.forEach(drop => {
-                const equip = drop.data || {};
-                const rarityColor = {
-                    'magic': '#3f51b5',
-                    'rare': '#ff9800',
-                    'craft': '#e91e63',
-                    'unique': '#ffd700'
-                }[equip.rarity] || '#999';
-                html += `<div class="bv-drop-item" style="color: ${rarityColor}">• ${equip.name || '아이템'}</div>`;
+        if (totalGold > 0) {
+            html += `<div class="bv-drop-row bv-drop-gold">💰 Gold +${totalGold.toLocaleString()}</div>`;
+        }
+
+        if (equipDrops.length > 0) {
+            html += `<div class="bv-drop-category">${t('drop_equipment')}</div>`;
+            equipDrops.forEach(drop => {
+                const eq = drop.data || {};
+                const rc = { magic: 'var(--color-magic)', rare: 'var(--color-rare)', unique: 'var(--color-unique)', craft: 'var(--color-craft)' };
+                const color = rc[eq.rarity] || 'var(--text-secondary)';
+                html += `<div class="bv-drop-item bv-drop-equip" data-action="show-drop-detail" data-drop-idx="${drop._idx}" style="color:${color}" data-popup-trigger>
+                    <span class="bv-drop-icon">⚔</span>
+                    <span class="bv-drop-name">${eq.name || t('drop_equipment')}</span>
+                    <span class="bv-drop-tag">iLv ${eq.item_level || '?'}</span>
+                </div>`;
             });
         }
 
-        if (grouped.card) {
-            html += '<div class="bv-drop-category">🎴 카드</div>';
-            grouped.card.forEach(drop => {
-                html += `<div class="bv-drop-item">• ${drop.data?.name || '카드'}</div>`;
+        if (cardDrops.length > 0) {
+            html += `<div class="bv-drop-category">${t('drop_card')}</div>`;
+            cardDrops.forEach(drop => {
+                const name = getMonsterName(drop.monster_idx);
+                html += `<div class="bv-drop-item bv-drop-card">🃏 ${name} ${t('drop_card')}</div>`;
             });
         }
 
-        if (grouped.gold) {
-            html += '<div class="bv-drop-category">💰 재료</div>';
-            grouped.gold.forEach(drop => {
-                html += `<div class="bv-drop-item">• Gold +${drop.amount || 0}</div>`;
+        if (matDrops.length > 0) {
+            const matNames = { ore: t('mat_ore'), potion: t('mat_potion'), quest_material: t('mat_quest') };
+            html += `<div class="bv-drop-category">${t('drop_material')}</div>`;
+            matDrops.forEach(drop => {
+                const name = matNames[drop.material_type] || drop.material_type;
+                html += `<div class="bv-drop-item bv-drop-mat">🪨 ${name} Lv${drop.material_id} ×${drop.amount}</div>`;
             });
         }
 
-        if (grouped.ore) {
-            grouped.ore.forEach(drop => {
-                html += `<div class="bv-drop-item">• 광석 +${drop.amount || 0}</div>`;
+        if (stigmaDrops.length > 0) {
+            html += `<div class="bv-drop-category">${t('drop_stigma')}</div>`;
+            stigmaDrops.forEach(drop => {
+                html += `<div class="bv-drop-item bv-drop-stigma">🔥 ${sinName(drop.sin_type)}${t('drop_stigma_of')}</div>`;
             });
+        }
+
+        html += '</div>';
+        return html;
+    },
+
+    // ── 드롭 아이템 상세 팝업 ──
+
+    _showDropPopup(target) {
+        const idx = parseInt(target.dataset.dropIdx);
+        const drop = this._lastDrops[idx];
+        if (!drop || drop.type !== 'equipment') return;
+
+        const eq = drop.data || {};
+        const html = this._buildItemPopupHtml(eq);
+        Popup.showSingle(html, target, { pinned: true });
+    },
+
+    _buildItemPopupHtml(eq) {
+        const rarityClass = eq.rarity || 'magic';
+
+        let html = `<div class="item-popup rarity-${rarityClass}">`;
+        html += `<div class="ip-name" style="color:var(--color-${rarityClass})">${eq.name || t('drop_equipment')}</div>`;
+        html += `<div class="ip-meta">${rarityName(eq.rarity)} ${slotName(eq.equip_slot)} &nbsp;|&nbsp; iLv ${eq.item_level || 0} &nbsp;|&nbsp; Cost ${eq.item_cost || 0}</div>`;
+
+        // 옵션
+        const opts = eq.dynamic_options || {};
+        const optEntries = Object.entries(opts);
+        if (optEntries.length > 0) {
+            html += '<div class="ip-options">';
+            optEntries.forEach(([key, val]) => {
+                const display = typeof val === 'number' ? (val > 0 ? `+${val.toFixed(1)}` : val.toFixed(1)) : val;
+                const label = t(`opt_${key}`) !== `opt_${key}` ? t(`opt_${key}`) : key;
+                html += `<div class="ip-opt-row"><span class="ip-opt-name">${label}</span><span class="ip-opt-val">${display}</span></div>`;
+            });
+            html += '</div>';
+        }
+
+        if (eq.prefix_id) {
+            html += `<div class="ip-affix">${t('prefix_label')}: ${sinName(eq.prefix_id)}</div>`;
+        }
+        if (eq.suffix_id) {
+            html += `<div class="ip-affix">${t('suffix_label')}: ${sinName(eq.suffix_id)}</div>`;
+        }
+        if (eq.set_id) {
+            html += `<div class="ip-set">${t('set_label')}: ${sinName(eq.set_id)}</div>`;
         }
 
         html += '</div>';
@@ -359,14 +446,14 @@ const BattleView = {
 
     // ── Phaser ──
 
-    _initPhaser(monsterIdx) {
+    _initPhaser(monsterIdx, spawnType) {
         this._destroyPhaser();
 
         const arenaEl = this.refs.arena;
         const width = arenaEl.clientWidth || 600;
         const height = arenaEl.clientHeight || 300;
 
-        const scene = new BattlePhaserScene(width, height, monsterIdx || 0);
+        const scene = new BattlePhaserScene(width, height, monsterIdx || 0, spawnType || '일반');
         this._battleScene = scene;
 
         this._phaserGame = new Phaser.Game({
@@ -390,12 +477,20 @@ const BattleView = {
 
 // ── Phaser Scene ──
 
+// 등급별 틴트 색상
+const SPAWN_TINT = {
+    '정예':     0x4488ff,
+    '보스':     0xff4444,
+    '챕터보스': 0xffaa00,
+};
+
 class BattlePhaserScene extends Phaser.Scene {
-    constructor(w, h, monsterIdx) {
+    constructor(w, h, monsterIdx, spawnType) {
         super({ key: 'BattleScene' });
         this._w = w;
         this._h = h;
         this._monsterIdx = monsterIdx;
+        this._spawnType = spawnType || '일반';
         this.playerSprite = null;
         this.monsterSprite = null;
     }
@@ -427,15 +522,18 @@ class BattlePhaserScene extends Phaser.Scene {
         }
 
         // 몬스터 (우측) — 이미지 있으면 스프라이트, 없으면 사각형
+        const tint = SPAWN_TINT[this._spawnType];
         if (this.textures.exists('monster')) {
             this.monsterSprite = this.add.image(cx + 180, bottom, 'monster');
             this.monsterSprite.setDisplaySize(240, 240);
             this.monsterSprite.setOrigin(0.5, 1.0);
+            if (tint) this.monsterSprite.setTint(tint);
         } else {
-            this.monsterSprite = this.add.rectangle(cx + 180, bottom - 35, 56, 70, 0xe53935);
-            this.monsterSprite.setStrokeStyle(2, 0xef9a9a);
+            const rectColor = tint || 0xe53935;
+            this.monsterSprite = this.add.rectangle(cx + 180, bottom - 35, 56, 70, rectColor);
+            this.monsterSprite.setStrokeStyle(2, tint ? 0xffffff : 0xef9a9a);
             this.add.text(cx + 180, bottom, 'Monster', {
-                fontSize: '12px', color: '#ef9a9a', fontFamily: 'sans-serif',
+                fontSize: '12px', color: tint ? '#ffffff' : '#ef9a9a', fontFamily: 'sans-serif',
             }).setOrigin(0.5);
         }
     }

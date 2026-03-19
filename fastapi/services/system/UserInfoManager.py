@@ -7,8 +7,11 @@ from services.system.ErrorCode import ErrorCode, error_response
 logger = logging.getLogger("RPG_SERVER")
 
 
+VALID_SIN_TYPES = {"wrath", "envy", "greed", "sloth", "gluttony", "lust", "pride"}
+
+
 class UserInfoManager:
-    """유저 정보 관리 (API 1004, 1005)"""
+    """유저 정보 관리 (API 1004, 1005, 1006)"""
 
     INITIAL_STAT_VALUE = 5           # 스탯 초기값 (5종 모두 동일)
     STAT_RESET_COST_PER_LEVEL = 100  # 스탯 리셋 비용 = 레벨 × 이 값
@@ -49,6 +52,7 @@ class UserInfoManager:
                         "cost": stat.stat_cost,
                     },
                     "stat_points": stat.stat_points,
+                    "basic_sin": user.basic_sin,
                 },
             }
 
@@ -136,5 +140,56 @@ class UserInfoManager:
                     "cost": stat.stat_cost,
                 },
                 "reset_cost": reset_cost,
+            },
+        }
+
+    # ── API 1006: 베이직 죄종 선택 ──
+
+    @classmethod
+    async def select_basic_sin(cls, user_no: int, data: dict):
+        """
+        API 1006: 베이직 죄종 선택/변경
+        - 해당 죄종 세트포인트 +1
+        - 변경 시 기존 선택 덮어쓰기 (무료)
+        """
+        # ── [1] 입력 추출 ──
+        sin_type = data.get("sin_type")
+        if not sin_type or sin_type not in VALID_SIN_TYPES:
+            return error_response(ErrorCode.INVALID_REQUEST, f"유효하지 않은 죄종입니다. (허용: {', '.join(VALID_SIN_TYPES)})")
+
+        # ── [3] DB 세션 + 검증 ──
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.user_no == user_no).with_for_update().first()
+            if not user:
+                return error_response(ErrorCode.USER_NOT_FOUND, "유저를 찾을 수 없습니다.")
+
+            old_sin = user.basic_sin
+
+            # ── [4] 비즈니스 로직 ──
+            user.basic_sin = sin_type
+
+            # ── [5] 커밋 + 캐시 무효화 ──
+            db.commit()
+            logger.info(f"[UserInfoManager] select_basic_sin (user_no={user_no}, {old_sin}→{sin_type})")
+
+            try:
+                await RedisManager.delete(f"user:{user_no}:battle_stats")
+            except RedisUnavailable:
+                logger.warning(f"[UserInfoManager] battle_stats 캐시 무효화 실패 (user_no={user_no})")
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"[UserInfoManager] select_basic_sin 실패: {e}", exc_info=True)
+            return error_response(ErrorCode.DB_ERROR, "베이직 죄종 선택 중 오류가 발생했습니다.")
+        finally:
+            db.close()
+
+        # ── [6] 응답 반환 ──
+        return {
+            "success": True,
+            "message": f"베이직 죄종이 {sin_type}(으)로 설정되었습니다.",
+            "data": {
+                "basic_sin": sin_type,
             },
         }

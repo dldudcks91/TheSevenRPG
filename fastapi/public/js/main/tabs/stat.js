@@ -5,6 +5,7 @@
 import { apiCall } from '../../api.js';
 import { Store } from '../../store.js';
 import { formatGold } from '../../utils.js';
+import { t } from '../../i18n/index.js';
 
 const StatTab = {
     el: null,
@@ -16,18 +17,18 @@ const StatTab = {
         el.innerHTML = `
             <div class="tab-stat">
                 <div class="stat-section">
-                    <div class="stat-section-title">캐릭터 정보</div>
+                    <div class="stat-section-title">${t('stat_char_info')}</div>
                     <div class="stat-info-grid">
                         <div class="stat-info-row">
-                            <span>레벨</span>
+                            <span>${t('stat_level')}</span>
                             <span id="ts-level">1</span>
                         </div>
                         <div class="stat-info-row">
-                            <span>경험치</span>
+                            <span>${t('stat_exp')}</span>
                             <span id="ts-exp">0 / 0</span>
                         </div>
                         <div class="stat-info-row">
-                            <span>골드</span>
+                            <span>${t('stat_gold')}</span>
                             <span id="ts-gold" class="gold-text">0 G</span>
                         </div>
                     </div>
@@ -35,7 +36,7 @@ const StatTab = {
 
                 <div class="stat-section">
                     <div class="stat-section-title">
-                        스탯 배분
+                        ${t('stat_alloc')}
                         <span class="stat-sp" id="ts-sp"></span>
                     </div>
                     <div class="stat-alloc-list" id="ts-alloc">
@@ -43,20 +44,13 @@ const StatTab = {
                 </div>
 
                 <div class="stat-section">
-                    <div class="stat-section-title">전투 스탯</div>
+                    <div class="stat-section-title">${t('stat_combat')}</div>
                     <div class="stat-combat-grid" id="ts-combat">
                     </div>
                 </div>
 
                 <div class="stat-section">
-                    <div class="stat-section-title">세트 보너스</div>
-                    <div class="stat-set-list" id="ts-sets">
-                        <div class="stat-set-empty">장비를 장착하면 세트 효과가 표시됩니다</div>
-                    </div>
-                </div>
-
-                <div class="stat-section">
-                    <button class="stat-reset-btn" data-action="reset-stats">스탯 리셋</button>
+                    <button class="stat-reset-btn" data-action="reset-stats">${t('stat_reset')}</button>
                 </div>
             </div>
         `;
@@ -75,6 +69,7 @@ const StatTab = {
             Store.subscribe('stats.vit', () => this._render()),
             Store.subscribe('stats.luck', () => this._render()),
             Store.subscribe('stats.cost', () => this._render()),
+            Store.subscribe('inventory.items', () => this._render()),
         );
 
         this._render();
@@ -120,11 +115,11 @@ const StatTab = {
 
         // 스탯 배분
         const stats = [
-            { key: 'str',  label: 'STR',  storeKey: 'stats.str',  desc: '공격력 +0.5%' },
-            { key: 'dex',  label: 'DEX',  storeKey: 'stats.dex',  desc: '공속 +0.3%, 명중 +5' },
-            { key: 'vit',  label: 'VIT',  storeKey: 'stats.vit',  desc: 'HP +10' },
-            { key: 'luck', label: 'LUK',  storeKey: 'stats.luck', desc: '치확 +5, 회피 +5' },
-            { key: 'cost', label: 'COST', storeKey: 'stats.cost', desc: '최대코스트 +2' },
+            { key: 'str',  label: 'STR',  storeKey: 'stats.str',  desc: t('stat_str_desc') },
+            { key: 'dex',  label: 'DEX',  storeKey: 'stats.dex',  desc: t('stat_dex_desc') },
+            { key: 'vit',  label: 'VIT',  storeKey: 'stats.vit',  desc: t('stat_vit_desc') },
+            { key: 'luck', label: 'LUK',  storeKey: 'stats.luck', desc: t('stat_luck_desc') },
+            { key: 'cost', label: 'COST', storeKey: 'stats.cost', desc: t('stat_cost_desc') },
         ];
 
         this.el.querySelector('#ts-alloc').innerHTML = stats.map(s => {
@@ -151,16 +146,64 @@ const StatTab = {
     },
 
     _renderCombatStats() {
-        const vit = Store.get('stats.vit') || 0;
-        const hp = 100 + vit * 10;
+        const str  = Store.get('stats.str') || 10;
+        const dex  = Store.get('stats.dex') || 10;
+        const vit  = Store.get('stats.vit') || 10;
+        const luck = Store.get('stats.luck') || 10;
+        const cost = Store.get('stats.cost') || 10;
+        const level = Store.get('user.level') || 1;
+
+        // 장비 옵션 합산
+        const items = Store.get('inventory.items') || [];
+        const equipped = items.filter(i => i.equip_slot);
+
+        let iAtkPct = 0, iAspdPct = 0, iHpPct = 0;
+        let iAcc = 0, iEva = 0, iCritCh = 0, iCritDmg = 0;
+        let iDef = 0, iMdef = 0;
+        let baseWpnAtk = 10, baseWpnAspd = 1.0;
+
+        equipped.forEach(item => {
+            const o = item.dynamic_options || {};
+            iAtkPct  += o.atk_pct || 0;
+            iAspdPct += o.aspd_pct || 0;
+            iHpPct   += o.hp_pct || o.hp_bonus || 0;
+            iAcc     += o.acc || o.accuracy || 0;
+            iEva     += o.eva || o.evasion || 0;
+            iCritCh  += o.crit_chance || o.crit_rate || 0;
+            iCritDmg += o.crit_dmg || o.crit_damage || 0;
+            iDef     += o.def || 0;
+            iMdef    += o.mdef || 0;
+            if (item.equip_slot === 'weapon') {
+                baseWpnAtk  = o.base_atk || 10;
+                baseWpnAspd = o.base_aspd || 1.0;
+            }
+        });
+
+        const maxHp    = Math.floor((100 + vit * 10) * (1 + iHpPct / 100));
+        const attack   = (baseWpnAtk * (1 + str * 0.005) * (1 + iAtkPct / 100)).toFixed(1);
+        const atkSpeed = (baseWpnAspd * (1 + dex * 0.003) * (1 + iAspdPct / 100)).toFixed(2);
+        const accRaw   = dex * 5 + iAcc;
+        const evaRaw   = luck * 5 + iEva;
+        const critChRaw = luck * 5 + iCritCh;
+        const acc      = (accRaw * 0.001).toFixed(3);
+        const eva      = (evaRaw * 0.001).toFixed(3);
+        const critCh   = (critChRaw * 0.001 * 100).toFixed(1);
+        const critDmg  = (1.5 + luck * 0.003 + iCritDmg).toFixed(2);
+        const defense  = iDef.toFixed(0);
+        const mdef     = iMdef.toFixed(0);
+        const maxCost  = level + cost * 2;
 
         const combatStats = [
-            { label: 'HP',       value: `${hp}` },
-            { label: '공격력',    value: '-' },
-            { label: '공격속도',  value: '-' },
-            { label: '명중률',    value: '-' },
-            { label: '회피율',    value: '-' },
-            { label: '치명타',    value: '-' },
+            { label: t('combat_hp'),          value: maxHp },
+            { label: t('combat_atk'),         value: attack },
+            { label: t('combat_aspd'),        value: atkSpeed },
+            { label: t('combat_acc'),         value: acc },
+            { label: t('combat_eva'),         value: eva },
+            { label: t('combat_crit_ch'),     value: `${critCh}%` },
+            { label: t('combat_crit_dmg'),    value: `x${critDmg}` },
+            { label: t('combat_def'),         value: defense },
+            { label: t('combat_mdef'),        value: mdef },
+            { label: t('combat_max_cost'),    value: maxCost },
         ];
 
         this.el.querySelector('#ts-combat').innerHTML = combatStats.map(s => `
@@ -184,7 +227,7 @@ const StatTab = {
     },
 
     async _resetStats() {
-        if (!confirm('스탯을 리셋하시겠습니까?\n골드가 소비됩니다.')) return;
+        if (!confirm(t('stat_reset_confirm'))) return;
 
         const result = await apiCall(1005, {});
         if (result?.success) {

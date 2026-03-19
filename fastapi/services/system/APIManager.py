@@ -1,6 +1,6 @@
 from services.system import GameDataManager, UserInitManager, UserInfoManager
 from services.rpg import (
-    InventoryManager, BattleManager, ItemDropManager,
+    InventoryManager, BattleManager,
     StageManager, CardManager,
 )
 
@@ -11,6 +11,7 @@ class APIManager:
         1003: (UserInitManager, UserInitManager.create_new_user),
         1004: (UserInfoManager, UserInfoManager.get_user_info),
         1005: (UserInfoManager, UserInfoManager.reset_stats),
+        1006: (UserInfoManager, UserInfoManager.select_basic_sin),
         1007: (UserInitManager, UserInitManager.login),
 
         # === RPG 인벤토리 API (2xxx) ===
@@ -26,7 +27,7 @@ class APIManager:
 
         # === RPG 전투 API (3xxx) ===
         3001: (BattleManager, BattleManager.battle_result),
-        3002: (ItemDropManager, ItemDropManager.process_kill),
+        # 3002: 제거 — ItemDropManager는 BattleManager 내부 호출로 전환 (Phase 17)
         3003: (StageManager, StageManager.enter_stage),
         3004: (StageManager, StageManager.clear_stage),
         3007: (StageManager, StageManager.return_to_town),

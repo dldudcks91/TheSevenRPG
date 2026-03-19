@@ -4,6 +4,7 @@
  */
 import { getSessionId, clearSession } from './session.js';
 import { showToast } from './utils.js';
+import { t } from './i18n/index.js';
 
 const MAX_RETRIES = 3;
 const BASE_DELAY = 1000;
@@ -49,7 +50,7 @@ export async function apiCall(apiCode, data = {}) {
         }
     }
 
-    showToast('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.', 'error');
+    showToast(t('error_network'), 'error');
     return null;
 }
 
@@ -61,7 +62,7 @@ function handleApiError(result) {
     // E1002: 세션 만료 → 로그인 화면으로
     if (errorCode === 'E1002') {
         clearSession();
-        showToast('세션이 만료되었습니다. 다시 로그인해주세요.', 'warning');
+        showToast(t('error_session'), 'warning');
         // 순환 의존 방지: app.js의 navigate() 대신 직접 hash 변경
         window.location.hash = '#login';
         return;

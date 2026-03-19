@@ -5,7 +5,8 @@
 import { Store } from '../store.js';
 import { formatGold } from '../utils.js';
 import { clearSession } from '../session.js';
-import { switchView } from '../app.js';
+import { SceneManager } from '../scene-manager.js';
+import { t, getLang, setLang, onLangChange } from '../i18n/index.js';
 
 const TopBar = {
     el: null,
@@ -25,7 +26,8 @@ const TopBar = {
                     <div class="top-bar-stats" id="tb-stats"></div>
                     <div class="top-bar-right">
                         <span class="top-bar-gold" id="tb-gold">0 G</span>
-                        <button class="top-bar-logout" data-action="logout">로그아웃</button>
+                        <button class="top-bar-settings" data-action="settings">\u2699</button>
+                        <button class="top-bar-logout" data-action="logout">${t('logout')}</button>
                     </div>
                 </div>
                 <div class="top-bar-exp">
@@ -42,9 +44,10 @@ const TopBar = {
             expFill: el.querySelector('#tb-exp-fill'),
         };
 
-        // 이벤트 위임
+        // 이벤트 위임 (el + 설정 모달용 document)
         this._handleEvent = this._onEvent.bind(this);
         el.addEventListener('pointerdown', this._handleEvent);
+        document.addEventListener('pointerdown', this._handleEvent);
 
         // Store 구독
         this._unsubscribers.push(
@@ -64,6 +67,7 @@ const TopBar = {
     unmount() {
         if (this._handleEvent) {
             this.el.removeEventListener('pointerdown', this._handleEvent);
+            document.removeEventListener('pointerdown', this._handleEvent);
         }
         this._unsubscribers.forEach(unsub => unsub());
         this._unsubscribers = [];
@@ -73,9 +77,21 @@ const TopBar = {
         const target = e.target.closest('[data-action]');
         if (!target) return;
 
-        if (target.dataset.action === 'logout') {
-            clearSession();
-            switchView('login');
+        switch (target.dataset.action) {
+            case 'logout':
+                clearSession();
+                SceneManager.resetTo('login');
+                break;
+            case 'settings':
+                this._showSettings();
+                break;
+            case 'lang-select':
+                setLang(target.dataset.lang);
+                location.reload();
+                break;
+            case 'close-settings':
+                this._hideSettings();
+                break;
         }
     },
 
@@ -98,6 +114,33 @@ const TopBar = {
         }
 
         this.refs.stats.innerHTML = html;
+    },
+
+    _showSettings() {
+        if (document.getElementById('settings-modal')) return;
+        const lang = getLang();
+        const modal = document.createElement('div');
+        modal.id = 'settings-modal';
+        modal.className = 'settings-overlay';
+        modal.innerHTML = `
+            <div class="settings-box">
+                <div class="settings-title">${t('settings_title')}</div>
+                <div class="settings-row">
+                    <span class="settings-label">${t('settings_language')}</span>
+                    <div class="settings-lang-btns">
+                        <button class="settings-lang-btn ${lang === 'ko' ? 'active' : ''}" data-action="lang-select" data-lang="ko">한국어</button>
+                        <button class="settings-lang-btn ${lang === 'en' ? 'active' : ''}" data-action="lang-select" data-lang="en">English</button>
+                    </div>
+                </div>
+                <button class="btn settings-close" data-action="close-settings">${t('settings_close')}</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    _hideSettings() {
+        const modal = document.getElementById('settings-modal');
+        if (modal) modal.remove();
     },
 
     _renderExp() {

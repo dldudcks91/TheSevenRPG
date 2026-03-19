@@ -4,6 +4,7 @@
  */
 import { Store } from '../../store.js';
 import { getMonsterName, getChapters } from '../../meta-data.js';
+import { t } from '../../i18n/index.js';
 import Popup from '../../popup.js';
 
 const CollectionTab = {
@@ -85,8 +86,7 @@ const CollectionTab = {
         if (chapterCollections.length === 0) {
             groupsEl.innerHTML = `
                 <div class="coll-empty">
-                    아직 수집한 카드가 없습니다.<br>
-                    몬스터를 처치하면 카드를 획득할 수 있습니다.
+                    ${t('collection_empty')}
                 </div>
             `;
             return;
@@ -95,7 +95,7 @@ const CollectionTab = {
         groupsEl.innerHTML = `
             <div class="coll-group">
                 <div class="coll-group-header">
-                    <span>수집 현황</span>
+                    <span>${t('collection_status')}</span>
                     <span class="coll-group-count">${chapterCollections.length}종</span>
                 </div>
                 <div class="coll-card-grid">
@@ -130,15 +130,15 @@ const CollectionTab = {
             <div class="popup-divider"></div>
             <div class="popup-option-row">
                 <span>Lv.1</span>
-                <span class="popup-option-value ${card.collection_level >= 1 ? 'up' : ''}">스킬 해금</span>
+                <span class="popup-option-value ${card.collection_level >= 1 ? 'up' : ''}">${t('collection_skill_unlock')}</span>
             </div>
             <div class="popup-option-row">
                 <span>Lv.2</span>
-                <span class="popup-option-value ${card.collection_level >= 2 ? 'up' : ''}">발동확률↑</span>
+                <span class="popup-option-value ${card.collection_level >= 2 ? 'up' : ''}">${t('collection_prob_up')}</span>
             </div>
             <div class="popup-option-row">
                 <span>Lv.3</span>
-                <span class="popup-option-value ${card.collection_level >= 3 ? 'up' : ''}">능력치↑</span>
+                <span class="popup-option-value ${card.collection_level >= 3 ? 'up' : ''}">${t('collection_stat_up')}</span>
             </div>
         `;
 

@@ -6,7 +6,8 @@
 import { apiCall } from '../api.js';
 import { saveSession } from '../session.js';
 import { showLoading, hideLoading } from '../utils.js';
-import { switchView } from '../app.js';
+import { SceneManager } from '../scene-manager.js';
+import { t } from '../i18n/index.js';
 
 const LoginScreen = {
     el: null,
@@ -19,24 +20,24 @@ const LoginScreen = {
             el.innerHTML = `
                 <div class="login-screen">
                     <div class="login-title">THE SEVEN</div>
-                    <div class="login-subtitle">7대 죄악의 성에 오신 것을 환영합니다</div>
+                    <div class="login-subtitle">${t('login_title')}</div>
                     <div class="login-form">
                         <input class="login-input"
                                id="login-name"
                                type="text"
-                               placeholder="닉네임"
+                               placeholder="${t('login_nickname_ph')}"
                                maxlength="20"
                                autocomplete="off" />
                         <input class="login-input"
                                id="login-pw"
                                type="password"
-                               placeholder="비밀번호"
+                               placeholder="${t('login_password_ph')}"
                                maxlength="30"
                                autocomplete="off" />
                         <div class="login-error" id="login-error"></div>
                         <div class="login-buttons">
-                            <button class="login-btn" data-action="login">로그인</button>
-                            <button class="login-btn login-btn-sub" data-action="signup">회원가입</button>
+                            <button class="login-btn" data-action="login">${t('login_btn')}</button>
+                            <button class="login-btn login-btn-sub" data-action="signup">${t('signup_btn')}</button>
                         </div>
                     </div>
                 </div>
@@ -88,22 +89,22 @@ const LoginScreen = {
 
         // 검증
         if (!userName) {
-            this.refs.error.textContent = '닉네임을 입력해주세요.';
+            this.refs.error.textContent = t('login_err_name_empty');
             this.refs.name.focus();
             return;
         }
         if (userName.length < 2) {
-            this.refs.error.textContent = '닉네임은 2자 이상이어야 합니다.';
+            this.refs.error.textContent = t('login_err_name_short');
             this.refs.name.focus();
             return;
         }
         if (!password) {
-            this.refs.error.textContent = '비밀번호를 입력해주세요.';
+            this.refs.error.textContent = t('login_err_pw_empty');
             this.refs.pw.focus();
             return;
         }
         if (password.length < 4) {
-            this.refs.error.textContent = '비밀번호는 4자 이상이어야 합니다.';
+            this.refs.error.textContent = t('login_err_pw_short');
             this.refs.pw.focus();
             return;
         }
@@ -120,11 +121,17 @@ const LoginScreen = {
             if (result?.success) {
                 const { user_no, user_name, session_id } = result.data;
                 saveSession(session_id, user_no, user_name);
-                switchView('main');
+
+                // 회원가입(1003) → 프롤로그, 로그인(1007) → 바로 메인
+                if (apiCode === 1003) {
+                    SceneManager.replace('prologue');
+                } else {
+                    SceneManager.replace('main');
+                }
             } else if (result) {
-                this.refs.error.textContent = result.message || '요청에 실패했습니다.';
+                this.refs.error.textContent = result.message || t('error_request');
             } else {
-                this.refs.error.textContent = '서버에 연결할 수 없습니다.';
+                this.refs.error.textContent = t('login_err_server');
             }
         } finally {
             hideLoading();

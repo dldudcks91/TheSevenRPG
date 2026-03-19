@@ -6,6 +6,7 @@
 import { apiCall } from '../../api.js';
 import { Store } from '../../store.js';
 import { getMonsterName } from '../../meta-data.js';
+import { t } from '../../i18n/index.js';
 import Popup from '../../popup.js';
 
 const SKILL_SLOTS = [
@@ -28,7 +29,7 @@ const SkillTab = {
         el.innerHTML = `
             <div class="tab-skill">
                 <div class="skill-section">
-                    <div class="skill-section-title">장착 스킬 슬롯</div>
+                    <div class="skill-section-title">${t('skill_equipped_slots')}</div>
                     <div class="skill-slots" id="sk-slots">
                         ${SKILL_SLOTS.map(s => {
                             const unlockLv = SLOT_UNLOCK_LEVELS[s.key];
@@ -44,7 +45,7 @@ const SkillTab = {
 
                 <div class="skill-section">
                     <div class="skill-section-title">
-                        미장착 스킬
+                        ${t('skill_unequipped')}
                         <span class="skill-count" id="sk-count">0개</span>
                     </div>
                     <div class="skill-grid" id="sk-grid"></div>
@@ -117,14 +118,14 @@ const SkillTab = {
             if (!unlocked) {
                 slotEl.classList.add('locked');
                 iconEl.textContent = '\u{1F512}';
-                slotEl.title = `Lv.${unlockLv}에 해금`;
+                slotEl.title = t('skill_unlock_at', { lv: unlockLv });
             } else if (equipped) {
                 slotEl.classList.add('filled');
                 iconEl.textContent = '\u26A1';
                 slotEl.title = getMonsterName(equipped.monster_idx) + ' 스킬';
             } else {
                 iconEl.textContent = '';
-                slotEl.title = '빈 슬롯';
+                slotEl.title = t('skill_empty_slot');
             }
         });
 
@@ -134,7 +135,7 @@ const SkillTab = {
 
         const grid = this.el.querySelector('#sk-grid');
         if (unequipped.length === 0) {
-            grid.innerHTML = '<div class="skill-grid-empty">해금된 스킬이 없습니다</div>';
+            grid.innerHTML = `<div class="skill-grid-empty">${t('skill_no_skills')}</div>`;
             return;
         }
 
@@ -169,9 +170,9 @@ const SkillTab = {
             <div class="popup-name">\u26A1 ${name}</div>
             <div class="popup-info">도감 Lv.${equipped.collection_level}</div>
             <div class="popup-divider"></div>
-            <div class="popup-info">카드 ${equipped.card_count}장</div>
+            <div class="popup-info">${t('skill_card_count', { n: equipped.card_count })}</div>
             <div class="popup-actions">
-                <button class="btn" data-action="unequip-skill" data-idx="${equipped.monster_idx}">해제</button>
+                <button class="btn" data-action="unequip-skill" data-idx="${equipped.monster_idx}">${t('unequip_btn')}</button>
             </div>
         `;
         Popup.showSingle(html, anchorEl, { pinned: true });
@@ -188,11 +189,11 @@ const SkillTab = {
         const name = getMonsterName(skill.monster_idx);
 
         const rightHtml = `
-            <div class="popup-header">미장착 \u25B6</div>
+            <div class="popup-header">${t('skill_unequipped')} \u25B6</div>
             <div class="popup-name">\u26A1 ${name}</div>
             <div class="popup-info">도감 Lv.${skill.collection_level}</div>
             <div class="popup-divider"></div>
-            <div class="popup-info">카드 ${skill.card_count}장</div>
+            <div class="popup-info">${t('skill_card_count', { n: skill.card_count })}</div>
             <div class="popup-actions">
                 <button class="btn btn-primary" data-action="equip-skill" data-idx="${skill.monster_idx}">장착</button>
             </div>
@@ -202,15 +203,15 @@ const SkillTab = {
         if (equippedInSlot) {
             const eqName = getMonsterName(equippedInSlot.monster_idx);
             leftHtml = `
-                <div class="popup-header">\u25C0 장착중 (S1)</div>
+                <div class="popup-header">\u25C0 ${t('skill_equipped_at')} (S1)</div>
                 <div class="popup-name">\u26A1 ${eqName}</div>
                 <div class="popup-info">도감 Lv.${equippedInSlot.collection_level}</div>
                 <div class="popup-divider"></div>
-                <div class="popup-info">카드 ${equippedInSlot.card_count}장</div>
+                <div class="popup-info">${t('skill_card_count', { n: equippedInSlot.card_count })}</div>
             `;
         } else {
             leftHtml = `
-                <div class="popup-header">\u25C0 장착중</div>
+                <div class="popup-header">\u25C0 ${t('skill_equipped_at')}</div>
                 <div class="popup-info">비어있음</div>
             `;
         }

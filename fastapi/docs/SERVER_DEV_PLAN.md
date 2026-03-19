@@ -1,7 +1,7 @@
 # TheSevenRPG — 서버 개발 계획서
 
 > 최초 작성: 2026-03-12
-> 최종 업데이트: 2026-03-19 (Phase 14~16 구현 완료)
+> 최종 업데이트: 2026-03-19 (Phase 17, 22 구현 완료)
 > 기준 기획서: `fastapi/docs/game_design/GAME_DESIGN.md`
 
 ---
@@ -20,7 +20,7 @@
 | `SessionManager.py` | 완성 | Redis 세션 생성/검증/삭제 |
 | `RedisManager.py` | 완성 | 비동기 Redis 싱글톤 |
 | `GameDataManager.py` | 완성 | CSV → 메모리 로드 |
-| `ItemDropManager.py` | 완성 | 드롭 판정, 아이템 생성 로직 (⚠️ DB 미저장 — Phase 17에서 서버사이드 저장으로 전환) |
+| `ItemDropManager.py` | ✅ 완료 | 드롭 시스템 v2 — mlvl 기반, 5종 드롭, 서버사이드 저장 (Phase 17) |
 | `APIManager.py` | 완성 | api_map 등록 |
 
 ### 재작성 완료 ✅
@@ -47,6 +47,7 @@
 | 1003 | UserInitManager | `create_new_user` | 회원가입 (비밀번호 해싱 + 세션 발급) | ✅ 완성 |
 | 1004 | UserInfoManager | `get_user_info` | 유저 정보 조회 (스탯/골드) | ✅ 완성 |
 | 1005 | UserInfoManager | `reset_stats` | 스탯 리셋 (골드 소비) | ✅ 완성 |
+| 1006 | UserInfoManager | `select_basic_sin` | 베이직 죄종 선택/변경 | ✅ 완성 |
 | 1007 | UserInitManager | `login` | 로그인 (비밀번호 검증 + 세션 발급) | ✅ 완성 |
 | 2001 | InventoryManager | `equip_item` | 장비 장착 | ✅ 완성 |
 | 2002 | InventoryManager | `unequip_item` | 장비 해제 | ✅ 완성 |
@@ -57,7 +58,7 @@
 | 2008 | CollectionManager | `equip_skill` | 스킬 슬롯 장착 | ✅ 완성 |
 | 2009 | CollectionManager | `unequip_skill` | 스킬 슬롯 해제 | ✅ 완성 |
 | 3001 | BattleManager | `battle_result` | 전투 시뮬레이션 결과 | ✅ 완성 |
-| 3002 | ItemDropManager | `process_kill` | 몬스터 킬 & 드롭 처리 | ✅ 완성 |
+| ~~3002~~ | ~~ItemDropManager~~ | ~~`process_kill`~~ | ~~몬스터 킬 & 드롭 처리~~ | ❌ 삭제 (Phase 17 — 내부 호출 전환) |
 | 3003 | StageManager | `enter_stage` | 스테이지 입장 (BattleSession 생성) | ✅ 완성 |
 | 3004 | StageManager | `clear_stage` | 스테이지 클리어 (보스 처치 후) | ✅ 완성 |
 | 3007 | StageManager | `return_to_town` | 마을 귀환 (HP 보존) | ✅ 완성 |
@@ -78,7 +79,7 @@
 
 | api_code | Manager | 메서드 | 설명 | Phase |
 |----------|---------|--------|------|-------|
-| 1006 | UserInfoManager | `select_basic_sin` | 베이직 죄종 선택 | 22 |
+| ~~1006~~ | ~~UserInfoManager~~ | ~~`select_basic_sin`~~ | ~~베이직 죄종 선택~~ | ✅ 22 완료 |
 | 2010 | InventoryManager | `disassemble_item` | 장비 분해 | 21 |
 | 2011 | MaterialManager | `use_potion` | 포션 사용 | 18 |
 | 2012 | CardManager | `get_cards` | 카드 인벤토리 조회 | 18.5 |
@@ -120,7 +121,7 @@ Phase 15   (정예 몬스터 특성) ✅ 완료
     ↓
 Phase 16   (전투 엔진 v2) ✅ 부분완료 ← 경직/사이즈/마저항/상태이상/리포트 (카드스킬/세트=스텁)
     ↓
-Phase 17   (드롭 시스템 v2) ← ilvl/mlvl/dlvl 체계 + 7종 드롭
+Phase 17   (드롭 시스템 v2) ✅ 완료 ← ilvl/mlvl/dlvl + 5종 드롭 + 서버사이드 저장
     ↓
 Phase 18   (재료 아이템 관리) ← 포션/광석/낙인/퀘스트재료/카드영혼
     ↓
@@ -132,7 +133,7 @@ Phase 20   (NPC 시설) ← 상인/퀘스트/흔적 조합소
     ↓
 Phase 21   (장비 분해)
     ↓
-Phase 22   (세트 보너스) ← 세트포인트 + 베이직 죄종 선택
+Phase 22   (세트 보너스) ✅ 완료 ← 세트포인트 + 베이직 죄종 + 전투 적용
 
 === Phase 23~ (엔드콘텐츠 — 추후) ===
 Phase 23   (PVP / 아레나) ← Lv20 이상, 6등급, 시즌제
@@ -559,53 +560,46 @@ Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
 
 ---
 
-### Phase 17 — 드롭 시스템 v2
-**목적**: 장비 전용이던 드롭을 7종 아이템으로 확장. ilvl/mlvl/dlvl 체계 적용. 서버사이드 DB 저장.
-**상태**: [ ] 미착수
+### Phase 17 — 드롭 시스템 v2 ✅
+**목적**: 장비 전용이던 드롭을 5종 카테고리로 확장. ilvl/mlvl/dlvl 체계 적용. 서버사이드 DB 저장.
+**상태**: ✅ 완료 (2026-03-19)
 **의존성**: Phase 13 (Materials/Cards 테이블), Phase 14 (웨이브 시스템)
 
-**변경 파일**
-- `services/rpg/ItemDropManager.py` (대폭 개편)
+**변경 파일 (5개)**
+- `services/rpg/ItemDropManager.py` (전면 재작성)
+- `services/rpg/BattleManager.py` (수정 — 드롭 호출 연동)
+- `services/rpg/StageManager.py` (수정 — pending_drops → DB 저장)
+- `services/system/GameDataManager.py` (수정 — 신규 CSV 로더)
+- `services/system/APIManager.py` (수정 — API 3002 제거)
 
-**기획 (확정)**
-```
-ilvl/mlvl/dlvl 체계 (D2 구조):
-- dlvl = 스테이지별 던전 레벨 (수치 배분 미확정 — 3안 중 선택 필요)
-- mlvl 보정: 일반=dlvl / 정예=dlvl+2 / 스테이지보스=dlvl+3 / 챕터보스=고정(cap 50)
-- ilvl = 드롭 몬스터의 mlvl
-- mlvl↑ → 상위 등급 드롭 확률↑ + 접사 수치 상한↑
+**신규 CSV (4개)**
+- `equip_drop_rate.csv` — mlvl 구간별 magic/rare 확률
+- `unique_drop_rate.csv` — 챕보별 유니크 드롭률 (3~10%)
+- `gold_drop_config.csv` — 골드 드롭 공식 파라미터
+- `stigma_drop_config.csv` — 챕보별 낙인 드롭률 (5%)
 
-스폰 등급별 드롭:
-| 등급 | 골드 | 포션 | 광석 | 퀘재 | 카드 | 장비 | 낙인 |
-|------|------|------|------|------|------|------|------|
-| 일반 | O | O | O | O | 극악 | X | X |
-| 정예 | O | O | O | O | 극악 | O(매직/레어) | X |
-| 보스 | O | O | O | O | 극악 | O(레어/유니크) | X |
-| 챕보 | O | O | O | X | 극악 | O(전용유니크) | O(희귀) |
+**수정 CSV (2개)**
+- `stage_info.csv` — dlvl, chapter_boss_mlvl 컬럼 추가 (C안 계단형)
+- `monster_drop_config.csv` — card 카테고리 분리 (5카테고리)
 
-타겟 파밍 3축:
-- 지역→죄종 편향 (접사 확률)
-- 몬스터 베이스→부위 편향 (장비 부위 가중치)
-- 챕터 보스→낙인 (크래프팅 죄종)
-```
+**구현 완료 항목**
+- [x] dlvl 배분: C안(계단형) — Ch1(2~8) → Ch7(47~49), 챕보 고정(15~50)
+- [x] mlvl 계산: 일반=dlvl / 정예=dlvl+2 / 스테보=dlvl+3 / 챕보=고정, cap 50
+- [x] 5종 드롭 카테고리: Nodrop / gold / equipment / card / etc(재료)
+- [x] 장비 등급: equip_drop_rate.csv 기반 (mlvl↑ → rare 확률↑)
+- [x] 장비 생성: 접두사 + 접미사(rare), 지역 죄종 편향(×2), 부위 가중치
+- [x] 골드 드롭: (mlvl×2+5) × grade.gold_mult × random(0.8~1.2)
+- [x] 카드 드롭: 처치 몬스터 1:1, Cards INSERT + 도감 자동 등록
+- [x] 재료 드롭: Materials UPSERT (광석, Phase 18에서 세분화)
+- [x] 유니크 드롭: 챕보 전용 (unique_drop_rate.csv)
+- [x] 낙인 드롭: 챕보 전용 (stigma_drop_config.csv)
+- [x] 서버사이드 DB 저장: pending_drops 축적 → clear_stage에서 일괄 커밋
+- [x] API 3002 제거 (내부 호출 전환 — 어뷰징 방지)
 
-**작업 내용**
-- [ ] ilvl/mlvl 계산 로직 구현
-- [ ] 드롭 판정 로직: 등급별 7종 아이템 개별 확률 (mlvl 기반)
-- [ ] 장비 드롭: 지역 죄종 편향 + 몬스터 베이스 부위 편향
-- [ ] 카드 드롭: Cards 테이블에 저장 + CollectionManager.register_card 연동 (도감 자동 등록)
-- [ ] 재료 드롭: Materials 테이블에 스택 추가
-- [ ] 낙인 드롭: 챕터 보스 전용
-- [ ] **서버사이드 DB 저장**: process_kill이 직접 DB에 저장 (현재 클라이언트 신뢰 구조 → 제거)
-- [ ] 드롭 CSV 메타데이터 확장
-
-**기획 확정 대기 항목**
-- dlvl 스테이지별 배분 수치 (A-동행형 / B-선형형 / C-계단형 중 선택)
-- mlvl별 등급 드롭 확률 테이블
-- 접사 qlvl(수치 요구 레벨) 체계
-- 골드 드롭량 공식
-- 낙인 드롭률 수치
-- 카드 드롭률 수치 (일반 vs 보스 차등)
+**미구현 (후속 Phase)**
+- 접사 qlvl 체계 (mlvl에 따른 접사 수치 스케일링) — 현재는 min~max 전체
+- etc 세분화 (포션/광석/퀘재) — Phase 18
+- 유니크 아이템 데이터 (equipment_unique.csv 비어있음) — 기획 필요
 
 ---
 
@@ -737,9 +731,9 @@ ilvl/mlvl/dlvl 체계 (D2 구조):
 
 ---
 
-### Phase 22 — 세트 보너스 시스템
+### Phase 22 — 세트 보너스 시스템 ✅
 **목적**: 세트포인트 계산 + 베이직 죄종 선택 + 세트 보너스 전투 적용.
-**상태**: [ ] 미착수
+**상태**: ✅ 완료 (2026-03-19)
 **의존성**: Phase 16 (전투 엔진 v2)
 
 **변경 파일**
@@ -767,10 +761,12 @@ ilvl/mlvl/dlvl 체계 (D2 구조):
 ```
 
 **작업 내용**
-- [ ] `select_basic_sin` (API 1006): 베이직 죄종 선택/변경
-- [ ] 세트포인트 계산: 장착 장비 접두/접미 + 베이직 죄종
-- [ ] 세트 보너스 전투 적용 (Phase 16 전투 엔진에 연동)
-- [ ] Redis battle_stats에 세트 정보 포함
+- [x] `select_basic_sin` (API 1006): 베이직 죄종 선택/변경 (무료)
+- [x] 세트포인트 계산: 장착 장비 prefix_id/suffix_id + basic_sin (한 장비 같은 죄종 1카운트)
+- [x] 세트 보너스 전투 적용: equipment_set_bonus.csv 기반, confirmed만 활성
+- [x] battle_stats에 set_points 포함 (Redis 캐시)
+- [x] 폭식 패널티: 2세트 -10%, 3세트 -20%, 4세트+ -35% (ATK/DEF/HP)
+- [x] 전투 내 세트 효과: 화상/중독/스턴/빙결/매혹 부여, 잃은체력 공격력, 약자멸시, 최후의 저항, 완전무결
 
 **기획 확정 대기 항목**
 - 나태 세트 4/6세트 효과
@@ -964,16 +960,16 @@ PVP 규칙:
 | ~~스킬 트리거 7종~~ | Phase 16 | on_attack/on_hit 등 7종 확정 |
 | ~~PVP 기본 규칙~~ | Phase 23 | 1:1 자동, 60초, Lv20+, 6등급 확정 |
 | ~~연맹~~ | Phase 24 | 최대 15명, 버프형 확정 |
+| ~~dlvl 스테이지별 배분~~ | Phase 17 | C안(계단형) 확정, stage_info.csv 반영 |
+| ~~mlvl별 등급 드롭 확률~~ | Phase 17 | equip_drop_rate.csv 확정 |
+| ~~골드 드롭 공식~~ | Phase 17 | (mlvl×2+5)×grade.gold_mult×random(0.8~1.2) 확정 |
+| ~~카드 드롭률~~ | Phase 17 | 일반 0.5% ~ 챕보 3%, 처치 몬스터 1:1 확정 |
+| ~~낙인 드롭률~~ | Phase 17 | 챕보 전용 5% 확정 |
 
 ### 미확정 (기획 필요)
 | 항목 | 영향 Phase | 비고 |
 |------|-----------|------|
-| dlvl 스테이지별 배분 수치 | Phase 17 | 3안 중 선택 필요 (A-동행 / B-선형 / C-계단) |
-| mlvl별 등급 드롭 확률 테이블 | Phase 17 | 미기획 |
-| 접사 qlvl 체계 | Phase 17 | 미기획 |
-| 골드 드롭 공식 | Phase 17 | 미기획 |
-| 카드 드롭률 수치 | Phase 17 | 일반 vs 보스 차등, 미기획 |
-| 낙인 드롭률 수치 | Phase 17 | 미기획 |
+| 접사 qlvl 체계 | Phase 17 보완 | mlvl에 따른 접사 수치 스케일링 (현재 min~max 전체) |
 | 포션 종류/효과/가격/지참 제한 | Phase 18 | 밸런싱 시 확정 |
 | 광석 등급 계층/합성 비율 | Phase 18 | 미기획 |
 | 카드 레벨업 소모량 (동일카드 N장, 영혼 N개) | Phase 18.5 | 미기획 |
@@ -1004,7 +1000,7 @@ PVP 규칙:
 | ~~`IdleFarmManager.py`~~ | ~~기획 제거됨, 코드 존재~~ | ✅ Phase 12.5 완료 |
 | ~~`APIManager.py` 3005/3006~~ | ~~삭제 대상 API 등록 중~~ | ✅ Phase 12.5 완료 |
 | ~~`UserInfoManager.get_user_info`~~ | ~~idle_farm Redis 참조 코드~~ | ✅ Phase 12.5 완료 |
-| `ItemDropManager.process_kill` | DB 미저장 (클라이언트 신뢰) | Phase 17 |
+| ~~`ItemDropManager.process_kill`~~ | ~~DB 미저장 (클라이언트 신뢰)~~ | ✅ Phase 17 완료 |
 | `CollectionManager` | 도감 레벨업 전제 설계 + 스킬슬롯 | Phase 18.5 |
 | `Collections.collection_level` | 도감 레벨업 폐기됨, 컬럼 미사용 | Phase 18.5 |
 | `User.current_stage` default=101 | stage_id 1~21 범위와 불일치 가능성 | Phase 14에서 검증 |

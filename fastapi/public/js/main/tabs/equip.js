@@ -5,22 +5,37 @@
 import { apiCall } from '../../api.js';
 import { Store } from '../../store.js';
 import { formatGold, escapeHtml } from '../../utils.js';
-import { getEquipName, getEquipSlot } from '../../meta-data.js';
+import { getEquipName, getEquipSlot, getSetBonus } from '../../meta-data.js';
 import Popup from '../../popup.js';
+import { t, sinName, rarityName, slotName } from '../../i18n/index.js';
 
 const EQUIP_SLOTS = [
-    { key: 'weapon',  icon: '\u2694',     label: '무기' },
-    { key: 'armor',   icon: '\u{1F6E1}',  label: '갑옷' },
-    { key: 'helmet',  icon: '\u{1FA96}',  label: '투구' },
-    { key: 'gloves',  icon: '\u{1F9E4}',  label: '장갑' },
-    { key: 'boots',   icon: '\u{1F462}',  label: '신발' },
+    { key: 'weapon',  icon: '\u2694' },
+    { key: 'armor',   icon: '\u{1F6E1}' },
+    { key: 'helmet',  icon: '\u{1FA96}' },
+    { key: 'gloves',  icon: '\u{1F9E4}' },
+    { key: 'boots',   icon: '\u{1F462}' },
 ];
 
-const RARITY_LABEL = { normal: '일반', magic: '매직', rare: '레어', craft: '크래프트', unique: '유니크' };
-
-const OPTION_LABEL = {
-    atk: '공격력', def: '방어력', hp: 'HP', atk_speed: '공격속도',
-    accuracy: '명중', evasion: '회피', crit_rate: '치명타확률', crit_damage: '치명타데미지',
+const OPTION_LABEL_KEYS = {
+    // 기본 스탯
+    base_atk: 'opt_base_atk', base_aspd: 'opt_base_aspd',
+    atk: 'opt_atk', def: 'opt_def', hp: 'opt_hp',
+    mdef: 'opt_mdef', atk_speed: 'opt_atk_speed',
+    accuracy: 'opt_accuracy', evasion: 'opt_evasion',
+    crit_rate: 'opt_crit_rate', crit_damage: 'opt_crit_damage',
+    // 접두사/접미사 옵션
+    atk_damage: 'opt_atk_damage',
+    hp_bonus: 'opt_hp_bonus', hp_regen: 'opt_hp_regen',
+    defense: 'opt_defense', magic_resist: 'opt_magic_resist',
+    reflect_damage: 'opt_reflect_damage', crushing_blow: 'opt_crushing_blow',
+    life_steal: 'opt_life_steal', def_ignore: 'opt_def_ignore',
+    cc_reduction: 'opt_cc_reduction', counter_dmg: 'opt_counter_dmg',
+    status_chance: 'opt_status_chance',
+    atk_per_lv: 'opt_atk_per_lv', def_per_lv: 'opt_def_per_lv',
+    all_skill_lv: 'opt_all_skill_lv', all_stats: 'opt_all_stats',
+    gold_find: 'opt_gold_find', item_find: 'opt_item_find',
+    fhr: 'opt_fhr',
 };
 
 const EquipTab = {
@@ -34,41 +49,43 @@ const EquipTab = {
         el.innerHTML = `
             <div class="tab-equip">
                 <div class="equip-section">
-                    <div class="equip-section-title">장착 장비</div>
+                    <div class="equip-section-title">${t('equip_equipped')}</div>
                     <div class="equip-slots" id="eq-slots">
                         ${EQUIP_SLOTS.map(s => `
                             <div class="eq-slot" data-action="slot-click" data-slot="${s.key}" data-popup-trigger>
                                 <span class="eq-slot-icon">${s.icon}</span>
-                                <span class="eq-slot-label">${s.label}</span>
+                                <span class="eq-slot-label">${slotName(s.key)}</span>
                             </div>
                         `).join('')}
                     </div>
                 </div>
 
                 <div class="equip-cost-bar">
-                    <span class="equip-cost-text" id="eq-cost-text">코스트: 0 / 0</span>
+                    <span class="equip-cost-text" id="eq-cost-text">${t('equip_cost')}: 0 / 0</span>
                     <div class="equip-cost-gauge">
                         <div class="equip-cost-fill" id="eq-cost-fill" style="width:0%"></div>
                     </div>
                 </div>
 
-                <div class="equip-set-summary" id="eq-set-summary"></div>
-
                 <div class="equip-section">
                     <div class="equip-filter-bar">
-                        <span class="equip-count" id="eq-unequip-count">미장착 0개</span>
+                        <span class="equip-count" id="eq-unequip-count">${t('equip_unequipped')} 0${t('equip_count_unit')}</span>
                         <div class="equip-filters">
-                            <button class="eq-filter active" data-action="filter" data-filter="all">전체</button>
-                            <button class="eq-filter" data-action="filter" data-filter="weapon">무기</button>
-                            <button class="eq-filter" data-action="filter" data-filter="armor">방어구</button>
+                            <button class="eq-filter active" data-action="filter" data-filter="all">${t('equip_filter_all')}</button>
+                            <button class="eq-filter" data-action="filter" data-filter="weapon">${t('equip_filter_weapon')}</button>
+                            <button class="eq-filter" data-action="filter" data-filter="armor">${t('equip_filter_armor')}</button>
                         </div>
                     </div>
                     <div class="equip-grid" id="eq-grid"></div>
                 </div>
 
                 <div class="equip-footer">
-                    <span id="eq-inv-count">0 / 100</span>
-                    <button class="btn" data-action="expand" style="font-size:var(--font-size-xs)">인벤 확장</button>
+                    <span id="eq-inv-count">0 / 21</span>
+                </div>
+
+                <div class="equip-section equip-set-section">
+                    <div class="equip-section-title">${t('equip_set_bonus')}</div>
+                    <div class="equip-set-summary" id="eq-set-summary"></div>
                 </div>
             </div>
         `;
@@ -76,11 +93,9 @@ const EquipTab = {
         this._handleEvent = this._onEvent.bind(this);
         el.addEventListener('pointerdown', this._handleEvent);
 
-        // 호버 이벤트 (비교 팝업)
-        this._handleHover = this._onHover.bind(this);
-        this._handleHoverOut = this._onHoverOut.bind(this);
-        el.addEventListener('pointerenter', this._handleHover, true);
-        el.addEventListener('pointerleave', this._handleHoverOut, true);
+        // 팝업 내 버튼도 처리 (팝업은 body에 붙으므로 별도 리스너)
+        this._handlePopupEvent = this._onPopupEvent.bind(this);
+        document.addEventListener('pointerdown', this._handlePopupEvent);
 
         this._unsubscribers.push(
             Store.subscribe('inventory.items', () => this._render()),
@@ -92,8 +107,7 @@ const EquipTab = {
 
     unmount() {
         if (this._handleEvent) this.el.removeEventListener('pointerdown', this._handleEvent);
-        if (this._handleHover) this.el.removeEventListener('pointerenter', this._handleHover, true);
-        if (this._handleHoverOut) this.el.removeEventListener('pointerleave', this._handleHoverOut, true);
+        if (this._handlePopupEvent) document.removeEventListener('pointerdown', this._handlePopupEvent);
         this._unsubscribers.forEach(unsub => unsub());
         this._unsubscribers = [];
         Popup.hide();
@@ -117,9 +131,6 @@ const EquipTab = {
             case 'filter':
                 this._setFilter(target.dataset.filter);
                 break;
-            case 'expand':
-                this._doExpand();
-                break;
             case 'equip':
                 this._doEquip(target.dataset.uid, target.dataset.slot);
                 break;
@@ -132,19 +143,32 @@ const EquipTab = {
             case 'item-click':
                 this._onItemClick(target.dataset.uid, target);
                 break;
+            case 'set-box-click':
+                this._onSetBoxClick(target);
+                break;
         }
     },
 
-    _onHover(e) {
-        const target = e.target.closest('[data-action="item-hover"]');
-        if (!target || Popup.isPinned()) return;
-        this._showComparePopup(target.dataset.uid, target);
-    },
+    _onPopupEvent(e) {
+        const popupContainer = document.getElementById('popup-container');
+        if (!popupContainer || !popupContainer.contains(e.target)) return;
 
-    _onHoverOut(e) {
-        const target = e.target.closest('[data-action="item-hover"]');
-        if (!target || Popup.isPinned()) return;
-        Popup.hide();
+        const target = e.target.closest('[data-action]');
+        if (!target) return;
+
+        e.stopPropagation();
+
+        switch (target.dataset.action) {
+            case 'equip':
+                this._doEquip(target.dataset.uid, target.dataset.slot);
+                break;
+            case 'unequip':
+                this._doUnequip(target.dataset.uid);
+                break;
+            case 'sell':
+                this._doSell(target.dataset.uid);
+                break;
+        }
     },
 
     // ── 렌더링 ──
@@ -184,43 +208,125 @@ const EquipTab = {
         const maxCost = level + costStat * 2;
         const pct = maxCost > 0 ? Math.min(100, (currentCost / maxCost) * 100) : 0;
 
-        this.el.querySelector('#eq-cost-text').textContent = `코스트: ${currentCost} / ${maxCost}`;
+        this.el.querySelector('#eq-cost-text').textContent = `${t('equip_cost')}: ${currentCost} / ${maxCost}`;
         this.el.querySelector('#eq-cost-fill').style.width = pct + '%';
     },
 
-    _renderSetSummary(items) {
+    _calcSetPoints(items) {
         const equipped = items.filter(i => i.equip_slot);
-        // 세트 포인트 계산 (접두/접미에서 죄종 추출)
         const setPoints = {};
         equipped.forEach(item => {
-            if (item.set_id) {
-                setPoints[item.set_id] = (setPoints[item.set_id] || 0) + 1;
+            const sins = new Set();
+            if (item.prefix_id) sins.add(item.prefix_id.toLowerCase());
+            if (item.suffix_id) sins.add(item.suffix_id.toLowerCase());
+            sins.forEach(sin => {
+                setPoints[sin] = (setPoints[sin] || 0) + 1;
+            });
+        });
+        // TODO: basic_sin 추가 (Store에서 가져오기)
+        const basicSin = Store.get('user.basic_sin');
+        if (basicSin) {
+            const sin = basicSin.toLowerCase();
+            setPoints[sin] = (setPoints[sin] || 0) + 1;
+        }
+        return setPoints;
+    },
+
+    _renderSetSummary(items) {
+        const setPoints = this._calcSetPoints(items);
+        const el = this.el.querySelector('#eq-set-summary');
+
+        const SINS = [
+            { key: 'wrath',    color: 'var(--color-wrath)' },
+            { key: 'envy',     color: 'var(--color-envy)' },
+            { key: 'greed',    color: 'var(--color-greed)' },
+            { key: 'sloth',    color: 'var(--color-sloth)' },
+            { key: 'gluttony', color: 'var(--color-gluttony)' },
+            { key: 'lust',     color: 'var(--color-lust)' },
+            { key: 'pride',    color: 'var(--color-pride)' },
+        ];
+        const MAX_POINTS = 6;
+        const BREAKPOINTS = [2, 4, 6];
+
+        let html = '';
+        SINS.forEach(sin => {
+            const pts = setPoints[sin.key] || 0;
+            const active = pts > 0;
+
+            let boxes = '';
+            for (let i = 1; i <= MAX_POINTS; i++) {
+                const filled = i <= pts;
+                const isBp = BREAKPOINTS.includes(i);
+                const bpEffect = isBp ? getSetBonus(sin.key, i) : null;
+
+                boxes += `<div class="set-box ${filled ? 'filled' : ''} ${isBp ? 'bp' : ''}"
+                    data-action="set-box-click"
+                    data-sin="${sin.key}"
+                    data-bp="${isBp ? i : 0}"
+                    data-box-idx="${i}"
+                    data-popup-trigger
+                    style="${filled ? `border-color:${sin.color}` : ''}"
+                    title="${isBp && bpEffect ? `${i}세트: ${bpEffect.effect_name}` : ''}">
+                    <span class="set-box-bp">${i}</span>
+                </div>`;
             }
+
+            html += `
+                <div class="set-row ${active ? '' : 'inactive'}">
+                    <span class="set-label" style="color:${active ? sin.color : 'var(--text-muted)'}">${sinName(sin.key)}</span>
+                    <div class="set-boxes">${boxes}</div>
+                    <span class="set-pts">${pts > 0 ? pts : '0'}</span>
+                </div>
+            `;
         });
 
-        const el = this.el.querySelector('#eq-set-summary');
-        const entries = Object.entries(setPoints).filter(([, v]) => v > 0);
-        if (entries.length === 0) {
-            el.textContent = '';
+        el.innerHTML = html;
+    },
+
+    _onSetBoxClick(target) {
+        const sin = target.dataset.sin;
+        const bp = parseInt(target.dataset.bp);
+        if (!bp) return; // 브레이크포인트 칸(2,4,6)만 팝업
+        const effect = getSetBonus(sin, bp);
+
+        const sinLabel = sinName(sin);
+
+        const items = Store.get('inventory.items') || [];
+        const setPoints = this._calcSetPoints(items);
+        const pts = setPoints[sin] || 0;
+        const isActive = pts >= bp;
+
+        let html = `<div class="set-popup">`;
+        html += `<div class="set-popup-title" style="color:var(--color-${sin})">${sinLabel} ${bp}세트</div>`;
+
+        if (effect && effect.status === 'confirmed') {
+            html += `<div class="set-popup-name ${isActive ? 'active' : ''}">${effect.effect_name}</div>`;
+            html += `<div class="set-popup-desc">${effect.effect_desc}</div>`;
+        } else if (effect && effect.status === 'pending') {
+            html += `<div class="set-popup-name">${t('set_undecided')}</div>`;
+            html += `<div class="set-popup-desc">${t('set_undecided_desc')}</div>`;
         } else {
-            el.textContent = '세트: ' + entries.map(([k, v]) => `${k}${v}`).join(' ');
+            html += `<div class="set-popup-name">???</div>`;
         }
+
+        html += `<div class="set-popup-status">${isActive ? '\u2726 ' + t('set_active') : `${t('set_need_points')}: ${bp} (${t('set_current')} ${pts})`}</div>`;
+        html += `</div>`;
+
+        Popup.showSingle(html, target, { pinned: true, position: 'right' });
     },
 
     _renderGrid(items) {
         const unequipped = items.filter(i => !i.equip_slot);
         const filtered = this._filterItems(unequipped);
 
-        this.el.querySelector('#eq-unequip-count').textContent = `미장착 ${unequipped.length}개`;
+        this.el.querySelector('#eq-unequip-count').textContent = `${t('equip_unequipped')} ${unequipped.length}${t('equip_count_unit')}`;
 
+        const MAX_SLOTS = 21;
         const grid = this.el.querySelector('#eq-grid');
         if (filtered.length === 0) {
-            const MIN_EMPTY = 20;
-            grid.innerHTML = '<div class="eq-icon empty"></div>'.repeat(MIN_EMPTY);
+            grid.innerHTML = '<div class="eq-icon empty"></div>'.repeat(MAX_SLOTS);
             return;
         }
-
-        const MIN_SLOTS = 20;
         const itemsHtml = filtered.map(item => {
             const slot = getEquipSlot(item.base_item_id);
             const slotInfo = EQUIP_SLOTS.find(s => s.key === slot);
@@ -238,22 +344,15 @@ const EquipTab = {
             `;
         }).join('');
 
-        const emptyCount = Math.max(0, MIN_SLOTS - filtered.length);
+        const emptyCount = Math.max(0, MAX_SLOTS - filtered.length);
         const emptyHtml = '<div class="eq-icon empty"></div>'.repeat(emptyCount);
 
         grid.innerHTML = itemsHtml + emptyHtml;
-
-        // 호버 이벤트 재연결
-        grid.querySelectorAll('[data-action="item-click"]').forEach(el => {
-            el.dataset.action = 'item-click';
-            el.setAttribute('data-action', 'item-hover');
-            // pointerdown은 item-click으로 처리 (별도)
-        });
     },
 
     _renderInvCount(items) {
-        const max = Store.get('user.max_inventory') || 100;
-        this.el.querySelector('#eq-inv-count').textContent = `${items.length} / ${max}`;
+        const unequipped = items.filter(i => !i.equip_slot);
+        this.el.querySelector('#eq-inv-count').textContent = `${unequipped.length} / 21`;
     },
 
     _filterItems(items) {
@@ -286,13 +385,13 @@ const EquipTab = {
         const item = items.find(i => i.equip_slot === slotKey);
         if (!item) return;
 
-        const html = this._buildItemPopupHtml(item, '착용중') +
+        const html = this._buildItemPopupHtml(item, t('popup_equipped')) +
             `<div class="popup-actions">
-                <button class="btn" data-action="unequip" data-uid="${item.item_uid}">해제</button>
-                <button class="btn" data-action="sell" data-uid="${item.item_uid}">판매</button>
+                <button class="btn" data-action="unequip" data-uid="${item.item_uid}">${t('unequip_btn')}</button>
+                <button class="btn" data-action="sell" data-uid="${item.item_uid}">${t('sell_btn')}</button>
             </div>`;
 
-        Popup.showSingle(html, anchorEl, { pinned: true });
+        Popup.showSingle(html, anchorEl, { pinned: true, position: 'right' });
     },
 
     _showComparePopup(uid, anchorEl, pinned = false) {
@@ -304,22 +403,22 @@ const EquipTab = {
         const equipped = items.find(i => i.equip_slot === slot);
 
         const leftHtml = equipped
-            ? `<div class="popup-header">\u25C0 착용중</div>` + this._buildItemPopupHtml(equipped)
-            : `<div class="popup-header">\u25C0 착용중</div><div class="popup-info">비어있음</div>`;
+            ? `<div class="popup-header">\u25C0 ${t('popup_equipped')}</div>` + this._buildItemPopupHtml(equipped)
+            : `<div class="popup-header">\u25C0 ${t('popup_equipped')}</div><div class="popup-info">${t('popup_empty')}</div>`;
 
-        const rightHtml = `<div class="popup-header">미착용 \u25B6</div>` +
+        const rightHtml = `<div class="popup-header">${t('popup_unequipped')} \u25B6</div>` +
             this._buildItemPopupHtml(item, null, equipped) +
             `<div class="popup-actions">
-                <button class="btn btn-primary" data-action="equip" data-uid="${item.item_uid}" data-slot="${slot}">장착</button>
-                <button class="btn" data-action="sell" data-uid="${item.item_uid}">판매</button>
+                <button class="btn btn-primary" data-action="equip" data-uid="${item.item_uid}" data-slot="${slot}">${t('equip_btn')}</button>
+                <button class="btn" data-action="sell" data-uid="${item.item_uid}">${t('sell_btn')}</button>
             </div>`;
 
-        Popup.showCompare(leftHtml, rightHtml, anchorEl, { pinned });
+        Popup.showCompare(leftHtml, rightHtml, anchorEl, { pinned, position: 'right' });
     },
 
     _buildItemPopupHtml(item, label, compareItem) {
         const name = this._getItemName(item);
-        const rarity = RARITY_LABEL[item.rarity] || item.rarity;
+        const rarity = rarityName(item.rarity);
         const opts = item.dynamic_options || {};
         const compareOpts = compareItem ? (compareItem.dynamic_options || {}) : null;
 
@@ -333,7 +432,7 @@ const EquipTab = {
         const allKeys = new Set([...Object.keys(opts), ...(compareOpts ? Object.keys(compareOpts) : [])]);
         for (const key of allKeys) {
             const val = opts[key] || 0;
-            const label = OPTION_LABEL[key] || key;
+            const optLabel = OPTION_LABEL_KEYS[key] ? t(OPTION_LABEL_KEYS[key]) : key;
             let colorClass = 'neutral';
 
             if (compareOpts) {
@@ -344,7 +443,7 @@ const EquipTab = {
 
             html += `
                 <div class="popup-option-row">
-                    <span>${label}</span>
+                    <span>${optLabel}</span>
                     <span class="popup-option-value ${colorClass}">+${val}</span>
                 </div>
             `;
@@ -394,8 +493,8 @@ const EquipTab = {
 
     _getItemName(item) {
         let name = getEquipName(item.base_item_id);
-        if (item.prefix_id) name = `${item.prefix_id} ${name}`;
-        if (item.suffix_id) name += ` [${item.suffix_id}]`;
+        if (item.prefix_id) name = `[${sinName(item.prefix_id)}] ${name}`;
+        if (item.suffix_id) name += ` [${sinName(item.suffix_id)}]`;
         return name;
     },
 };

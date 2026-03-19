@@ -179,6 +179,20 @@ export function getStagesByChapter(chapterId) {
     return result;
 }
 
+// ── 세트 보너스 룩업 ──
+
+/**
+ * set_id + breakpoint로 세트 효과를 반환한다.
+ * @param {string} setId - 죄종 key (wrath, envy, ...)
+ * @param {number} breakpoint - 2, 4, 6
+ * @returns {object|null} { effect_name, effect_desc, status, ... }
+ */
+export function getSetBonus(setId, breakpoint) {
+    const setBonus = (_configs.set_bonus || {})[setId];
+    if (!setBonus) return null;
+    return setBonus[String(breakpoint)] || null;
+}
+
 /**
  * stage_id로 스테이지 이름을 반환한다.
  * @param {number|string} stageId

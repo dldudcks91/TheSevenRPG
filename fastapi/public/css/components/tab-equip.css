@@ -92,12 +92,127 @@
     background: var(--cost-bar);
 }
 
-/* 세트 요약 */
+/* 세트 보너스 */
 .equip-set-summary {
+    padding: var(--spacing-xs) var(--spacing-md);
+}
+
+.set-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-bottom: 3px;
+}
+
+.set-label {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-bold);
+    width: 28px;
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.set-boxes {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+}
+
+.set-box {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--border-secondary);
+    background: var(--bg-input);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.set-box.bp {
+    border-width: 2px;
+    border-style: solid;
+}
+
+.set-box.bp:hover {
+    border-color: var(--border-highlight);
+    background: var(--bg-tertiary);
+}
+
+.set-box.filled {
+    background: rgba(255,255,255,0.08);
+}
+
+.set-box.filled .set-box-bp {
+    color: var(--text-primary);
+}
+
+.set-box-bp {
+    font-size: 10px;
+    font-family: var(--font-bold);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+
+.set-pts {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.set-row.inactive {
+    opacity: 0.35;
+}
+
+.set-row.inactive:hover {
+    opacity: 0.6;
+}
+
+.equip-set-section {
+    flex: 1;
+}
+
+/* 세트 팝업 */
+.set-popup {
+    min-width: 180px;
+}
+
+.set-popup-title {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
+    margin-bottom: var(--spacing-xs);
+}
+
+.set-popup-name {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.set-popup-name.active {
+    color: var(--color-warning);
+}
+
+.set-popup-desc {
     font-size: var(--font-size-xs);
     color: var(--text-secondary);
-    padding: 0 var(--spacing-md);
-    min-height: 14px;
+    line-height: 1.5;
+    margin-bottom: var(--spacing-sm);
+}
+
+.set-popup-status {
+    font-size: 10px;
+    color: var(--text-muted);
+    padding-top: var(--spacing-xs);
+    border-top: 1px solid var(--border-secondary);
 }
 
 /* 필터 바 */
