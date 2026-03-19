@@ -1,7 +1,7 @@
 # TheSevenRPG — 클라이언트 개발 계획서
 
 > 최초 작성: 2026-03-13
-> 최종 업데이트: 2026-03-17 (좌우 분할 5탭 구조로 전면 개편)
+> 최종 업데이트: 2026-03-19 (Wave indicator 구현, C16 버그 발견, 자동 감시 시스템 설정)
 > 화면 기획서: `fastapi/docs/game_design/SCREEN_DESIGN.md`
 > 기준 서버 계획서: `fastapi/docs/SERVER_DEV_PLAN.md`
 > 개발 가이드: `.claude/skills/web-client/skill.md`
@@ -242,7 +242,7 @@ fastapi/public/
 
 ### Phase C14 — 우측 전투 모드
 **목적**: Phaser 전투 연출. 서버 battle_log 재생. 스테이지별 배경 + 캐릭터/몬스터 이미지.
-**상태**: [x] 완료
+**상태**: [x] 완료 (2026-03-19: Wave indicator UI 구현 완료)
 
 **작업 내용**
 - `views/battle-view.js` + `battle-view.css` 신규
@@ -250,7 +250,7 @@ fastapi/public/
 - 스테이지별 배경 이미지 (`background_stage_{stageId}.png`)
 - 캐릭터/몬스터 이미지 스프라이트 (`character.png`, `monster_{monsterIdx}.png`)
 - 이미지 없으면 사각형 폴백
-- 상단: 스테이지명 + Wave 진행
+- 상단: 스테이지명 + Wave 진행 (**4개 점 + 연결선 인디케이터 추가**)
 - HUD: Player/Monster HP 바
 - Phaser 아레나: 공격 모션, 데미지/미스/크리티컬 팝업
 - 전투 로그: 하단 200px 고정
@@ -259,6 +259,11 @@ fastapi/public/
 - 전투 중 좌측 패널 유지 (장비 변경은 서버 차단)
 
 **연동 API**: `3001`, `3004`
+
+**최근 업데이트**
+- Wave indicator: 비활성=회색, 활성=노란색 글로우 효과
+- CSS: `.bv-wave-indicator` (flex), `.bv-wave-dot` (12px 원형), `.bv-wave-line` (연결선)
+- JS: `_createWaveIndicator(waveCount)`, `_updateWaveIndicator(currentWaveIndex)` 메서드 추가
 
 ---
 
@@ -279,7 +284,7 @@ fastapi/public/
 
 ### Phase C16 — 통합 테스트 & 폴리싱
 **목적**: 전체 흐름 검증 + UI 다듬기.
-**상태**: [ ] 미착수
+**상태**: [ ] 미착수 (2026-03-19: 버그 발견 — "이미 진행중인 전투" 메시지)
 
 **작업 내용**
 - 로그인 → Main → 스탯배분 → 장비장착 → 스테이지입장 → 전투 → 결과 전체 흐름
@@ -288,6 +293,11 @@ fastapi/public/
 - 팝업 호버/클릭/닫기 엣지 케이스
 - SW 프리캐시 목록 업데이트
 - 메모리 릭 점검 (Phaser 생성/파괴 반복)
+
+**발견된 버그**
+- 클라이언트 "이미 진행중인 전투가 있다는데" 메시지 → Store 상태 미초기화 추정
+- 서버 로그는 정상, 클라이언트 battle.stage_id 상태 잔존 가능성
+- C16 통합테스트 시 Store 초기화 로직 검증 필요
 
 ---
 
@@ -334,4 +344,4 @@ Phase C16 (통합/폴리싱)      [ ] 전체 흐름 검증
 
 ---
 
-*마지막 업데이트: 2026-03-17*
+*마지막 업데이트: 2026-03-19*

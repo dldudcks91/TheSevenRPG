@@ -27,7 +27,7 @@ const BattleView = {
             <div class="bv-screen">
                 <div class="bv-top-bar">
                     <div class="bv-stage-name" id="bv-stage-name"></div>
-                    <div class="bv-wave-info" id="bv-wave-info"></div>
+                    <div class="bv-wave-indicator" id="bv-wave-indicator"></div>
                 </div>
 
                 <div class="bv-hud">
@@ -56,7 +56,7 @@ const BattleView = {
 
         this.refs = {
             stageName: el.querySelector('#bv-stage-name'),
-            waveInfo: el.querySelector('#bv-wave-info'),
+            waveIndicator: el.querySelector('#bv-wave-indicator'),
             playerHp: el.querySelector('#bv-player-hp'),
             playerHpText: el.querySelector('#bv-player-hp-text'),
             monsterName: el.querySelector('#bv-monster-name'),
@@ -105,6 +105,26 @@ const BattleView = {
         }
     },
 
+    // ── 웨이브 인디케이터 생성 ──
+
+    _createWaveIndicator(waveCount) {
+        let html = '';
+        for (let i = 0; i < waveCount; i++) {
+            html += `<div class="bv-wave-dot ${i === 0 ? 'active' : ''}"></div>`;
+            if (i < waveCount - 1) {
+                html += `<div class="bv-wave-line"></div>`;
+            }
+        }
+        this.refs.waveIndicator.innerHTML = html;
+    },
+
+    _updateWaveIndicator(currentWaveIndex) {
+        const dots = this.refs.waveIndicator.querySelectorAll('.bv-wave-dot');
+        dots.forEach((dot, idx) => {
+            dot.classList.toggle('active', idx === currentWaveIndex);
+        });
+    },
+
     // ── 전투 시작 ──
 
     async _startBattle() {
@@ -129,16 +149,19 @@ const BattleView = {
             return;
         }
 
+        // 웨이브 인디케이터 생성
+        this._createWaveIndicator(monsterPool.length);
+
         await this._runWaves(monsterPool, stageId);
     },
 
     async _runWaves(waves, stageId) {
-        let totalRewards = { exp_gained: 0, gold_gained: 0, gold: 0, level: 0, exp: 0, leveled_up: false };
+        let totalRewards = { exp_gained: 0, gold_gained: 0, gold: 0, level: 0, exp: 0, leveled_up: false, drops: [] };
         let finalResult = 'win';
 
         for (let wi = 0; wi < waves.length; wi++) {
             const wave = waves[wi];
-            this.refs.waveInfo.textContent = `Wave ${wave.wave || wi + 1} / ${waves.length}`;
+            this._updateWaveIndicator(wi);
 
             const monsters = wave.monsters || [];
             for (let mi = 0; mi < monsters.length; mi++) {
@@ -169,6 +192,9 @@ const BattleView = {
                 if (rw.level !== undefined) totalRewards.level = rw.level;
                 if (rw.exp !== undefined) totalRewards.exp = rw.exp;
                 if (rw.leveled_up) totalRewards.leveled_up = true;
+
+                const drops = data.drops || [];
+                totalRewards.drops.push(...drops);
 
                 if (data.result !== 'win') { finalResult = data.result; break; }
             }
@@ -259,6 +285,8 @@ const BattleView = {
         if (rewards.exp) Store.set('user.exp', rewards.exp);
         if (rewards.level) Store.set('user.level', rewards.level);
 
+        const dropsHtml = this._formatDrops(rewards.drops || []);
+
         this.refs.result.innerHTML = `
             <div class="bv-result-box ${isVictory ? 'victory' : 'defeat'}">
                 <div class="bv-result-title">${isVictory ? '\u2694\uFE0F 승리!' : '\u{1F480} 패배...'}</div>
@@ -267,6 +295,7 @@ const BattleView = {
                         ${rewards.exp_gained ? `<div class="bv-reward-row">EXP <span>+${rewards.exp_gained}</span></div>` : ''}
                         ${rewards.gold_gained ? `<div class="bv-reward-row">Gold <span>+${rewards.gold_gained}</span></div>` : ''}
                         ${rewards.leveled_up ? '<div class="bv-reward-row level-up">LEVEL UP!</div>' : ''}
+                        ${dropsHtml ? `<div class="bv-drops-section">${dropsHtml}</div>` : ''}
                     </div>
                 ` : ''}
                 <div class="bv-result-actions">
@@ -276,6 +305,56 @@ const BattleView = {
             </div>
         `;
         this.refs.result.classList.add('show');
+    },
+
+    _formatDrops(drops) {
+        if (!drops || drops.length === 0) return '';
+
+        const grouped = {};
+        drops.forEach(d => {
+            const key = d.type;
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(d);
+        });
+
+        let html = '<div class="bv-drops-list">';
+
+        if (grouped.equipment) {
+            html += '<div class="bv-drop-category">⚔️ 장비</div>';
+            grouped.equipment.forEach(drop => {
+                const equip = drop.data || {};
+                const rarityColor = {
+                    'magic': '#3f51b5',
+                    'rare': '#ff9800',
+                    'craft': '#e91e63',
+                    'unique': '#ffd700'
+                }[equip.rarity] || '#999';
+                html += `<div class="bv-drop-item" style="color: ${rarityColor}">• ${equip.name || '아이템'}</div>`;
+            });
+        }
+
+        if (grouped.card) {
+            html += '<div class="bv-drop-category">🎴 카드</div>';
+            grouped.card.forEach(drop => {
+                html += `<div class="bv-drop-item">• ${drop.data?.name || '카드'}</div>`;
+            });
+        }
+
+        if (grouped.gold) {
+            html += '<div class="bv-drop-category">💰 재료</div>';
+            grouped.gold.forEach(drop => {
+                html += `<div class="bv-drop-item">• Gold +${drop.amount || 0}</div>`;
+            });
+        }
+
+        if (grouped.ore) {
+            grouped.ore.forEach(drop => {
+                html += `<div class="bv-drop-item">• 광석 +${drop.amount || 0}</div>`;
+            });
+        }
+
+        html += '</div>';
+        return html;
     },
 
     // ── Phaser ──

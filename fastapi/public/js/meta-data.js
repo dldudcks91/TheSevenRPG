@@ -117,7 +117,7 @@ const SIN_COLOR_MAP = {
  */
 export function getChapters() {
     const chapters = _configs.chapters || {};
-    return Object.entries(chapters)
+    const result = Object.entries(chapters)
         .map(([id, ch]) => ({
             id: Number(id),
             sin: ch.sin_kr,
@@ -127,6 +127,16 @@ export function getChapters() {
             bossDesc: ch.boss_desc,
         }))
         .sort((a, b) => a.id - b.id);
+
+    // 더미: chapters가 비어있으면 기본값
+    if (result.length === 0) {
+        return [
+            { id: 1, sin: '분노', region: '불타는 전장', boss: '아바돈' },
+            { id: 2, sin: '시기', region: '뒤틀린 숲', boss: '사마엘' },
+            { id: 3, sin: '탐욕', region: '황금의 사막', boss: '다곤' },
+        ];
+    }
+    return result;
 }
 
 /**
@@ -136,7 +146,7 @@ export function getChapters() {
  */
 export function getStagesByChapter(chapterId) {
     const stages = _configs.stages || {};
-    return Object.entries(stages)
+    const result = Object.entries(stages)
         .filter(([, s]) => s.chapter === chapterId)
         .map(([id, s]) => ({
             stageId: Number(id),
@@ -144,6 +154,29 @@ export function getStagesByChapter(chapterId) {
             stageName: s.stage_name,
         }))
         .sort((a, b) => a.stageId - b.stageId);
+
+    // 더미: stages가 비어있으면 기본값
+    if (result.length === 0) {
+        const dummyStages = {
+            1: [
+                { stageId: 101, stageNum: 1, stageName: '파멸의 진영' },
+                { stageId: 102, stageNum: 2, stageName: '흑심의 동굴' },
+                { stageId: 103, stageNum: 3, stageName: '아바돈의 궁전' },
+            ],
+            2: [
+                { stageId: 201, stageNum: 1, stageName: '시기의 숲' },
+                { stageId: 202, stageNum: 2, stageName: '증오의 늪지' },
+                { stageId: 203, stageNum: 3, stageName: '사마엘의 서식지' },
+            ],
+            3: [
+                { stageId: 301, stageNum: 1, stageName: '황금의 사막' },
+                { stageId: 302, stageNum: 2, stageName: '탐욕의 탑' },
+                { stageId: 303, stageNum: 3, stageName: '다곤의 무덤' },
+            ],
+        };
+        return dummyStages[chapterId] || [];
+    }
+    return result;
 }
 
 /**

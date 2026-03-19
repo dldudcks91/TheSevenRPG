@@ -20,11 +20,38 @@
 .bv-stage-name {
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
 }
 
-.bv-wave-info {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
+/* 웨이브 인디케이터 */
+.bv-wave-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 0 var(--spacing-md);
+}
+
+.bv-wave-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    border: 1px solid var(--border-secondary);
+}
+
+.bv-wave-dot.active {
+    background: var(--color-warning);
+    box-shadow: 0 0 6px var(--color-warning);
+    border-color: var(--color-warning);
+}
+
+.bv-wave-line {
+    flex: 1;
+    height: 1px;
+    background: var(--text-muted);
+    min-width: 20px;
 }
 
 /* HUD */
@@ -192,6 +219,38 @@
     0% { opacity: 1; }
     50% { opacity: 0.3; }
     100% { opacity: 1; }
+}
+
+.bv-drops-section {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-secondary);
+}
+
+.bv-drops-list {
+    text-align: left;
+    max-height: 150px;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-secondary);
+}
+
+.bv-drop-category {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-bold);
+    color: var(--color-warning);
+    margin-top: var(--spacing-xs);
+    margin-bottom: 2px;
+}
+
+.bv-drop-category:first-child { margin-top: 0; }
+
+.bv-drop-item {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    margin-left: var(--spacing-sm);
+    padding: 1px 0;
 }
 
 .bv-result-actions {

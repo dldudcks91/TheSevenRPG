@@ -1,20 +1,20 @@
 monster_idx,monster_name,monster_type,monster_base,size_type,hp,attack,defense,magic_defense,attack_speed,exp_reward,sprite_path,description
-1101,고블린 척후병,Demon,Goblin,1,55,8,3,10,1.5,45,ch1_goblin_scout,파멸의 진영 선봉 잡병
-1102,고블린 전사,Demon,Goblin,1,70,10,5,12,1.3,65,ch1_goblin_warrior,무기를 든 정규 고블린 병사
-1103,오크 전사,Demon,Orc,2,95,14,10,8,0.9,140,ch1_orc_warrior,강력한 한 방의 오크 전사
-1150,아바돈,Demon,Orc,3,450,10,15,8,0.7,450,ch1_boss_abaddon,파멸의 군주 — 무저갱의 왕
-1201,인간 보병,Normal,Human,1,80,10,8,5,1.2,55,ch1_human_infantry,검과 방패의 정규 병사
-1202,인간 창병,Normal,Human,1,70,12,5,5,1.3,60,ch1_human_spearman,긴 창을 든 돌격 병사
-1203,트롤 돌격병,Normal,Troll,2,120,16,16,8,0.7,150,ch1_troll_charger,묵직한 강타의 거대 트롤
-1250,레기온,Normal,Human,2,580,12,18,15,0.6,400,ch1_boss_legion,천의 목소리 — 천 개의 분노가 깃든 자
-1301,스켈레톤 전사,Undead,Skeleton,1,90,12,8,5,1.2,50,ch1_skeleton_warrior,묘지에서 일어난 해골 병사
-1302,스켈레톤 궁수,Undead,Skeleton,1,75,15,4,5,1.3,55,ch1_skeleton_archer,뼈활을 다루는 해골 궁수
-1303,스켈레톤 기사,Undead,Skeleton,2,140,18,16,8,0.8,140,ch1_skeleton_knight,해골 말을 탄 기마 전사
-1350,둘라한,Undead,Skeleton,2,720,14,22,10,0.6,420,ch1_boss_dullahan,머리 없는 전쟁귀
-1401,제단의 화염마,Demon,Imp,1,100,14,5,18,1.4,55,ch1_imp_firetender,제단의 불꽃을 관리하는 임프
-1402,몰록의 제물관,Demon,Imp,2,130,18,10,22,1.1,120,ch1_imp_offerings,의식을 집행하는 임프 사제
-1403,몰록의 심판관,Demon,Imp,3,170,22,18,30,0.9,250,ch1_imp_judge,제물 자격을 판결하는 대임프
-1900,몰록,Demon,Gargoyle,3,3800,20,35,30,0.5,2000,ch1_chboss_moloch,불의 심복 — 사탄의 문지기
+1101,고블린 척후병,Demon,Goblin,1,55,8,3,10,0.75,45,ch1_goblin_scout,파멸의 진영 선봉 잡병
+1102,고블린 전사,Demon,Goblin,1,70,10,5,12,0.65,65,ch1_goblin_warrior,무기를 든 정규 고블린 병사
+1103,오크 전사,Demon,Orc,2,95,14,10,8,0.45,140,ch1_orc_warrior,강력한 한 방의 오크 전사
+1150,아바돈,Demon,Orc,3,450,10,15,8,0.35,450,ch1_boss_abaddon,파멸의 군주 — 무저갱의 왕
+1201,인간 보병,Normal,Human,1,80,10,8,5,0.6,55,ch1_human_infantry,검과 방패의 정규 병사
+1202,인간 창병,Normal,Human,1,70,12,5,5,0.65,60,ch1_human_spearman,긴 창을 든 돌격 병사
+1203,트롤 돌격병,Normal,Troll,2,120,16,16,8,0.35,150,ch1_troll_charger,묵직한 강타의 거대 트롤
+1250,레기온,Normal,Human,2,580,12,18,15,0.3,400,ch1_boss_legion,천의 목소리 — 천 개의 분노가 깃든 자
+1301,스켈레톤 전사,Undead,Skeleton,1,90,12,8,5,0.6,50,ch1_skeleton_warrior,묘지에서 일어난 해골 병사
+1302,스켈레톤 궁수,Undead,Skeleton,1,75,15,4,5,0.65,55,ch1_skeleton_archer,뼈활을 다루는 해골 궁수
+1303,스켈레톤 기사,Undead,Skeleton,2,140,18,16,8,0.4,140,ch1_skeleton_knight,해골 말을 탄 기마 전사
+1350,둘라한,Undead,Skeleton,2,720,14,22,10,0.3,420,ch1_boss_dullahan,머리 없는 전쟁귀
+1401,제단의 화염마,Demon,Imp,1,100,14,5,18,0.7,55,ch1_imp_firetender,제단의 불꽃을 관리하는 임프
+1402,몰록의 제물관,Demon,Imp,2,130,18,10,22,0.55,120,ch1_imp_offerings,의식을 집행하는 임프 사제
+1403,몰록의 심판관,Demon,Imp,3,170,22,18,30,0.45,250,ch1_imp_judge,제물 자격을 판결하는 대임프
+1900,몰록,Demon,Gargoyle,3,3800,20,35,30,0.25,2000,ch1_chboss_moloch,불의 심복 — 사탄의 문지기
 2101,독늑대 척후,Normal,Wolf,1,70,16,6,5,1.6,55,ch2_wolf_scout,독에 변형된 날렵한 늑대
 2102,도마뱀 저주사,Normal,Lizardman,1,85,18,8,20,1.3,65,ch2_lizardman_hexer,독 주술의 원거리 마법형
 2103,도마뱀 돌격병,Normal,Lizardman,2,200,28,16,15,1.0,150,ch2_lizardman_charger,독에 의해 비대해진 거대 도마뱀
