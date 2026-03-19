@@ -1,7 +1,7 @@
 # TheSevenRPG — 서버 개발 계획서
 
 > 최초 작성: 2026-03-12
-> 최종 업데이트: 2026-03-18 (StageManager 몬스터풀 기획 반영 + 클라이언트 UI 개선)
+> 최종 업데이트: 2026-03-19 (Phase 14~16 구현 완료)
 > 기준 기획서: `fastapi/docs/game_design/GAME_DESIGN.md`
 
 ---
@@ -28,9 +28,9 @@
 |------|------|------|
 | `models.py` | ✅ 완료 | User/UserStat/Item/Collection/BattleSession/Material/Card 7테이블 |
 | `UserInitManager.py` | ✅ 완료 | 회원가입(bcrypt 해싱) + 로그인(비밀번호 검증) |
-| `BattleManager.py` | ✅ 완료 | 전투 시뮬레이션 엔진, Redis 캐싱, 보상 지급 |
+| `BattleManager.py` | ✅ 완료 | 전투 시뮬레이션 엔진, Redis 캐싱, 웨이브 보상, 사망 패널티 (Phase 14) |
 | `InventoryManager.py` | ✅ 완료 | 장착/해제/조회/판매/인벤확장, 코스트 검증, Redis 무효화 |
-| `StageManager.py` | ✅ 완료 | 스테이지 입장/클리어, 해금 검증 (⚠️ 몬스터풀 16마리→13마리 수정 필요 — Phase 14) |
+| `StageManager.py` | ✅ 완료 | 4웨이브 체크포인트, 귀환(HP보존), 재접속, 13마리 구조 (Phase 14) |
 | `CollectionManager.py` | ✅ 완료 | 도감 조회/스킬 장착/해제 (⚠️ 카드 인벤토리화 반영 필요 — Phase 18.5) |
 | `UserInfoManager.py` | ✅ 수정 | 스탯 리셋 API 추가 (Phase 12) (⚠️ idle_farm 참조 코드 제거 필요 — Phase 12.5) |
 | `EnhanceManager.py` | ⏸️ 보류 | 기획 보류 (api_map 미등록, 코드 보존) |
@@ -58,8 +58,10 @@
 | 2009 | CollectionManager | `unequip_skill` | 스킬 슬롯 해제 | ✅ 완성 |
 | 3001 | BattleManager | `battle_result` | 전투 시뮬레이션 결과 | ✅ 완성 |
 | 3002 | ItemDropManager | `process_kill` | 몬스터 킬 & 드롭 처리 | ✅ 완성 |
-| 3003 | StageManager | `enter_stage` | 스테이지 입장 (해금 검증) | ✅ 완성 |
-| 3004 | StageManager | `clear_stage` | 스테이지 클리어 (다음 해금) | ✅ 완성 |
+| 3003 | StageManager | `enter_stage` | 스테이지 입장 (BattleSession 생성) | ✅ 완성 |
+| 3004 | StageManager | `clear_stage` | 스테이지 클리어 (보스 처치 후) | ✅ 완성 |
+| 3007 | StageManager | `return_to_town` | 마을 귀환 (HP 보존) | ✅ 완성 |
+| 3008 | StageManager | `get_battle_session` | 전투 세션 조회 (재접속) | ✅ 완성 |
 
 ### 삭제 예정 API (Phase 12.5)
 | api_code | Manager | 메서드 | 사유 |
@@ -83,8 +85,6 @@
 | 2013 | CardManager | `disassemble_card` | 카드 분해 → 카드 영혼 | 18.5 |
 | 2014 | CardManager | `level_up_card` | 카드 레벨업 (동일카드N+영혼N) | 18.5 |
 | 2015 | MaterialManager | `get_materials` | 재료 인벤토리 조회 | 18 |
-| 3007 | StageManager | `return_to_town` | 귀환 (HP 보존) | 14 |
-| 3008 | StageManager | `get_battle_session` | 전투 세션 조회 | 14 |
 | 4001 | CraftingManager | `craft_item` | 크래프팅 | 19 |
 | 4002 | ShopManager | `buy_item` | 상인 구매 | 20 |
 | 4003 | QuestManager | `submit_quest` | 퀘스트 재료 납품 | 20 |
@@ -114,11 +114,11 @@ Phase 12.5 (코드 정리) ← IdleFarmManager 삭제, 기획 불일치 수정
     ↓
 Phase 13   (DB 모델 확장) ← BattleSessions, Materials, Cards, Users 컬럼
     ↓
-Phase 14   (웨이브/체크포인트) ← StageManager + BattleManager 개편, 사망패널티 10%
+Phase 14   (웨이브/체크포인트) ✅ 완료 ← StageManager + BattleManager 개편, 사망패널티 10%
     ↓
-Phase 15   (정예 몬스터 특성)
+Phase 15   (정예 몬스터 특성) ✅ 완료
     ↓
-Phase 16   (전투 엔진 v2) ← 경직/사이즈/마저항/상태이상/스킬발동 ★핵심
+Phase 16   (전투 엔진 v2) ✅ 부분완료 ← 경직/사이즈/마저항/상태이상/리포트 (카드스킬/세트=스텁)
     ↓
 Phase 17   (드롭 시스템 v2) ← ilvl/mlvl/dlvl 체계 + 7종 드롭
     ↓
@@ -435,9 +435,9 @@ Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
 
 ---
 
-### Phase 14 — 웨이브/체크포인트 시스템
+### Phase 14 — 웨이브/체크포인트 시스템 ✅
 **목적**: 스테이지 런 구조를 4웨이브 시스템으로 전면 개편.
-**상태**: [ ] 미착수
+**상태**: ✅ 완료 (2026-03-19)
 **의존성**: Phase 13 (BattleSessions 테이블)
 
 **변경 파일**
@@ -456,13 +456,14 @@ Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
 ```
 
 **작업 내용**
-- [ ] `enter_stage` 개편: BattleSession 생성, 웨이브1 몬스터 풀 반환 (**몬스터풀 13마리 구조는 2026-03-18 선행 수정 완료**)
-- [ ] `battle_result` 개편: 유닛 단위 전투 → 웨이브 진행 업데이트
-- [ ] 체크포인트: 웨이브 클리어 시 BattleSession 업데이트
-- [ ] `return_to_town` (API 3007): HP 보존 귀환, 세션 유지, 귀환 버튼 → 현재 유닛 전투 후 귀환
-- [ ] `get_battle_session` (API 3008): 재접속 시 진행 복구
-- [ ] 사망 처리: 경험치 10% 차감, 웨이브 처음 재시작
-- [ ] `clear_stage` 개편: 웨이브4(보스) 클리어 시 스테이지 완료 처리
+- [x] `enter_stage` 개편: BattleSession 생성, 웨이브 몬스터 풀 반환 (13마리 구조)
+- [x] `battle_result` 개편: BattleSession 연동, 연속 HP, 웨이브 킬 기록, 웨이브 클리어 보상
+- [x] 체크포인트: 웨이브 클리어 시 BattleSession 업데이트 + 다음 웨이브 진행
+- [x] `return_to_town` (API 3007): HP 보존 귀환, 세션 유지, 현재 웨이브 킬 리셋
+- [x] `get_battle_session` (API 3008): 재접속 시 진행 복구
+- [x] 사망 처리: 경험치 10% 차감, 웨이브 처음 재시작, HP max 복구
+- [x] `clear_stage` 개편: 웨이브4(보스) 클리어 검증 후 스테이지 완료 + BattleSession 삭제
+- [x] `main.py` CSV base_path 수정 (os.path.dirname 기반 절대경로)
 
 **어뷰징 방지**
 - 웨이브 순서 강제 (1→2→3→4)
@@ -471,9 +472,9 @@ Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
 
 ---
 
-### Phase 15 — 정예 몬스터 특성 시스템
+### Phase 15 — 정예 몬스터 특성 시스템 ✅
 **목적**: 정예 몬스터 런타임 생성 로직 구현.
-**상태**: [ ] 미착수
+**상태**: ✅ 완료 (2026-03-19)
 **의존성**: Phase 14 (웨이브 시스템)
 
 **변경 파일**
@@ -498,16 +499,16 @@ Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
 ```
 
 **작업 내용**
-- [ ] `EliteManager.generate_elite(stage_id, wave_monsters)` — 정예 유닛 생성
-- [ ] 죄종 고유 특성 7종 전투 적용
-- [ ] 공통 특성 16종 전투 적용
-- [ ] BattleManager에 특성 효과 반영
+- [x] `EliteManager.generate_elite(stage_id, monster_data, grade)` — 정예 유닛 생성 + 특성 스탯 보정
+- [x] 죄종 고유 특성 7종 전투 적용 (불가침은 Phase 16 상태이상 구현 후 활성화)
+- [x] 공통 특성 16종 전투 적용 (저주받은은 Phase 16 구현 후 활성화)
+- [x] BattleManager._simulate_with_hp에 elite_stats/traits 파라미터 추가, 전투 루프 내 특성 효과 반영
 
 ---
 
-### Phase 16 — 전투 엔진 v2 ★핵심
+### Phase 16 — 전투 엔진 v2 ★핵심 ✅ (부분)
 **목적**: 확정된 전투 공식 전체를 BattleManager에 반영. 현재 기본 공방만 있는 엔진을 완전체로 개편.
-**상태**: [ ] 미착수
+**상태**: ✅ 부분 완료 (2026-03-19) — 카드 스킬/세트 보너스는 Phase 18.5/22에서 연동
 **의존성**: Phase 12 (경험치), Phase 15 (정예 특성)
 
 **변경 파일**
@@ -539,23 +540,22 @@ Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
 ```
 
 **작업 내용**
-- [ ] 스탯 계산기 리팩토링 (통합 계수 적용)
-- [ ] 경직 시스템: 피격 경직 조건(단타>최대HP÷10) + 둔기 추가 경직 + FHR 감소
-- [ ] 사이즈 보정: 무기 사이즈 vs 갑옷 사이즈
-- [ ] 마법 저항: 별도 감소율 계산
-- [ ] 상태이상 7종 전투 적용:
-  - 화상(4s): 체력회복 감소
-  - 중독(4s): 매 초 고정 데미지
+- [x] CombatUnit 기반 전투 엔진 리팩토링 (StatusEffectManager.py 신규)
+- [x] 경직 시스템: 피격 경직 조건(단타>최대HP÷10) + FHR 감소
+- [x] 사이즈 보정: get_size_correction (대↔대 +10%, 대↔소 -10%)
+- [x] 마법 저항: MR / (MR + 100) 감소율 (CombatUnit에 magic_def 포함)
+- [x] 상태이상 7종 시스템 구현 (CombatUnit.apply_status / tick_status)
+  - 화상(4s): 회복량 50% 감소
+  - 중독(4s): 매초 고정 데미지
   - 스턴(1s): 공격 불가
-  - 빙결(3s): 공격속도 감소
-  - 침식(영구): 피격마다 방어력 영구 감소 (스택)
-  - 매혹(4s): 명중률 대폭 감소
-  - 심판(2s): 카드 스킬 발동 확률 0%
+  - 빙결(3s): 공속 50% 감소
+  - 침식(영구): 피격당 DEF 2% 영구 감소 (스택)
+  - 매혹(4s): 명중률 50% 감소
+  - 심판(2s): 카드 스킬 봉인
   - 중첩: 갱신(타이머 리셋), 침식만 스택형
-  - 다른 종류 동시 적용 가능
-- [ ] 카드 스킬 발동: 7종 트리거 (on_attack/on_hit/on_being_hit/on_cooldown_ready/every_n_hit/on_evade/every_n_seconds)
-- [ ] 세트 보너스 전투 적용 (Phase 22 세트 계산 결과 반영)
-- [ ] 전투 리포트: 피해량/명중률/회피율/치명타/경직/상태이상/잔여HP
+- [ ] 카드 스킬 발동: Phase 18.5 카드 인벤토리 구현 후 연동
+- [ ] 세트 보너스 전투 적용: Phase 22 세트 보너스 구현 후 연동
+- [x] 전투 리포트: battle_report (p_total_dmg/m_total_dmg/hits/misses/crits/staggers)
 
 ---
 

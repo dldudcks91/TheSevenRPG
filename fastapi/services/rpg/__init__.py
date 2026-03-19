@@ -5,3 +5,4 @@ from .ItemDropManager import ItemDropManager
 from .StageManager import StageManager
 from .CardManager import CardManager
 from .EnhanceManager import EnhanceManager
+from .EliteManager import EliteManager

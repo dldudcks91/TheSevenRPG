@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -38,7 +39,9 @@ PUBLIC_API_CODES = {
 async def startup_event():
     logger.info("=== RPG Server Starting Up ===")
     await RedisManager.init()
-    GameDataManager.load_all_csv(base_path="./meta_data/")
+    # uvicorn을 fastapi/ 디렉토리에서 실행하므로 상대 경로 기준
+    base = os.path.join(os.path.dirname(__file__), "meta_data")
+    GameDataManager.load_all_csv(base_path=base + "/")
     database.init_db()
     logger.info("=== Server is Ready to Battle ===")
 

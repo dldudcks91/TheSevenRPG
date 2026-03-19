@@ -40,6 +40,9 @@ class ErrorCode(str, Enum):
     STAGE_NOT_FOUND     = "E4001"   # 스테이지 없음
     INVALID_BATTLE_REQ  = "E4002"   # 잘못된 전투 요청
     STAGE_NOT_UNLOCKED  = "E4003"   # 스테이지 미해금
+    BATTLE_SESSION_NOT_FOUND = "E4004"  # 전투 세션 없음
+    BATTLE_SESSION_EXISTS    = "E4005"  # 이미 진행 중인 전투 세션 존재
+    WAVE_NOT_CLEARED         = "E4006"  # 웨이브 미클리어
 
     # ── E9xxx: 서버 내부 ─────────────────────────────────
     DB_ERROR            = "E9001"   # DB 오류

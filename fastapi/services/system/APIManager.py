@@ -29,4 +29,6 @@ class APIManager:
         3002: (ItemDropManager, ItemDropManager.process_kill),
         3003: (StageManager, StageManager.enter_stage),
         3004: (StageManager, StageManager.clear_stage),
+        3007: (StageManager, StageManager.return_to_town),
+        3008: (StageManager, StageManager.get_battle_session),
     }
