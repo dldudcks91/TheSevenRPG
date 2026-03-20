@@ -31,6 +31,16 @@ fastapi/public/
 │   ├── app.js              # 앱 초기화, 라우터
 │   ├── api.js              # 서버 통신 (apiCall)
 │   ├── session.js          # 세션 관리
+│   ├── i18n/               # 다국어/텍스트 관리
+│   │   ├── index.js        # t() 함수, setLang(), sinName() 등
+│   │   ├── ko.js           # UI 텍스트 (버튼, 라벨, 에러)
+│   │   ├── en.js           # 영어 UI 텍스트
+│   │   └── story-ko.js     # 스토리/대사 텍스트 (프롤로그, 튜토리얼)
+│   ├── scenes/             # 씬 모듈 (SceneManager 라이프사이클)
+│   │   ├── splash.js       # 스플래시 (초기 로딩)
+│   │   ├── prologue.js     # 프롤로그 (최초 1회)
+│   │   ├── tutorial-battle.js  # 튜토리얼 전투
+│   │   └── walking.js      # 워킹 연출
 │   ├── screens/            # 화면별 JS
 │   │   ├── login.js
 │   │   ├── town.js

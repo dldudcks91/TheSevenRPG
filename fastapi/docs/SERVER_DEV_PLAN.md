@@ -1,7 +1,7 @@
 # TheSevenRPG — 서버 개발 계획서
 
 > 최초 작성: 2026-03-12
-> 최종 업데이트: 2026-03-20 (Phase 18.5~21 구현 완료)
+> 최종 업데이트: 2026-03-20 (Phase 11 시뮬레이션 + 컨벤션 개편 + FastAPI 0.128.8 업그레이드)
 > 기준 기획서: `fastapi/docs/game_design/GAME_DESIGN.md`
 
 ---
@@ -150,11 +150,22 @@ Phase 21   (장비 분해) ✅ 완료 ← disassemble_item (등급별 광석+골
     ↓
 Phase 22   (세트 보너스) ✅ 완료 ← 세트포인트 + 베이직 죄종 + 전투 적용
 
-=== Phase 23~ (엔드콘텐츠 — 추후) ===
-Phase 23   (PVP / 아레나) ← Lv20 이상, 6등급, 시즌제
-Phase 24   (연맹) ← 최대 15명, 경험치/골드/드롭률 버프
+=== 클라이언트 인프라 개선 (2026-03-20) ===
+Client-Refactor-1  Phaser 재사용 (Game 1회 생성, swapMonster 스프라이트 교체) ✅
+Client-Refactor-2  Store.batch() — 다중 set 배치 렌더링 ✅
+Client-Refactor-3  코드 중복 제거 (setupEventDelegation/teardown/buildItemPopupHtml) ✅
+Client-Refactor-4  챕터 맵 뷰 (분기 월드맵 + 캐릭터 이동) ✅
 
-=== Phase 11 (시뮬레이션 도구) — Phase 16 이후 착수 ===
+=== Phase 11 (시뮬레이션 도구) ✅ 완료 ===
+Phase 11   (시뮬레이션 도구) ✅ 완료 ← PVE/PVP/드롭/성장 4모드 CLI
+
+=== 컨벤션 업데이트 (2026-03-20) ===
+Convention-1  fastapi-server 컨벤션 개편 — Redis 격하(세션 전용), Manager 유형 구분, API 코드 전체 정리 ✅
+Convention-2  manager-convention 컨벤션 개편 — Redis 캐시 섹션 삭제, Utility Manager 예외, 내부 호출 규칙 ✅
+
+=== Phase 23~ (엔드콘텐츠 — 추후, Redis 재도입 시점) ===
+Phase 23   (PVP / 아레나) ← Lv20 이상, 6등급, 시즌제 (Redis: 매칭 큐, 랭킹 sorted set)
+Phase 24   (연맹) ← 최대 15명, 버프 (Redis: 실시간 상태 공유)
 ```
 
 ---

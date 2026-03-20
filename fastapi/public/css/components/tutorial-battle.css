@@ -1,0 +1,316 @@
+/* ============================================
+   TheSevenRPG — Tutorial Battle Scene
+   프롤로그 직후 간이 전투 화면
+   ============================================ */
+
+.tutorial-battle-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+}
+
+/* === 인트로 텍스트 (전투 전 내레이션) === */
+.tutorial-intro {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-xl);
+    max-width: 640px;
+    margin: 0 auto;
+    width: 100%;
+    cursor: pointer;
+}
+
+.tutorial-intro-line {
+    font-family: var(--font-main);
+    font-size: var(--font-size-md);
+    color: var(--text-secondary);
+    line-height: 2;
+    text-align: center;
+    opacity: 0;
+    animation: tutorialFadeIn 0.6s ease forwards;
+}
+
+.tutorial-intro-line.accent {
+    color: var(--color-wrath);
+    font-family: var(--font-bold);
+}
+
+@keyframes tutorialFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* === 전투 영역 === */
+.tutorial-battle-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    max-width: 640px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* --- 전투 참가자 (플레이어/몬스터) --- */
+.tutorial-combatant {
+    margin-bottom: var(--spacing-xl);
+}
+
+.tutorial-combatant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.tutorial-combatant-name {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.tutorial-combatant-hp-text {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+/* --- HP 바 --- */
+.tutorial-hp-track {
+    width: 100%;
+    height: 16px;
+    background: var(--hp-bar-bg);
+    box-shadow: var(--rpg-border-inset);
+    position: relative;
+    overflow: hidden;
+}
+
+.tutorial-hp-fill {
+    height: 100%;
+    background: var(--hp-bar);
+    transition: width 0.4s ease;
+    position: relative;
+}
+
+.tutorial-hp-fill.monster {
+    background: var(--color-wrath);
+}
+
+/* HP 바 하이라이트 (픽셀 스타일) */
+.tutorial-hp-fill::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* --- VS 구분선 --- */
+.tutorial-vs {
+    text-align: center;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-xl);
+    color: var(--text-muted);
+    padding: var(--spacing-lg) 0;
+    letter-spacing: 4px;
+}
+
+/* --- 전투 로그 --- */
+.tutorial-battle-log {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    box-shadow: var(--rpg-border-inset);
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.tutorial-log-entry {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    line-height: 1.8;
+    opacity: 0;
+    animation: tutorialFadeIn 0.3s ease forwards;
+}
+
+.tutorial-log-entry.player-hit {
+    color: var(--color-info);
+}
+
+.tutorial-log-entry.monster-hit {
+    color: var(--color-wrath);
+}
+
+/* --- 데미지 팝업 --- */
+.tutorial-damage-popup {
+    position: absolute;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-lg);
+    color: var(--color-warning);
+    text-shadow: 2px 2px 0 #000;
+    pointer-events: none;
+    animation: tutorialDamageFloat 0.8s ease forwards;
+    z-index: 10;
+}
+
+.tutorial-damage-popup.to-monster {
+    color: var(--color-info);
+}
+
+.tutorial-damage-popup.to-player {
+    color: var(--color-wrath);
+}
+
+@keyframes tutorialDamageFloat {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-24px); }
+}
+
+/* === 승리 화면 === */
+.tutorial-victory {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-xl);
+    max-width: 640px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.tutorial-victory-title {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-xxl);
+    color: var(--color-warning);
+    letter-spacing: 4px;
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: var(--spacing-xl);
+    animation: tutorialVictoryPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes tutorialVictoryPulse {
+    0%, 100% { opacity: 0.9; }
+    50% { opacity: 1; }
+}
+
+/* --- 보상 표시 --- */
+.tutorial-rewards {
+    width: 100%;
+    margin-bottom: var(--spacing-xl);
+}
+
+.tutorial-reward-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-family: var(--font-main);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.tutorial-reward-value {
+    color: var(--color-success);
+    font-family: var(--font-bold);
+}
+
+/* --- 드롭 아이템 카드 --- */
+.tutorial-drop-card {
+    width: 100%;
+    padding: var(--spacing-lg);
+    background: var(--bg-card);
+    box-shadow: var(--rpg-border-outset);
+    margin-bottom: var(--spacing-xl);
+}
+
+.tutorial-drop-label {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+}
+
+.tutorial-drop-name {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-lg);
+    color: var(--rarity-magic);
+    margin-bottom: var(--spacing-sm);
+}
+
+.tutorial-drop-stats {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+/* --- 가이드 텍스트 --- */
+.tutorial-guide {
+    font-family: var(--font-main);
+    font-size: var(--font-size-sm);
+    color: var(--color-warning);
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    animation: prologueHintBlink 1.5s steps(2) infinite;
+}
+
+/* --- 장착 버튼 --- */
+.tutorial-equip-btn {
+    width: 100%;
+    max-width: 280px;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--bg-tertiary);
+    box-shadow: var(--rpg-border-outset);
+    border: none;
+    font-family: var(--font-bold);
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: center;
+    min-height: 44px;
+}
+
+.tutorial-equip-btn:active {
+    box-shadow: var(--rpg-border-inset);
+}
+
+/* === 챕터 진입 (프롤로그와 동일 스타일) === */
+.tutorial-chapter-enter {
+    font-family: var(--font-bold);
+    font-size: var(--font-size-xl);
+    color: var(--text-accent);
+    text-align: center;
+    letter-spacing: 3px;
+    text-shadow:
+        0 0 20px rgba(224, 48, 48, 0.4),
+        2px 2px 0 #000;
+    animation: prologueChapterPulse 2s ease-in-out infinite;
+}
+
+/* === 진행 힌트 (하단) === */
+.tutorial-footer {
+    padding: var(--spacing-md) var(--spacing-xl);
+    text-align: center;
+}
+
+.tutorial-hint {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    animation: prologueHintBlink 1.5s steps(2) infinite;
+}
+
+/* === 페이드 전환 === */
+.tutorial-fade-out {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}

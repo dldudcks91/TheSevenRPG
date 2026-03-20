@@ -3,6 +3,7 @@
  * 챕터별 도감 그룹, 카드 수집 현황, 그룹 패시브 (열람 전용)
  */
 import { Store } from '../../store.js';
+import { setupEventDelegation, teardown } from '../../utils.js';
 import { getMonsterName, getChapters } from '../../meta-data.js';
 import { t } from '../../i18n/index.js';
 import Popup from '../../popup.js';
@@ -13,7 +14,7 @@ const CollectionTab = {
     _selectedChapter: 1,
 
     mount(el) {
-        this.el = el;
+        setupEventDelegation(this, el);
 
         const chapters = getChapters();
 
@@ -31,9 +32,6 @@ const CollectionTab = {
             </div>
         `;
 
-        this._handleEvent = this._onEvent.bind(this);
-        el.addEventListener('pointerdown', this._handleEvent);
-
         this._unsubscribers.push(
             Store.subscribe('collections.list', () => this._render()),
         );
@@ -43,9 +41,7 @@ const CollectionTab = {
     },
 
     unmount() {
-        if (this._handleEvent) this.el.removeEventListener('pointerdown', this._handleEvent);
-        this._unsubscribers.forEach(unsub => unsub());
-        this._unsubscribers = [];
+        teardown(this);
         Popup.hide();
     },
 

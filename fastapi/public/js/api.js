@@ -57,14 +57,14 @@ export async function apiCall(apiCode, data = {}) {
 /** API 에러 처리 */
 function handleApiError(result) {
     const errorCode = result.error_code || '';
-    const message = result.message || '알 수 없는 오류';
+    const message = result.message || t('error_unknown');
 
     // E1002: 세션 만료 → 로그인 화면으로
     if (errorCode === 'E1002') {
         clearSession();
         showToast(t('error_session'), 'warning');
-        // 순환 의존 방지: app.js의 navigate() 대신 직접 hash 변경
-        window.location.hash = '#login';
+        // 순환 의존 방지: 커스텀 이벤트로 app.js에 알림
+        window.dispatchEvent(new CustomEvent('session-expired'));
         return;
     }
 

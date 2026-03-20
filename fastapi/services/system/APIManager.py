@@ -1,4 +1,4 @@
-from services.system import GameDataManager, UserInitManager, UserInfoManager
+from services.system import GameDataManager, UserInitManager, UserInfoManager, TutorialBattleManager
 from services.rpg import (
     InventoryManager, BattleManager,
     StageManager, CardManager, MaterialManager,
@@ -14,6 +14,7 @@ class APIManager:
         1005: (UserInfoManager, UserInfoManager.reset_stats),
         1006: (UserInfoManager, UserInfoManager.select_basic_sin),
         1007: (UserInitManager, UserInitManager.login),
+        1010: (TutorialBattleManager, TutorialBattleManager.tutorial_battle),
 
         # === RPG 인벤토리 API (2xxx) ===
         2001: (InventoryManager, InventoryManager.equip_item),

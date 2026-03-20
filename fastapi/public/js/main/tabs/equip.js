@@ -4,7 +4,7 @@
  */
 import { apiCall } from '../../api.js';
 import { Store } from '../../store.js';
-import { formatGold, escapeHtml } from '../../utils.js';
+import { formatGold, escapeHtml, setupEventDelegation, teardown } from '../../utils.js';
 import { getEquipName, getEquipSlot, getSetBonus } from '../../meta-data.js';
 import Popup from '../../popup.js';
 import { t, sinName, rarityName, slotName } from '../../i18n/index.js';
@@ -44,7 +44,7 @@ const EquipTab = {
     _currentFilter: 'all',
 
     mount(el) {
-        this.el = el;
+        setupEventDelegation(this, el);
 
         el.innerHTML = `
             <div class="tab-equip">
@@ -90,9 +90,6 @@ const EquipTab = {
             </div>
         `;
 
-        this._handleEvent = this._onEvent.bind(this);
-        el.addEventListener('pointerdown', this._handleEvent);
-
         // 팝업 내 버튼도 처리 (팝업은 body에 붙으므로 별도 리스너)
         this._handlePopupEvent = this._onPopupEvent.bind(this);
         document.addEventListener('pointerdown', this._handlePopupEvent);
@@ -106,10 +103,8 @@ const EquipTab = {
     },
 
     unmount() {
-        if (this._handleEvent) this.el.removeEventListener('pointerdown', this._handleEvent);
+        teardown(this);
         if (this._handlePopupEvent) document.removeEventListener('pointerdown', this._handlePopupEvent);
-        this._unsubscribers.forEach(unsub => unsub());
-        this._unsubscribers = [];
         Popup.hide();
     },
 

@@ -1,55 +1,33 @@
 /**
  * TheSevenRPG — App Entry
- * 2화면 전환: Login ↔ Main
+ * SceneManager 기반 씬 관리
+ *
+ * Scene flow:
+ *   Splash (title + loading) → Login (세션 없음) / Main (세션 있음)
+ *   회원가입 → Prologue (5씬 내레이션) → Walking (걷기 연출) → Tutorial Battle → Main
+ *   Main 내부: town ↔ battle ↔ forge ↔ shop (switchRightView로 관리)
  */
-import { isLoggedIn } from './session.js';
-import { loadMetaData } from './meta-data.js';
+import { SceneManager } from './scene-manager.js';
+import SplashScene from './scenes/splash.js';
+import PrologueScene from './scenes/prologue.js';
+import WalkingScene from './scenes/walking.js';
+import TutorialBattleScene from './scenes/tutorial-battle.js';
 import LoginScreen from './screens/login.js';
 import MainScreen from './main.js';
 
-let currentView = null; // 'login' | 'main'
-let appContainer = null;
-
-/** 화면 전환 */
-export function switchView(viewName) {
-    if (viewName === currentView) return;
-
-    // 현재 화면 언마운트
-    if (currentView === 'login' && LoginScreen.unmount) {
-        LoginScreen.unmount();
-    } else if (currentView === 'main' && MainScreen.unmount) {
-        MainScreen.unmount();
-    }
-
-    // 기존 화면 비활성화
-    const existing = appContainer.querySelector('.view.active');
-    if (existing) existing.classList.remove('active');
-
-    currentView = viewName;
-
-    // 새 화면 마운트
-    let viewEl = appContainer.querySelector(`[data-view="${viewName}"]`);
-    if (!viewEl) {
-        viewEl = document.createElement('div');
-        viewEl.className = 'view';
-        viewEl.dataset.view = viewName;
-        appContainer.appendChild(viewEl);
-    }
-
-    if (viewName === 'login') {
-        LoginScreen.mount(viewEl);
-    } else if (viewName === 'main') {
-        MainScreen.mount(viewEl);
-    }
-
-    viewEl.classList.add('active');
+// ── Scene 등록 ──
+function registerScenes() {
+    SceneManager.register('splash', SplashScene);
+    SceneManager.register('prologue', PrologueScene);
+    SceneManager.register('walking', WalkingScene);
+    SceneManager.register('tutorial-battle', TutorialBattleScene);
+    SceneManager.register('login', LoginScreen);
+    SceneManager.register('main', MainScreen);
 }
 
 // ── visibilitychange ──
 function handleVisibilityChange() {
-    if (!currentView) return;
-
-    if (currentView === 'main' && MainScreen.onVisibilityChange) {
+    if (SceneManager.current() === 'main' && MainScreen.onVisibilityChange) {
         MainScreen.onVisibilityChange(document.hidden);
     }
 }
@@ -65,18 +43,20 @@ function registerServiceWorker() {
 
 // ── 초기화 ──
 async function init() {
-    appContainer = document.getElementById('app');
+    const appContainer = document.getElementById('app');
 
-    await loadMetaData();
+    SceneManager.init(appContainer);
+    registerScenes();
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // 세션 유무에 따라 초기 화면 결정
-    if (isLoggedIn()) {
-        switchView('main');
-    } else {
-        switchView('login');
-    }
+    // 세션 만료 이벤트 → SceneManager로 로그인 화면 전환
+    window.addEventListener('session-expired', () => {
+        SceneManager.resetTo('login');
+    });
+
+    // Splash에서 메타데이터 로드 + 세션 체크 + 자동 전환
+    await SceneManager.push('splash');
 
     registerServiceWorker();
     console.log('[App] TheSevenRPG 클라이언트 초기화 완료');

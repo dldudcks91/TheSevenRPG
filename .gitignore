@@ -2,3 +2,6 @@ fastapi/docs/credentials.json
 fastapi/.env
 fastapi/logs/
 __pycache__/
+
+# 이미지 에셋 (LPC 스프라이트 + 장비 아이콘 등)
+fastapi/public/img/

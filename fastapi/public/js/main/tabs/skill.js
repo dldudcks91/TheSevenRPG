@@ -5,6 +5,7 @@
  */
 import { apiCall } from '../../api.js';
 import { Store } from '../../store.js';
+import { setupEventDelegation, teardown } from '../../utils.js';
 import { getMonsterName } from '../../meta-data.js';
 import { t } from '../../i18n/index.js';
 import Popup from '../../popup.js';
@@ -24,7 +25,7 @@ const SkillTab = {
     _unsubscribers: [],
 
     mount(el) {
-        this.el = el;
+        setupEventDelegation(this, el);
 
         el.innerHTML = `
             <div class="tab-skill">
@@ -53,9 +54,6 @@ const SkillTab = {
             </div>
         `;
 
-        this._handleEvent = this._onEvent.bind(this);
-        el.addEventListener('pointerdown', this._handleEvent);
-
         this._unsubscribers.push(
             Store.subscribe('collections.list', () => this._render()),
         );
@@ -64,9 +62,7 @@ const SkillTab = {
     },
 
     unmount() {
-        if (this._handleEvent) this.el.removeEventListener('pointerdown', this._handleEvent);
-        this._unsubscribers.forEach(unsub => unsub());
-        this._unsubscribers = [];
+        teardown(this);
         Popup.hide();
     },
 

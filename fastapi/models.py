@@ -1,5 +1,5 @@
 # models.py
-from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, ForeignKey, JSON, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -75,6 +75,10 @@ class Item(Base):
     is_equipped = Column(Boolean, default=False, index=True)
     equip_slot = Column(String(20), nullable=True)
 
+    __table_args__ = (
+        Index('ix_items_user_equip', 'user_no', 'equip_slot'),
+    )
+
     # 관계 설정
     user = relationship("User", back_populates="items")
 
@@ -125,6 +129,10 @@ class Material(Base):
     material_id = Column(Integer, nullable=False)       # 메타데이터 참조 (포션 종류, 광석 등급, 죄종 등)
     amount = Column(Integer, default=0)                 # 수량 (스택 가능)
 
+    __table_args__ = (
+        Index('ix_materials_user_type_id', 'user_no', 'material_type', 'material_id'),
+    )
+
     # 관계 설정
     user = relationship("User", back_populates="materials")
 
@@ -142,6 +150,10 @@ class Card(Base):
     is_equipped = Column(Boolean, default=False, index=True)  # 스킬 슬롯 장착 여부
     skill_slot = Column(Integer, nullable=True)         # 장착된 스킬 슬롯 (1~4)
     created_at = Column(DateTime, default=func.now())   # 획득 시각
+
+    __table_args__ = (
+        Index('ix_cards_user_monster', 'user_no', 'monster_idx'),
+    )
 
     # 관계 설정
     user = relationship("User", back_populates="cards")

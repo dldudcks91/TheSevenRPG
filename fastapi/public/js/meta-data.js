@@ -3,6 +3,7 @@
  * API 1002로 서버 메타데이터를 로드하고 룩업 함수를 제공한다.
  */
 import { apiCall } from './api.js';
+import { t } from './i18n/index.js';
 
 let _loaded = false;
 let _configs = {};
@@ -51,7 +52,7 @@ export function isMetaLoaded() {
  */
 export function getEquipName(baseItemId) {
     const row = _equipBaseMap[String(baseItemId)];
-    return row ? row.item_base : `장비 #${baseItemId}`;
+    return row ? row.item_base : t('fallback_equip', { id: baseItemId });
 }
 
 /**
@@ -91,7 +92,7 @@ export function getEquipSlot(baseItemId) {
  */
 export function getMonsterName(monsterIdx) {
     const monster = (_configs.monsters || {})[String(monsterIdx)];
-    return monster ? monster.name : `몬스터 #${monsterIdx}`;
+    return monster ? monster.name : t('fallback_monster', { id: monsterIdx });
 }
 
 /**
@@ -131,9 +132,9 @@ export function getChapters() {
     // 더미: chapters가 비어있으면 기본값
     if (result.length === 0) {
         return [
-            { id: 1, sin: '분노', region: '불타는 전장', boss: '아바돈' },
-            { id: 2, sin: '시기', region: '뒤틀린 숲', boss: '사마엘' },
-            { id: 3, sin: '탐욕', region: '황금의 사막', boss: '다곤' },
+            { id: 1, sin: t('sin_wrath'), region: t('dummy_ch1_region'), boss: t('dummy_ch1_boss') },
+            { id: 2, sin: t('sin_envy'), region: t('dummy_ch2_region'), boss: t('dummy_ch2_boss') },
+            { id: 3, sin: t('sin_greed'), region: t('dummy_ch3_region'), boss: t('dummy_ch3_boss') },
         ];
     }
     return result;
@@ -159,19 +160,19 @@ export function getStagesByChapter(chapterId) {
     if (result.length === 0) {
         const dummyStages = {
             1: [
-                { stageId: 101, stageNum: 1, stageName: '파멸의 진영' },
-                { stageId: 102, stageNum: 2, stageName: '흑심의 동굴' },
-                { stageId: 103, stageNum: 3, stageName: '아바돈의 궁전' },
+                { stageId: 101, stageNum: 1, stageName: t('dummy_s101') },
+                { stageId: 102, stageNum: 2, stageName: t('dummy_s102') },
+                { stageId: 103, stageNum: 3, stageName: t('dummy_s103') },
             ],
             2: [
-                { stageId: 201, stageNum: 1, stageName: '시기의 숲' },
-                { stageId: 202, stageNum: 2, stageName: '증오의 늪지' },
-                { stageId: 203, stageNum: 3, stageName: '사마엘의 서식지' },
+                { stageId: 201, stageNum: 1, stageName: t('dummy_s201') },
+                { stageId: 202, stageNum: 2, stageName: t('dummy_s202') },
+                { stageId: 203, stageNum: 3, stageName: t('dummy_s203') },
             ],
             3: [
-                { stageId: 301, stageNum: 1, stageName: '황금의 사막' },
-                { stageId: 302, stageNum: 2, stageName: '탐욕의 탑' },
-                { stageId: 303, stageNum: 3, stageName: '다곤의 무덤' },
+                { stageId: 301, stageNum: 1, stageName: t('dummy_s301') },
+                { stageId: 302, stageNum: 2, stageName: t('dummy_s302') },
+                { stageId: 303, stageNum: 3, stageName: t('dummy_s303') },
             ],
         };
         return dummyStages[chapterId] || [];
@@ -200,5 +201,5 @@ export function getSetBonus(setId, breakpoint) {
  */
 export function getStageName(stageId) {
     const stage = (_configs.stages || {})[String(stageId)];
-    return stage ? stage.stage_name : `스테이지 ${stageId}`;
+    return stage ? stage.stage_name : t('fallback_stage', { id: stageId });
 }

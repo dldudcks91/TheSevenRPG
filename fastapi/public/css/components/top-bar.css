@@ -117,6 +117,36 @@
     background: var(--exp-bar);
 }
 
+/* 씬 다시보기 버튼 */
+.top-bar-replay {
+    background: none;
+    border: 1px solid var(--border-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-main);
+}
+
+.top-bar-replay:hover {
+    color: var(--text-accent);
+    border-color: var(--text-accent);
+}
+
+/* replay 모달 버튼 */
+.replay-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-md) 0;
+}
+
+.replay-btn {
+    text-align: left;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
 /* 설정 버튼 */
 .top-bar-settings {
     background: none;

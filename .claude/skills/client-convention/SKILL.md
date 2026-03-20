@@ -800,3 +800,78 @@ unmount() {
     // game 인스턴스 파괴 안 하고 화면만 전환 → 메모리 릭
 }
 ```
+
+---
+
+## §11. i18n (다국어/텍스트 관리)
+
+### 텍스트 3계층 체계
+
+UI에 표시되는 모든 텍스트는 하드코딩하지 않고, 용도별 3계층으로 관리한다.
+
+| 계층 | 파일 | 내용 | 사용 방식 |
+|------|------|------|----------|
+| **UI 텍스트** | `i18n/ko.js` | 버튼, 라벨, 에러, 탭 이름, 폴백 | `t('key')` 또는 `t('key', { n: 5 })` |
+| **스토리/대사** | `i18n/story-ko.js` | 프롤로그, 튜토리얼, 연출 텍스트 | `import story from './i18n/story-ko.js'` |
+| **게임 메타데이터** | 서버 CSV → API 응답 | 몬스터명, 스테이지명, 장비명 | `getMonsterName(idx)`, `getStageName(id)` |
+
+### t() 함수 사용 규칙
+
+```javascript
+import { t } from '../i18n/index.js';
+
+// ✅ 단순 키
+el.textContent = t('confirm');
+
+// ✅ 템플릿 치환
+el.textContent = t('town_chapter', { n: 3 });  // "제3장"
+
+// ✅ 폴백: 키가 없으면 ko.js → 키 문자열 그대로 반환
+t('nonexistent_key');  // → "nonexistent_key"
+
+// ❌ 한글 문자열 직접 사용
+el.textContent = '확인';
+```
+
+### 스토리 텍스트 규칙
+
+```javascript
+import story from '../i18n/story-ko.js';
+
+// ✅ story 객체에서 참조
+const scenes = story.prologue_scenes;
+const playerName = story.tutorial_player_name;
+
+// ❌ 대사/내레이션을 JS 파일에 직접 하드코딩
+const SCENES = [{ title: '왕좌', lines: ['지옥에는...'] }];
+```
+
+### 메타데이터 폴백 규칙
+
+서버에서 이름을 받아오되, 로드 실패 시 i18n 키로 폴백한다.
+
+```javascript
+// ✅ 메타데이터 룩업 + i18n 폴백
+return row ? row.item_base : t('fallback_equip', { id: baseItemId });
+
+// ❌ 한글 폴백 직접 작성
+return row ? row.item_base : `장비 #${baseItemId}`;
+```
+
+### 키 네이밍 규칙
+
+| 접두사 | 용도 | 예시 |
+|--------|------|------|
+| `login_` | 로그인 화면 | `login_btn`, `login_err_pw_empty` |
+| `tab_` | 좌측 탭 이름 | `tab_stat`, `tab_equip` |
+| `stat_` | 스탯 관련 | `stat_level`, `stat_combat` |
+| `equip_` | 장비 관련 | `equip_btn`, `equip_cost` |
+| `battle_` | 전투 관련 | `battle_victory`, `battle_retry` |
+| `town_` | 마을 관련 | `town_gate`, `town_smith` |
+| `cmap_` | 챕터맵 | `cmap_back`, `cmap_no_data` |
+| `error_` | 에러 메시지 | `error_network`, `error_unknown` |
+| `fallback_` | 메타데이터 폴백 | `fallback_equip`, `fallback_monster` |
+| `opt_` | 장비 옵션 라벨 | `opt_atk`, `opt_def` |
+| `sin_` | 죄종 이름 | `sin_wrath`, `sin_envy` |
+| `rarity_` | 등급 이름 | `rarity_normal`, `rarity_magic` |
+| `slot_` | 장착 슬롯 | `slot_weapon`, `slot_armor` |

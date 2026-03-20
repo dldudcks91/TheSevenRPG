@@ -5,7 +5,7 @@
  */
 import { apiCall } from '../../api.js';
 import { Store } from '../../store.js';
-import { showLoading, hideLoading } from '../../utils.js';
+import { showLoading, hideLoading, setupEventDelegation, teardown } from '../../utils.js';
 import { getChapters, getStagesByChapter } from '../../meta-data.js';
 import { t } from '../../i18n/index.js';
 import MainScreen from '../../main.js';
@@ -26,7 +26,7 @@ const TownView = {
     _selectedChapter: 1,
 
     mount(el) {
-        this.el = el;
+        setupEventDelegation(this, el);
 
         el.innerHTML = `
             <div class="town-view">
@@ -55,16 +55,11 @@ const TownView = {
             </div>
         `;
 
-        this._handleEvent = this._onEvent.bind(this);
-        el.addEventListener('pointerdown', this._handleEvent);
-
         this._updateUnlockState();
     },
 
     unmount() {
-        if (this._handleEvent && this.el) {
-            this.el.removeEventListener('pointerdown', this._handleEvent);
-        }
+        teardown(this);
     },
 
     _onEvent(e) {
@@ -99,7 +94,8 @@ const TownView = {
         const viewMode = target.dataset.view;
 
         if (viewMode === 'stage-select') {
-            this._openStagePopup();
+            MainScreen.switchRightView('chapter-map');
+            return;
         } else {
             // NPC 시설 (Phase 19~20, 현재 미구현)
             MainScreen.switchRightView(viewMode);

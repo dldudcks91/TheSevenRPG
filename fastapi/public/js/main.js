@@ -6,15 +6,22 @@ import TopBar from './main/top-bar.js';
 import LeftPanel from './main/left-panel.js';
 import TownView from './main/views/town-view.js';
 import BattleView from './main/views/battle-view.js';
+import ChapterMapView from './main/views/chapter-map-view.js';
 import { apiCall } from './api.js';
 import { Store } from './store.js';
 import { showLoading, hideLoading } from './utils.js';
 
-// 우측 뷰 모듈 맵
+// 우측 뷰 모듈 맵 (registerView로 외부에서 추가 가능)
 const VIEW_MODULES = {
     town: TownView,
     battle: BattleView,
+    'chapter-map': ChapterMapView,
 };
+
+/** 우측 뷰 모듈을 동적으로 등록한다 (NPC 시설 등) */
+export function registerView(name, module) {
+    VIEW_MODULES[name] = module;
+}
 
 const MainScreen = {
     el: null,
@@ -40,10 +47,13 @@ const MainScreen = {
         TopBar.mount(el.querySelector('#main-top-bar'));
         LeftPanel.mount(el.querySelector('#main-left-panel'));
 
-        // 우측 뷰: 기본 마을 모드
+        // 전투 상태 초기화 후 마을 모드로 시작
+        Store.set('battle.stage_id', null);
+        Store.set('battle.monster_pool', null);
         this.switchRightView('town');
 
         this._loadUserData();
+        this._checkBattleSession();
     },
 
     unmount() {
@@ -92,16 +102,29 @@ const MainScreen = {
             const result = await apiCall(1004, {});
             if (result?.success) {
                 const d = result.data;
-                Store.set('user.name', d.user_name);
-                Store.set('user.level', d.level);
-                Store.set('user.gold', d.gold);
-                Store.set('user.exp', d.exp);
-                Store.set('user.stat_points', d.stat_points);
-                Store.set('user.current_stage', d.current_stage);
-                Store.merge(d.stats, 'stats');
+                Store.batch(() => {
+                    Store.set('user.name', d.user_name);
+                    Store.set('user.level', d.level);
+                    Store.set('user.gold', d.gold);
+                    Store.set('user.exp', d.exp);
+                    Store.set('user.stat_points', d.stat_points);
+                    Store.set('user.current_stage', d.current_stage);
+                    Store.merge(d.stats, 'stats');
+                });
             }
         } finally {
             hideLoading();
+        }
+    },
+
+    /** 전투 세션 복구 (API 3008) — 재접속 시 진행 중인 전투가 있으면 자동 복구 */
+    async _checkBattleSession() {
+        const result = await apiCall(3008, {});
+        if (result?.success && result.data.session) {
+            const session = result.data.session;
+            Store.set('battle.stage_id', session.stage_id);
+            Store.set('battle.monster_pool', result.data.monsters || []);
+            this.switchRightView('battle');
         }
     },
 };

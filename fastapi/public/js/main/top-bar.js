@@ -26,6 +26,7 @@ const TopBar = {
                     <div class="top-bar-stats" id="tb-stats"></div>
                     <div class="top-bar-right">
                         <span class="top-bar-gold" id="tb-gold">0 G</span>
+                        <button class="top-bar-replay" data-action="replay-scene" title="씬 다시보기">\u25B6</button>
                         <button class="top-bar-settings" data-action="settings">\u2699</button>
                         <button class="top-bar-logout" data-action="logout">${t('logout')}</button>
                     </div>
@@ -85,6 +86,16 @@ const TopBar = {
             case 'settings':
                 this._showSettings();
                 break;
+            case 'replay-scene':
+                this._showReplayModal();
+                break;
+            case 'replay-select':
+                this._hideReplayModal();
+                SceneManager.push(target.dataset.scene, { replay: true });
+                break;
+            case 'close-replay':
+                this._hideReplayModal();
+                break;
             case 'lang-select':
                 setLang(target.dataset.lang);
                 location.reload();
@@ -140,6 +151,29 @@ const TopBar = {
 
     _hideSettings() {
         const modal = document.getElementById('settings-modal');
+        if (modal) modal.remove();
+    },
+
+    _showReplayModal() {
+        if (document.getElementById('replay-modal')) return;
+        const modal = document.createElement('div');
+        modal.id = 'replay-modal';
+        modal.className = 'settings-overlay';
+        modal.innerHTML = `
+            <div class="settings-box">
+                <div class="settings-title">씬 다시보기</div>
+                <div class="replay-list">
+                    <button class="btn replay-btn" data-action="replay-select" data-scene="prologue">프롤로그</button>
+                    <button class="btn replay-btn" data-action="replay-select" data-scene="walking">걸어가는 씬</button>
+                </div>
+                <button class="btn settings-close" data-action="close-replay">${t('settings_close')}</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    _hideReplayModal() {
+        const modal = document.getElementById('replay-modal');
         if (modal) modal.remove();
     },
 

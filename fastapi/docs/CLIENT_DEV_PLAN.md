@@ -1,7 +1,7 @@
 # TheSevenRPG — 클라이언트 개발 계획서
 
 > 최초 작성: 2026-03-13
-> 최종 업데이트: 2026-03-19 (Wave indicator 구현, C16 버그 발견, 자동 감시 시스템 설정)
+> 최종 업데이트: 2026-03-20 (LPC 스프라이트 도입, Walking Scene, 프롤로그 개선, 씬 다시보기)
 > 화면 기획서: `fastapi/docs/game_design/SCREEN_DESIGN.md`
 > 기준 서버 계획서: `fastapi/docs/SERVER_DEV_PLAN.md`
 > 개발 가이드: `.claude/skills/web-client/skill.md`
@@ -278,6 +278,43 @@ fastapi/public/
 - 호버/클릭 팝업 (이름, 효과, 보유 수량, [사용])
 - Phase 18 전까지 "준비 중" 표시
 
+---
+
+### Phase C15.5 — 스토리 씬 & LPC 스프라이트 (2026-03-20)
+**목적**: 게임 시작 시퀀스 완성 + LPC 캐릭터 스프라이트 시스템 도입.
+**상태**: [x] 완료
+
+**씬 흐름 변경**
+```
+Prologue → Walking Scene → Tutorial Battle → Main
+```
+
+**LPC 스프라이트 에셋**
+- Universal LPC Spritesheet 전체 에셋 도입 (288,141 파일, ~303MB)
+- `fastapi/public/img/lpc/assets/` — .gitignore 등록 (git 제외)
+- 64x64 프레임 기반, 레이어 합성 방식 (body + head + hair + legs + cape + boots)
+- `lpc-preview.html` — 기존 프리뷰 도구 (프리셋별 합성 & 애니메이션 확인)
+
+**Walking Scene (신규)**
+- `scenes/walking.js` + `components/walking.css`
+- LPC 레이어 합성 → 캔버스 애니메이션 (walk north, 8FPS)
+- 바알 캐릭터: body/head/hair(bangslong)/pants/boots/cape(maroon)
+- 어둠 배경 + 붉은 불씨 파티클 + 4단계 텍스트 연출
+- 13초 자동 진행 or 클릭 스킵
+
+**프롤로그 개선**
+- 붉은 불씨 파티클 이펙트 추가 (`.prologue-particles`)
+- SKIP 버튼 추가 (우상단, 프롤로그 전체 스킵)
+
+**Top Bar — 씬 다시보기**
+- ▶ 버튼 추가 (설정 버튼 좌측)
+- 모달에서 프롤로그 / 걸어가는 씬 선택
+- push/pop 방식 — 씬 종료 후 메인 화면 자동 복귀
+- `replay: true` 데이터 전달로 정상 흐름과 구분
+
+**i18n**
+- `story-ko.js`에 `walking_texts`, `walking_skip` 추가
+
 **연동 API**: `(미정)`, `2011`
 
 ---
@@ -323,6 +360,8 @@ Phase C14 (전투 모드)        [x] Phaser 이식 + 결과 오버레이
     ↓
 Phase C15 (아이템 탭)        [x] 스켈레톤 (서버 Phase 18 이후 본격)
     ↓
+Phase C15.5 (스토리 씬)      [x] Walking Scene + 프롤로그 개선 + 씬 다시보기
+    ↓
 Phase C16 (통합/폴리싱)      [ ] 전체 흐름 검증
 ```
 
@@ -344,4 +383,4 @@ Phase C16 (통합/폴리싱)      [ ] 전체 흐름 검증
 
 ---
 
-*마지막 업데이트: 2026-03-19*
+*마지막 업데이트: 2026-03-20*

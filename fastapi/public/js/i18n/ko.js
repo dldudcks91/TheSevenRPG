@@ -192,6 +192,46 @@ export default {
     opt_item_find: '아이템 발견',
     opt_fhr: '경직 회복',
 
+    // ── 챕터맵 ──
+    cmap_back: '← 마을로',
+    cmap_no_data: '맵 데이터 없음',
+    cmap_chapter: '제{n}장',
+    map_town: '마을',
+    map_ch1_name: '불타는 전장',
+    map_ch1_s1: '파멸의 진영',
+    map_ch1_s2a: '핏빛 교전지대',
+    map_ch1_s2b: '저주받은 참호',
+    map_ch1_s3: '원한의 묘지',
+    map_ch1_boss: '사탄의 왕좌',
+
+    // ── 더미 챕터/스테이지 ──
+    dummy_ch1_region: '불타는 전장',
+    dummy_ch2_region: '뒤틀린 숲',
+    dummy_ch3_region: '황금의 사막',
+    dummy_ch1_boss: '아바돈',
+    dummy_ch2_boss: '사마엘',
+    dummy_ch3_boss: '다곤',
+    dummy_s101: '파멸의 진영',
+    dummy_s102: '흑심의 동굴',
+    dummy_s103: '아바돈의 궁전',
+    dummy_s201: '시기의 숲',
+    dummy_s202: '증오의 늪지',
+    dummy_s203: '사마엘의 서식지',
+    dummy_s301: '황금의 사막',
+    dummy_s302: '탐욕의 탑',
+    dummy_s303: '다곤의 무덤',
+
+    // ── 메타데이터 폴백 ──
+    fallback_equip: '장비 #{id}',
+    fallback_monster: '몬스터 #{id}',
+    fallback_stage: '스테이지 {id}',
+
+    // ── 에러 ──
+    error_unknown: '알 수 없는 오류',
+
+    // ── 튜토리얼 전투 ──
+    tutorial_attack_log: '{attacker}의 공격! {target}에게 {damage} 데미지',
+
     // ── 설정 ──
     settings_title: '설정',
     settings_language: '언어',

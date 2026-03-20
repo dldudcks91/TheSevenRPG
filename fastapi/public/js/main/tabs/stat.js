@@ -4,7 +4,7 @@
  */
 import { apiCall } from '../../api.js';
 import { Store } from '../../store.js';
-import { formatGold } from '../../utils.js';
+import { formatGold, setupEventDelegation, teardown } from '../../utils.js';
 import { t } from '../../i18n/index.js';
 
 const StatTab = {
@@ -12,7 +12,7 @@ const StatTab = {
     _unsubscribers: [],
 
     mount(el) {
-        this.el = el;
+        setupEventDelegation(this, el);
 
         el.innerHTML = `
             <div class="tab-stat">
@@ -55,9 +55,6 @@ const StatTab = {
             </div>
         `;
 
-        this._handleEvent = this._onEvent.bind(this);
-        el.addEventListener('pointerdown', this._handleEvent);
-
         // Store 구독
         this._unsubscribers.push(
             Store.subscribe('user.level', () => this._render()),
@@ -76,11 +73,7 @@ const StatTab = {
     },
 
     unmount() {
-        if (this._handleEvent) {
-            this.el.removeEventListener('pointerdown', this._handleEvent);
-        }
-        this._unsubscribers.forEach(unsub => unsub());
-        this._unsubscribers = [];
+        teardown(this);
     },
 
     _onEvent(e) {
@@ -232,13 +225,15 @@ const StatTab = {
         const result = await apiCall(1005, {});
         if (result?.success) {
             const d = result.data;
-            Store.set('user.gold', d.gold);
-            Store.set('user.stat_points', d.stat_points);
-            Store.set('stats.str', d.stats.str);
-            Store.set('stats.dex', d.stats.dex);
-            Store.set('stats.vit', d.stats.vit);
-            Store.set('stats.luck', d.stats.luck);
-            Store.set('stats.cost', d.stats.cost);
+            Store.batch(() => {
+                Store.set('user.gold', d.gold);
+                Store.set('user.stat_points', d.stat_points);
+                Store.set('stats.str', d.stats.str);
+                Store.set('stats.dex', d.stats.dex);
+                Store.set('stats.vit', d.stats.vit);
+                Store.set('stats.luck', d.stats.luck);
+                Store.set('stats.cost', d.stats.cost);
+            });
         }
     },
 };

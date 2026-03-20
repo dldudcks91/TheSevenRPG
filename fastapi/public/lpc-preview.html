@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPC Spritesheet Preview</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        h1 { color: #e94560; margin-bottom: 6px; }
+        .subtitle { color: #666; font-size: 13px; margin-bottom: 20px; }
+        h2 {
+            color: #0f3460;
+            background: #e0e0e0;
+            padding: 6px 14px;
+            margin: 16px 0 10px;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+
+        .controls {
+            background: #16213e;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .controls label { font-size: 12px; color: #a0a0a0; display: block; margin-bottom: 4px; }
+        .controls select, .controls button {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #0f3460;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .controls button {
+            background: #e94560;
+            border-color: #e94560;
+            color: white;
+            font-weight: bold;
+            height: 30px;
+        }
+        .controls button:hover { background: #c73852; }
+
+        .preview-area {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .anim-player {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 12px;
+        }
+        canvas#animCanvas {
+            image-rendering: pixelated;
+            border: 2px solid #0f3460;
+            border-radius: 4px;
+            background: #222;
+        }
+        .anim-info { font-size: 13px; line-height: 1.8; }
+        .anim-info span { color: #e94560; font-weight: bold; }
+
+        .frame-strip {
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+        .frame-strip canvas {
+            image-rendering: pixelated;
+            border: 1px solid #333;
+            border-radius: 2px;
+            background: #111;
+        }
+        .frame-strip canvas.active { border-color: #e94560; }
+
+        .all-anims {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+        }
+        .anim-card {
+            background: #1a1a2e;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        .anim-card h3 { font-size: 13px; margin-bottom: 6px; color: #e94560; }
+        .anim-card canvas { image-rendering: pixelated; }
+
+        .scale-buttons { display: flex; gap: 3px; }
+        .scale-buttons button {
+            padding: 3px 8px; font-size: 11px;
+            background: #1a1a2e;
+        }
+        .scale-buttons button.active {
+            background: #0f3460; border-color: #e94560;
+        }
+
+        .status { padding: 6px 14px; border-radius: 4px; margin: 8px 0; font-size: 13px; }
+        .status.loading { background: #0f3460; }
+        .status.error { background: #8b0000; }
+        .status.ok { background: #006400; }
+    </style>
+</head>
+<body>
+    <h1>LPC Spritesheet Preview</h1>
+    <div class="subtitle">v2 포맷 — 애니메이션별 개별 파일</div>
+
+    <div class="controls">
+        <div>
+            <label>프리셋</label>
+            <select id="presetSelect">
+                <option value="warrior_male">Male Warrior (검+방패)</option>
+                <option value="warrior_female">Female Warrior (검+방패)</option>
+                <option value="base_male">Male Base (무기 없음)</option>
+                <option value="base_female">Female Base (무기 없음)</option>
+            </select>
+        </div>
+        <div>
+            <label>애니메이션</label>
+            <select id="animSelect">
+                <option value="walk">Walk</option>
+                <option value="slash">Slash</option>
+                <option value="thrust">Thrust</option>
+                <option value="idle">Idle</option>
+                <option value="spellcast">Spellcast</option>
+                <option value="shoot">Shoot</option>
+                <option value="hurt">Hurt</option>
+                <option value="run">Run</option>
+            </select>
+        </div>
+        <div>
+            <label>방향</label>
+            <select id="dirSelect">
+                <option value="2">↓ South</option>
+                <option value="0">↑ North</option>
+                <option value="1">← West</option>
+                <option value="3">→ East</option>
+            </select>
+        </div>
+        <div>
+            <label>FPS</label>
+            <select id="fpsSelect">
+                <option value="4">4</option>
+                <option value="6">6</option>
+                <option value="8" selected>8</option>
+                <option value="12">12</option>
+            </select>
+        </div>
+        <div>
+            <label>스케일</label>
+            <div class="scale-buttons">
+                <button onclick="setScale(2)">2x</button>
+                <button onclick="setScale(3)">3x</button>
+                <button class="active" onclick="setScale(4)">4x</button>
+            </div>
+        </div>
+        <button onclick="loadPreset()">합성 & 재생</button>
+    </div>
+
+    <div id="statusArea"></div>
+
+    <div class="preview-area" id="playerArea" style="display:none">
+        <h2>애니메이션 플레이어</h2>
+        <div class="anim-player">
+            <canvas id="animCanvas" width="256" height="256"></canvas>
+            <div class="anim-info">
+                <div>프리셋: <span id="infoPreset">-</span></div>
+                <div>애니메이션: <span id="infoAnim">-</span></div>
+                <div>방향: <span id="infoDir">-</span></div>
+                <div>프레임: <span id="infoFrame">-</span></div>
+                <div>시트 크기: <span id="infoSize">-</span></div>
+            </div>
+        </div>
+
+        <h2>프레임 스트립</h2>
+        <div id="frameStrip" class="frame-strip"></div>
+
+        <h2>전체 애니메이션 미리보기</h2>
+        <div id="allAnims" class="all-anims"></div>
+    </div>
+
+    <script>
+    const FRAME = 64;
+    const ASSET_BASE = 'img/lpc/assets';
+    const COMPOSED_BASE = 'img/lpc/composed';
+    const DIR_NAMES = ['North', 'West', 'South', 'East'];
+
+    const ANIMS = {
+        idle:      { frames: 2 },
+        walk:      { frames: 9 },
+        run:       { frames: 9 },
+        slash:     { frames: 6 },
+        thrust:    { frames: 8 },
+        spellcast: { frames: 7 },
+        shoot:     { frames: 13 },
+        hurt:      { frames: 6 },
+    };
+
+    const LAYER_Z = { body: 10, head: 15, legs: 20, torso: 25, shield: 28, weapon: 30 };
+
+    const PRESETS = {
+        warrior_male: {
+            name: 'Male Warrior',
+            base: ['body/male', 'head/male', 'legs/male'],
+            weapons: {
+                slash:  ['weapon/longsword/slash.png', 'shield/round/slash.png'],
+                walk:   ['weapon/longsword/walk.png', 'shield/round/walk.png'],
+                thrust: ['shield/round/thrust.png'],
+            },
+        },
+        warrior_female: {
+            name: 'Female Warrior',
+            base: ['body/female', 'head/female', 'legs/female'],
+            weapons: {
+                slash:  ['weapon/longsword/slash.png', 'shield/round/slash.png'],
+                walk:   ['weapon/longsword/walk.png', 'shield/round/walk.png'],
+                thrust: ['shield/round/thrust.png'],
+            },
+        },
+        base_male: {
+            name: 'Male Base',
+            base: ['body/male', 'head/male', 'legs/male'],
+            weapons: {},
+        },
+        base_female: {
+            name: 'Female Base',
+            base: ['body/female', 'head/female', 'legs/female'],
+            weapons: {},
+        },
+    };
+
+    // 상태
+    let composedSheets = {}; // {animName: OffscreenCanvas}
+    let animFrame = 0;
+    let animTimer = null;
+    let currentScale = 4;
+    let currentPreset = null;
+
+    function status(msg, type = 'loading') {
+        document.getElementById('statusArea').innerHTML = `<div class="status ${type}">${msg}</div>`;
+    }
+
+    function getZ(path) {
+        for (const [k, z] of Object.entries(LAYER_Z)) {
+            if (path.includes(k)) return z;
+        }
+        return 50;
+    }
+
+    function loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error(`로드 실패: ${src}`));
+            img.src = src;
+        });
+    }
+
+    async function composeAnimation(preset, animName) {
+        const layers = [];
+
+        // 기본 레이어 (body, head, legs)
+        for (const basePath of preset.base) {
+            try {
+                const img = await loadImage(`${ASSET_BASE}/${basePath}/${animName}.png`);
+                layers.push({ z: getZ(basePath), img });
+            } catch { /* skip */ }
+        }
+
+        // 무기/방패 레이어
+        const weaponPaths = preset.weapons[animName] || [];
+        for (const wp of weaponPaths) {
+            try {
+                const img = await loadImage(`${ASSET_BASE}/${wp}`);
+                layers.push({ z: getZ(wp), img });
+            } catch { /* skip */ }
+        }
+
+        if (layers.length === 0) return null;
+
+        // z-order 정렬
+        layers.sort((a, b) => a.z - b.z);
+
+        // 캔버스 크기 = 가장 큰 레이어
+        const maxW = Math.max(...layers.map(l => l.img.width));
+        const maxH = Math.max(...layers.map(l => l.img.height));
+        const canvas = new OffscreenCanvas(maxW, maxH);
+        const ctx = canvas.getContext('2d');
+
+        for (const { img } of layers) {
+            ctx.drawImage(img, 0, 0);
+        }
+
+        return canvas;
+    }
+
+    async function loadPreset() {
+        const key = document.getElementById('presetSelect').value;
+        const preset = PRESETS[key];
+        if (!preset) return;
+
+        currentPreset = key;
+        composedSheets = {};
+        status(`${preset.name} 로딩 중...`);
+
+        // 먼저 사전 합성 파일 시도, 없으면 실시간 합성
+        let loadedCount = 0;
+        const animNames = Object.keys(ANIMS);
+
+        for (const animName of animNames) {
+            // 사전 합성 파일 시도
+            try {
+                const img = await loadImage(`${COMPOSED_BASE}/${key}/${animName}.png`);
+                const canvas = new OffscreenCanvas(img.width, img.height);
+                canvas.getContext('2d').drawImage(img, 0, 0);
+                composedSheets[animName] = canvas;
+                loadedCount++;
+                continue;
+            } catch { /* 실시간 합성 */ }
+
+            // 실시간 합성
+            status(`${preset.name} — ${animName} 합성 중...`);
+            const result = await composeAnimation(preset, animName);
+            if (result) {
+                composedSheets[animName] = result;
+                loadedCount++;
+            }
+        }
+
+        if (loadedCount === 0) {
+            status('에셋 로드 실패 — lpc_download.py를 먼저 실행하세요', 'error');
+            return;
+        }
+
+        status(`${preset.name} 완료 — ${loadedCount}개 애니메이션`, 'ok');
+        document.getElementById('playerArea').style.display = '';
+        document.getElementById('infoPreset').textContent = preset.name;
+
+        renderFrameStrip();
+        renderAllAnims();
+        startAnimation();
+    }
+
+    function getAnimSheet() {
+        const animKey = document.getElementById('animSelect').value;
+        return { sheet: composedSheets[animKey], animKey };
+    }
+
+    function renderFrameStrip() {
+        const container = document.getElementById('frameStrip');
+        container.innerHTML = '';
+
+        const { sheet, animKey } = getAnimSheet();
+        if (!sheet) return;
+
+        const dirIdx = parseInt(document.getElementById('dirSelect').value);
+        const numFrames = sheet.width / FRAME;
+        const scale = 3;
+
+        for (let i = 0; i < numFrames; i++) {
+            const c = document.createElement('canvas');
+            c.width = FRAME * scale;
+            c.height = FRAME * scale;
+            c.dataset.frame = i;
+            const ctx = c.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(
+                sheet, i * FRAME, dirIdx * FRAME, FRAME, FRAME,
+                0, 0, c.width, c.height
+            );
+            container.appendChild(c);
+        }
+    }
+
+    function renderAllAnims() {
+        const container = document.getElementById('allAnims');
+        container.innerHTML = '';
+        const dirIdx = parseInt(document.getElementById('dirSelect').value);
+
+        for (const [animName, sheet] of Object.entries(composedSheets)) {
+            const card = document.createElement('div');
+            card.className = 'anim-card';
+
+            const numFrames = sheet.width / FRAME;
+            const h3 = document.createElement('h3');
+            h3.textContent = `${animName} (${numFrames}f)`;
+            card.appendChild(h3);
+
+            // 작은 애니메이션 캔버스
+            const c = document.createElement('canvas');
+            const scale = 2;
+            c.width = FRAME * scale;
+            c.height = FRAME * scale;
+            c.style.imageRendering = 'pixelated';
+            card.appendChild(c);
+
+            // 미니 플레이어
+            let frame = 0;
+            const ctx = c.getContext('2d');
+            setInterval(() => {
+                ctx.imageSmoothingEnabled = false;
+                ctx.clearRect(0, 0, c.width, c.height);
+                const f = frame % numFrames;
+                ctx.drawImage(
+                    sheet, f * FRAME, dirIdx * FRAME, FRAME, FRAME,
+                    0, 0, c.width, c.height
+                );
+                frame++;
+            }, 150);
+
+            container.appendChild(card);
+        }
+    }
+
+    function startAnimation() {
+        if (animTimer) clearInterval(animTimer);
+        animFrame = 0;
+        const fps = parseInt(document.getElementById('fpsSelect').value);
+        animTimer = setInterval(renderAnimFrame, 1000 / fps);
+    }
+
+    function renderAnimFrame() {
+        const { sheet, animKey } = getAnimSheet();
+        if (!sheet) return;
+
+        const canvas = document.getElementById('animCanvas');
+        const ctx = canvas.getContext('2d');
+        const dirIdx = parseInt(document.getElementById('dirSelect').value);
+        const numFrames = sheet.width / FRAME;
+        const frame = animFrame % numFrames;
+
+        canvas.width = FRAME * currentScale;
+        canvas.height = FRAME * currentScale;
+        ctx.imageSmoothingEnabled = false;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (dirIdx * FRAME < sheet.height) {
+            ctx.drawImage(
+                sheet, frame * FRAME, dirIdx * FRAME, FRAME, FRAME,
+                0, 0, canvas.width, canvas.height
+            );
+        }
+
+        document.getElementById('infoAnim').textContent = animKey;
+        document.getElementById('infoDir').textContent = DIR_NAMES[dirIdx] || '-';
+        document.getElementById('infoFrame').textContent = `${frame + 1} / ${numFrames}`;
+        document.getElementById('infoSize').textContent = `${sheet.width}x${sheet.height}`;
+
+        // 프레임 스트립 하이라이트
+        document.querySelectorAll('#frameStrip canvas').forEach((c, i) => {
+            c.classList.toggle('active', i === frame);
+        });
+
+        animFrame++;
+    }
+
+    function setScale(s) {
+        currentScale = s;
+        document.querySelectorAll('.scale-buttons button').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent === s + 'x');
+        });
+    }
+
+    // 컨트롤 변경 이벤트
+    ['animSelect', 'dirSelect', 'fpsSelect'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+            if (Object.keys(composedSheets).length > 0) {
+                renderFrameStrip();
+                startAnimation();
+            }
+        });
+    });
+
+    document.getElementById('dirSelect').addEventListener('change', renderAllAnims);
+
+    // 페이지 로드 시 자동 실행
+    window.addEventListener('load', loadPreset);
+    </script>
+</body>
+</html>

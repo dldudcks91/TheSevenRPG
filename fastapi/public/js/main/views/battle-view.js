@@ -1,10 +1,14 @@
 /**
  * TheSevenRPG — Battle View (우측 전투 모드)
  * 서버 battle_log를 Phaser 애니메이션으로 재생
+ *
+ * Phaser 최적화:
+ *   Game 인스턴스는 mount 시 1회 생성, unmount 시 파괴.
+ *   몬스터 교체 시 swapMonster()로 스프라이트만 교체.
  */
 import { apiCall } from '../../api.js';
 import { Store } from '../../store.js';
-import { showLoading, hideLoading } from '../../utils.js';
+import { showLoading, hideLoading, escapeHtml, setupEventDelegation, teardown, buildItemPopupHtml } from '../../utils.js';
 import { getMonsterName, getStageName } from '../../meta-data.js';
 import { t, sinName, rarityName, slotName } from '../../i18n/index.js';
 import MainScreen from '../../main.js';
@@ -23,7 +27,7 @@ const BattleView = {
     _playTimer: null,
 
     mount(el, data) {
-        this.el = el;
+        setupEventDelegation(this, el);
 
         el.innerHTML = `
             <div class="bv-screen">
@@ -69,16 +73,12 @@ const BattleView = {
             result: el.querySelector('#bv-result'),
         };
 
-        this._handleEvent = this._onEvent.bind(this);
-        el.addEventListener('pointerdown', this._handleEvent);
-
+        this._initPhaser();
         this._startBattle();
     },
 
     unmount() {
-        if (this._handleEvent && this.el) {
-            this.el.removeEventListener('pointerdown', this._handleEvent);
-        }
+        teardown(this);
         if (this._playTimer) {
             clearTimeout(this._playTimer);
             this._playTimer = null;
@@ -112,7 +112,7 @@ const BattleView = {
         }
     },
 
-    // ── 웨이브 인디케이터 생성 ──
+    // ── 웨이브 인디케이터 ──
 
     _createWaveIndicator(waveCount) {
         let html = '';
@@ -145,17 +145,14 @@ const BattleView = {
         this.refs.result.classList.remove('show');
         this.refs.log.innerHTML = '';
 
-        // 스테이지 배경 적용
         this.refs.arena.style.backgroundImage = `url('${getStageBgUrl(stageId)}')`;
         this.refs.arena.style.backgroundSize = 'cover';
         this.refs.arena.style.backgroundPosition = 'center';
 
-        // 서버에 스테이지 재입장 (3003) — 새 BattleSession 생성
         showLoading();
         try {
             const enterResult = await apiCall(3003, { stage_id: stageId });
             if (!enterResult?.success) {
-                console.error('[Battle] enter_stage failed:', enterResult);
                 MainScreen.switchRightView('town');
                 return;
             }
@@ -170,9 +167,7 @@ const BattleView = {
             return;
         }
 
-        // 웨이브 인디케이터 생성
         this._createWaveIndicator(monsterPool.length);
-
         await this._runWaves(monsterPool, stageId);
     },
 
@@ -198,7 +193,6 @@ const BattleView = {
                 let data;
                 try {
                     const result = await apiCall(3001, { monster_idx: monsterIdx, spawn_type: spawnType });
-                    console.log('[Battle] 3001 response:', result?.success, result?.error_code, result?.message);
                     if (!result?.success) { finalResult = 'lose'; break; }
                     data = result.data;
                 } finally {
@@ -243,7 +237,10 @@ const BattleView = {
             this.refs.playerHp.style.width = '100%';
             this.refs.monsterHp.style.width = '100%';
 
-            this._initPhaser(monsterIdx, spawnType);
+            // 스프라이트 교체 (Phaser 재생성 없음)
+            if (this._battleScene) {
+                this._battleScene.swapMonster(monsterIdx, spawnType);
+            }
 
             let i = 0;
             const delay = 350;
@@ -303,15 +300,17 @@ const BattleView = {
             }
         }
 
-        if (rewards.gold) Store.set('user.gold', rewards.gold);
-        if (rewards.exp) Store.set('user.exp', rewards.exp);
-        if (rewards.level) Store.set('user.level', rewards.level);
+        Store.batch(() => {
+            if (rewards.gold) Store.set('user.gold', rewards.gold);
+            if (rewards.exp) Store.set('user.exp', rewards.exp);
+            if (rewards.level) Store.set('user.level', rewards.level);
+        });
 
         const dropsHtml = this._formatDrops(rewards.drops || []);
 
         this.refs.result.innerHTML = `
             <div class="bv-result-box ${isVictory ? 'victory' : 'defeat'}">
-                <div class="bv-result-title">${isVictory ? '\u2694\uFE0F ' + t('battle_victory') : '\u{1F480} ' + t('battle_defeat')}</div>
+                <div class="bv-result-title">${isVictory ? '\u2694\uFE0F ' + t('battle_victory') : '\uD83D\uDC80 ' + t('battle_defeat')}</div>
                 ${isVictory ? `
                     <div class="bv-result-rewards">
                         ${rewards.exp_gained ? `<div class="bv-reward-row">EXP <span>+${rewards.exp_gained}</span></div>` : ''}
@@ -329,7 +328,6 @@ const BattleView = {
         this.refs.result.classList.add('show');
     },
 
-    /** 드롭 저장 (팝업용) */
     _lastDrops: [],
 
     _formatDrops(drops) {
@@ -351,11 +349,9 @@ const BattleView = {
         });
 
         let html = '<div class="bv-drops-list">';
-
         if (totalGold > 0) {
-            html += `<div class="bv-drop-row bv-drop-gold">💰 Gold +${totalGold.toLocaleString()}</div>`;
+            html += `<div class="bv-drop-row bv-drop-gold">\uD83D\uDCB0 Gold +${totalGold.toLocaleString()}</div>`;
         }
-
         if (equipDrops.length > 0) {
             html += `<div class="bv-drop-category">${t('drop_equipment')}</div>`;
             equipDrops.forEach(drop => {
@@ -363,42 +359,35 @@ const BattleView = {
                 const rc = { magic: 'var(--color-magic)', rare: 'var(--color-rare)', unique: 'var(--color-unique)', craft: 'var(--color-craft)' };
                 const color = rc[eq.rarity] || 'var(--text-secondary)';
                 html += `<div class="bv-drop-item bv-drop-equip" data-action="show-drop-detail" data-drop-idx="${drop._idx}" style="color:${color}" data-popup-trigger>
-                    <span class="bv-drop-icon">⚔</span>
-                    <span class="bv-drop-name">${eq.name || t('drop_equipment')}</span>
+                    <span class="bv-drop-icon">\u2694</span>
+                    <span class="bv-drop-name">${escapeHtml(eq.name || t('drop_equipment'))}</span>
                     <span class="bv-drop-tag">iLv ${eq.item_level || '?'}</span>
                 </div>`;
             });
         }
-
         if (cardDrops.length > 0) {
             html += `<div class="bv-drop-category">${t('drop_card')}</div>`;
             cardDrops.forEach(drop => {
-                const name = getMonsterName(drop.monster_idx);
-                html += `<div class="bv-drop-item bv-drop-card">🃏 ${name} ${t('drop_card')}</div>`;
+                html += `<div class="bv-drop-item bv-drop-card">\uD83C\uDCCF ${getMonsterName(drop.monster_idx)} ${t('drop_card')}</div>`;
             });
         }
-
         if (matDrops.length > 0) {
             const matNames = { ore: t('mat_ore'), potion: t('mat_potion'), quest_material: t('mat_quest') };
             html += `<div class="bv-drop-category">${t('drop_material')}</div>`;
             matDrops.forEach(drop => {
                 const name = matNames[drop.material_type] || drop.material_type;
-                html += `<div class="bv-drop-item bv-drop-mat">🪨 ${name} Lv${drop.material_id} ×${drop.amount}</div>`;
+                html += `<div class="bv-drop-item bv-drop-mat">\uD83E\uDEA8 ${name} Lv${drop.material_id} \u00D7${drop.amount}</div>`;
             });
         }
-
         if (stigmaDrops.length > 0) {
             html += `<div class="bv-drop-category">${t('drop_stigma')}</div>`;
             stigmaDrops.forEach(drop => {
-                html += `<div class="bv-drop-item bv-drop-stigma">🔥 ${sinName(drop.sin_type)}${t('drop_stigma_of')}</div>`;
+                html += `<div class="bv-drop-item bv-drop-stigma">\uD83D\uDD25 ${sinName(drop.sin_type)}${t('drop_stigma_of')}</div>`;
             });
         }
-
         html += '</div>';
         return html;
     },
-
-    // ── 드롭 아이템 상세 팝업 ──
 
     _showDropPopup(target) {
         const idx = parseInt(target.dataset.dropIdx);
@@ -406,54 +395,30 @@ const BattleView = {
         if (!drop || drop.type !== 'equipment') return;
 
         const eq = drop.data || {};
-        const html = this._buildItemPopupHtml(eq);
+        const html = `<div class="item-popup rarity-${eq.rarity || 'magic'}">` + buildItemPopupHtml(eq, {
+            name: eq.name || t('drop_equipment'),
+            metaText: `${rarityName(eq.rarity)} ${slotName(eq.equip_slot)} &nbsp;|&nbsp; iLv ${eq.item_level || 0} &nbsp;|&nbsp; Cost ${eq.item_cost || 0}`,
+            showAffixes: true,
+            cssPrefix: 'ip',
+            optionLabel: (key) => { const k = `opt_${key}`; return t(k) !== k ? t(k) : key; },
+            prefixLabel: t('prefix_label'),
+            suffixLabel: t('suffix_label'),
+            setLabel: t('set_label'),
+            sinName,
+        }) + '</div>';
         Popup.showSingle(html, target, { pinned: true });
     },
 
-    _buildItemPopupHtml(eq) {
-        const rarityClass = eq.rarity || 'magic';
+    // ── Phaser (1회 생성, 스프라이트만 교체) ──
 
-        let html = `<div class="item-popup rarity-${rarityClass}">`;
-        html += `<div class="ip-name" style="color:var(--color-${rarityClass})">${eq.name || t('drop_equipment')}</div>`;
-        html += `<div class="ip-meta">${rarityName(eq.rarity)} ${slotName(eq.equip_slot)} &nbsp;|&nbsp; iLv ${eq.item_level || 0} &nbsp;|&nbsp; Cost ${eq.item_cost || 0}</div>`;
-
-        // 옵션
-        const opts = eq.dynamic_options || {};
-        const optEntries = Object.entries(opts);
-        if (optEntries.length > 0) {
-            html += '<div class="ip-options">';
-            optEntries.forEach(([key, val]) => {
-                const display = typeof val === 'number' ? (val > 0 ? `+${val.toFixed(1)}` : val.toFixed(1)) : val;
-                const label = t(`opt_${key}`) !== `opt_${key}` ? t(`opt_${key}`) : key;
-                html += `<div class="ip-opt-row"><span class="ip-opt-name">${label}</span><span class="ip-opt-val">${display}</span></div>`;
-            });
-            html += '</div>';
-        }
-
-        if (eq.prefix_id) {
-            html += `<div class="ip-affix">${t('prefix_label')}: ${sinName(eq.prefix_id)}</div>`;
-        }
-        if (eq.suffix_id) {
-            html += `<div class="ip-affix">${t('suffix_label')}: ${sinName(eq.suffix_id)}</div>`;
-        }
-        if (eq.set_id) {
-            html += `<div class="ip-set">${t('set_label')}: ${sinName(eq.set_id)}</div>`;
-        }
-
-        html += '</div>';
-        return html;
-    },
-
-    // ── Phaser ──
-
-    _initPhaser(monsterIdx, spawnType) {
-        this._destroyPhaser();
+    _initPhaser() {
+        if (this._phaserGame) return;
 
         const arenaEl = this.refs.arena;
         const width = arenaEl.clientWidth || 600;
         const height = arenaEl.clientHeight || 300;
 
-        const scene = new BattlePhaserScene(width, height, monsterIdx || 0, spawnType || '일반');
+        const scene = new BattlePhaserScene(width, height);
         this._battleScene = scene;
 
         this._phaserGame = new Phaser.Game({
@@ -477,38 +442,55 @@ const BattleView = {
 
 // ── Phaser Scene ──
 
-// 등급별 틴트 색상
 const SPAWN_TINT = {
-    '정예':     0x4488ff,
-    '보스':     0xff4444,
-    '챕터보스': 0xffaa00,
+    '\uC815\uC608':     0x4488ff,
+    '\uBCF4\uC2A4':     0xff4444,
+    '\uCC55\uD130\uBCF4\uC2A4': 0xffaa00,
 };
 
 class BattlePhaserScene extends Phaser.Scene {
-    constructor(w, h, monsterIdx, spawnType) {
+    constructor(w, h) {
         super({ key: 'BattleScene' });
         this._w = w;
         this._h = h;
-        this._monsterIdx = monsterIdx;
-        this._spawnType = spawnType || '일반';
+        this._spawnType = '\uC77C\uBC18';
         this.playerSprite = null;
         this.monsterSprite = null;
+        this._monsterLabel = null;
     }
 
     preload() {
-        // 로드 실패 시 무시 (create에서 폴백 처리)
         this.load.on('loaderror', () => {});
         this.load.image('player', '/assets/sprites/character.png');
-        this.load.image('monster', `/assets/sprites/monster_${this._monsterIdx}.png`);
     }
 
     create() {
-        const cx = this._w / 2;
-        const cy = this._h / 2 + 20;
+        this._createPlayerSprite();
+    }
 
+    /** 몬스터 스프라이트를 교체한다 (Phaser Game 재생성 없음) */
+    swapMonster(monsterIdx, spawnType) {
+        this._spawnType = spawnType || '\uC77C\uBC18';
+
+        if (this.monsterSprite) { this.monsterSprite.destroy(); this.monsterSprite = null; }
+        if (this._monsterLabel) { this._monsterLabel.destroy(); this._monsterLabel = null; }
+
+        const textureKey = `monster_${monsterIdx}`;
+
+        if (this.textures.exists(textureKey)) {
+            this._createMonsterSprite(textureKey);
+        } else {
+            this.load.image(textureKey, `/assets/sprites/monster_${monsterIdx}.png`);
+            this.load.once('complete', () => this._createMonsterSprite(textureKey));
+            this.load.once('loaderror', () => this._createMonsterFallback());
+            this.load.start();
+        }
+    }
+
+    _createPlayerSprite() {
+        const cx = this._w / 2;
         const bottom = this._h - 10;
 
-        // 캐릭터 (좌측) — 이미지 있으면 스프라이트, 없으면 사각형
         if (this.textures.exists('player')) {
             this.playerSprite = this.add.image(cx - 180, bottom, 'player');
             this.playerSprite.setDisplaySize(240, 240);
@@ -520,28 +502,35 @@ class BattlePhaserScene extends Phaser.Scene {
                 fontSize: '12px', color: '#90caf9', fontFamily: 'sans-serif',
             }).setOrigin(0.5);
         }
+    }
 
-        // 몬스터 (우측) — 이미지 있으면 스프라이트, 없으면 사각형
+    _createMonsterSprite(textureKey) {
+        const cx = this._w / 2;
+        const bottom = this._h - 10;
         const tint = SPAWN_TINT[this._spawnType];
-        if (this.textures.exists('monster')) {
-            this.monsterSprite = this.add.image(cx + 180, bottom, 'monster');
-            this.monsterSprite.setDisplaySize(240, 240);
-            this.monsterSprite.setOrigin(0.5, 1.0);
-            if (tint) this.monsterSprite.setTint(tint);
-        } else {
-            const rectColor = tint || 0xe53935;
-            this.monsterSprite = this.add.rectangle(cx + 180, bottom - 35, 56, 70, rectColor);
-            this.monsterSprite.setStrokeStyle(2, tint ? 0xffffff : 0xef9a9a);
-            this.add.text(cx + 180, bottom, 'Monster', {
-                fontSize: '12px', color: tint ? '#ffffff' : '#ef9a9a', fontFamily: 'sans-serif',
-            }).setOrigin(0.5);
-        }
+
+        this.monsterSprite = this.add.image(cx + 180, bottom, textureKey);
+        this.monsterSprite.setDisplaySize(240, 240);
+        this.monsterSprite.setOrigin(0.5, 1.0);
+        if (tint) this.monsterSprite.setTint(tint);
+    }
+
+    _createMonsterFallback() {
+        const cx = this._w / 2;
+        const bottom = this._h - 10;
+        const tint = SPAWN_TINT[this._spawnType];
+        const rectColor = tint || 0xe53935;
+
+        this.monsterSprite = this.add.rectangle(cx + 180, bottom - 35, 56, 70, rectColor);
+        this.monsterSprite.setStrokeStyle(2, tint ? 0xffffff : 0xef9a9a);
+        this._monsterLabel = this.add.text(cx + 180, bottom, 'Monster', {
+            fontSize: '12px', color: tint ? '#ffffff' : '#ef9a9a', fontFamily: 'sans-serif',
+        }).setOrigin(0.5);
     }
 
     playAction(entry) {
         if (!this.playerSprite || !this.monsterSprite) return;
         const cx = this._w / 2;
-
         const dmgY = this._h - 120;
 
         if (entry.actor === 'player') {
@@ -583,8 +572,13 @@ class BattlePhaserScene extends Phaser.Scene {
 
     _flashSprite(sprite) {
         if (sprite.setTintFill) {
+            const origTint = sprite.tintTopLeft;
+            const hadTint = origTint !== 0xffffff;
             sprite.setTintFill(0xffffff);
-            this.time.delayedCall(80, () => sprite.clearTint());
+            this.time.delayedCall(80, () => {
+                sprite.clearTint();
+                if (hadTint) sprite.setTint(origTint);
+            });
         } else if (sprite.setFillStyle) {
             const orig = sprite.fillColor;
             sprite.setFillStyle(0xffffff);
