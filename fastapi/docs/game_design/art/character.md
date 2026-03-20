@@ -24,7 +24,7 @@
 | **눈** | 금색 — 유일한 비인간적 요소 | 픽셀아트에서 눈 색으로 차별화 |
 | **피부** | 창백 | 차가운 인상 + 낙인 문양 대비 |
 | **낙인** | 가슴/쇄골 중심 → 챕터마다 전신으로 확산 | 성장의 시각적 지표, 7죄종 색상 |
-| **복장** | 소박(초반) → 어둡고 날카로운 갑옷(후반) | 장비 파밍 시스템과 연동 |
+| **복장** | 성직자풍 흰 로브 (전 구간 통일) | 대악마가 성직자의 옷을 입은 아이러니 |
 
 ### 감정 아크와 외형 변화
 
@@ -37,110 +37,24 @@
 
 ---
 
-## 인게임 스프라이트 — 성장 단계별
-
----
-
-### Stage A — 추락 직후 (프롤로그 ~ Ch1 초반)
+## 인게임 스프라이트
 
 ```
 16-bit pixel art, young woman with long unkempt black hair falling
-past shoulders, pale cold skin, sharp golden eyes with an inhuman
-emotionless gaze, lean slim build standing with unconsciously regal
-posture, wearing torn dirty peasant clothes — a tattered gray tunic
-and rough cloth pants, barefoot, faint crimson stigma mark barely
-visible on collarbone, holding a crude salvaged short sword loosely
-at her side, expression blank and indifferent, dark fantasy RPG
-protagonist sprite, white background, facing left, full body
+past shoulders, deathly pale skin almost white, sharp golden eyes
+with an inhuman emotionless gaze, lean slim build standing with
+unconsciously regal posture, wearing a long white clerical robe
+with high collar and long sleeves — simple and austere like a
+priestess vestment, faint crimson stigma mark barely visible on
+collarbone peeking above the collar, holding a short sword loosely
+at her side, expression blank and coldly indifferent, dark fantasy
+RPG protagonist sprite, white background, facing left, full body
 ```
 
 ---
 
-### Stage B — 분노 각성 (Ch1 ~ Ch2)
+## 프롬프트 (복사용)
 
 ```
-16-bit pixel art, young woman with long black hair with a single
-streak of white near the temple, pale cold skin, sharp golden eyes
-now faintly glowing, lean athletic build in an upright commanding
-stance, wearing dark fitted leather armor over a black long-sleeved
-tunic, crimson stigma markings spreading from collarbone down the
-left arm in vein-like patterns glowing faintly red, wielding a
-dark iron sword with confidence, expression cold and piercing with
-a hint of suppressed rage, dark fantasy RPG protagonist sprite,
-white background, facing left, full body
-```
-
----
-
-### Stage C — 힘의 회복 (Ch3 ~ Ch5)
-
-```
-16-bit pixel art, young woman with long black hair streaked with
-white strands blowing slightly, pale skin with faintly visible dark
-vein patterns on neck, heterochromatic eyes — left eye golden right
-eye deep crimson, lean powerful build in a dominant stance, wearing
-dark layered armor — black leather chest piece with dark metal
-pauldron on left shoulder, stigma markings covering both arms and
-neck in layered colors — red and green and gold vein-like patterns
-pulsing with absorbed sin, dark energy faintly radiating from body,
-wielding a refined dark blade, expression cold and unreadable but
-eyes burning with intensity, dark fantasy RPG protagonist sprite,
-white background, facing left, full body
-```
-
----
-
-### Stage D — 대악마 복귀 (Ch6 ~ Ch7)
-
-```
-16-bit pixel art, young woman with long flowing black and white
-hair whipping upward with dark energy, pale luminous skin covered
-in intricate stigma markings across entire body glowing in seven
-shifting colors — red blue gold green amber violet white, both eyes
-blazing solid gold radiating light, lean figure now clad in elegant
-dark demonic armor that looks grown rather than worn — organic black
-plate with sharp edges and subtle horn-like ridges on shoulders,
-a faint crown of light hovering above head — not horns but a
-fractured halo-like ring of dark energy, wielding a massive dark
-greatsword crackling with seven-colored sin energy, stance absolute
-and commanding like a returning king, expression still cold but eyes
-carrying visible grief and resolve, dark fantasy RPG protagonist
-sprite, white background, facing left, full body
-```
-
----
-
-## 스토리 일러스트용
-
----
-
-### 프롤로그 씬4 — 마을에서 눈을 뜨는 장면
-
-```
-16-bit pixel art, young woman lying on a simple wooden bed in a
-dim village hut, long black hair spread across a rough pillow,
-pale skin with fresh wounds and bruises, eyes barely open revealing
-a sliver of cold gold iris staring at the ceiling with zero emotion,
-faint crimson stigma mark glowing softly on exposed collarbone,
-an old villager's weathered hand offering a wooden cup of water
-at the edge of frame, dark muted interior colors — brown wood
-and dim candlelight, dark fantasy RPG scene illustration,
-pixel art style
-```
-
----
-
-### Ch7 엔딩 — 처음으로 우는 장면
-
-```
-16-bit pixel art, young woman kneeling alone in the ruins of a
-heavenly battlefield, long black and white hair falling over her
-face, full dark demonic armor cracked and battle-damaged, seven-
-colored stigma markings flickering unstably across skin, head
-bowed with both hands on the ground, single visible eye — golden
-— with a tear of light rolling down a cold pale cheek, a broken
-holy lance lying beside her on shattered marble floor, faint
-golden feathers scattered around from a fallen angel, vast empty
-ruined cathedral in background, dark fantasy RPG scene illustration,
-pixel art style
+16-bit pixel art, young woman with long unkempt black hair falling past shoulders, deathly pale skin almost white, sharp golden eyes with an inhuman emotionless gaze, lean slim build standing with unconsciously regal posture, wearing a long white clerical robe with high collar and long sleeves — simple and austere like a priestess vestment, faint crimson stigma mark barely visible on collarbone peeking above the collar, holding a short sword loosely at her side, expression blank and coldly indifferent, dark fantasy RPG protagonist sprite, white background, facing left, full body
 ```

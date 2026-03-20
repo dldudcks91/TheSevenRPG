@@ -1,7 +1,8 @@
 from services.system import GameDataManager, UserInitManager, UserInfoManager
 from services.rpg import (
     InventoryManager, BattleManager,
-    StageManager, CardManager,
+    StageManager, CardManager, MaterialManager,
+    CraftingManager, ShopManager, QuestManager,
 )
 
 class APIManager:
@@ -24,6 +25,12 @@ class APIManager:
         2007: (CardManager, CardManager.get_collection),
         2008: (CardManager, CardManager.equip_skill),
         2009: (CardManager, CardManager.unequip_skill),
+        2010: (InventoryManager, InventoryManager.disassemble_item),
+        2011: (MaterialManager, MaterialManager.use_potion),
+        2012: (CardManager, CardManager.get_cards),
+        2013: (CardManager, CardManager.disassemble_card),
+        2014: (CardManager, CardManager.level_up_card),
+        2015: (MaterialManager, MaterialManager.get_materials),
 
         # === RPG 전투 API (3xxx) ===
         3001: (BattleManager, BattleManager.battle_result),
@@ -32,4 +39,11 @@ class APIManager:
         3004: (StageManager, StageManager.clear_stage),
         3007: (StageManager, StageManager.return_to_town),
         3008: (StageManager, StageManager.get_battle_session),
+
+        # === NPC 시설 API (4xxx) ===
+        4001: (CraftingManager, CraftingManager.craft_item),
+        4002: (ShopManager, ShopManager.buy_item),
+        4003: (QuestManager, QuestManager.submit_quest),
+        4004: (QuestManager, QuestManager.get_quests),
+        4005: (ShopManager, ShopManager.get_shop),
     }

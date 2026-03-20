@@ -1,6 +1,6 @@
 import logging
 from database import SessionLocal
-from models import User, UserStat, Item
+from models import User, UserStat, Item, Material
 from services.redis_manager.RedisManager import RedisManager, RedisUnavailable
 from services.system.ErrorCode import ErrorCode, error_response
 
@@ -20,6 +20,17 @@ SELL_PRICE_TABLE = {
 EXPAND_BASE_COST = 500   # 기본 비용
 EXPAND_SLOTS = 10        # 한 번에 확장되는 칸 수
 MAX_INVENTORY_CAP = 500  # 최대 인벤토리 상한
+
+# 장비 분해 — 등급별 광석 회수 배율
+DISASSEMBLE_ORE_TABLE = {
+    "magic": 1,    # item_level × 1
+    "rare": 2,     # item_level × 2
+    "craft": 3,    # item_level × 3
+    "unique": 5,   # item_level × 5
+}
+DISASSEMBLE_GOLD_PER_LEVEL = 20  # item_level × 20 골드 회수
+ORE_TYPE = "ore"
+ORE_BASE_ID = 1
 
 
 class InventoryManager:
@@ -267,6 +278,88 @@ class InventoryManager:
             "data": {
                 "max_inventory": new_max,
                 "cost": cost,
+                "total_gold": total_gold,
+            },
+        }
+
+    # ── 장비 분해 ────────────────────────────────────
+
+    @classmethod
+    async def disassemble_item(cls, user_no: int, data: dict):
+        """API 2010: 장비 분해 → 광석 + 골드 회수"""
+        # ── [1] 입력 추출 ──
+        item_uid = data.get("item_uid")
+        if not item_uid:
+            return error_response(ErrorCode.ITEM_NOT_FOUND, "item_uid가 필요합니다.")
+
+        # ── [3] DB 세션 + 소유권/상태 검증 ──
+        db = SessionLocal()
+        try:
+            item = db.query(Item).filter(
+                Item.item_uid == item_uid,
+                Item.user_no == user_no,
+            ).with_for_update().first()
+            if not item:
+                return error_response(ErrorCode.ITEM_NOT_FOUND, "아이템을 찾을 수 없습니다.")
+
+            if item.equip_slot is not None:
+                return error_response(ErrorCode.EQUIP_SLOT_MISMATCH, "장착 중인 장비는 분해할 수 없습니다. 먼저 해제하세요.")
+
+            # ── [4] 비즈니스 로직 ──
+            # 광석 회수량
+            ore_mult = DISASSEMBLE_ORE_TABLE.get(item.rarity, 1)
+            ore_gain = max(1, item.item_level * ore_mult)
+
+            # 골드 회수량
+            gold_gain = max(1, item.item_level * DISASSEMBLE_GOLD_PER_LEVEL)
+
+            # 아이템 삭제
+            db.delete(item)
+
+            # 광석 UPSERT
+            ore_mat = db.query(Material).filter(
+                Material.user_no == user_no,
+                Material.material_type == ORE_TYPE,
+                Material.material_id == ORE_BASE_ID,
+            ).first()
+            if ore_mat:
+                ore_mat.amount += ore_gain
+                ore_total = ore_mat.amount
+            else:
+                ore_mat = Material(
+                    user_no=user_no,
+                    material_type=ORE_TYPE,
+                    material_id=ORE_BASE_ID,
+                    amount=ore_gain,
+                )
+                db.add(ore_mat)
+                ore_total = ore_gain
+
+            # 골드 지급
+            user = db.query(User).filter(User.user_no == user_no).with_for_update().first()
+            user.gold += gold_gain
+            total_gold = user.gold
+
+            # ── [5] 커밋 ──
+            db.commit()
+            logger.info(f"[InventoryManager] disassemble_item (user_no={user_no}, item_uid={item_uid}, ore={ore_gain}, gold={gold_gain})")
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"[InventoryManager] disassemble_item 실패: {e}", exc_info=True)
+            return error_response(ErrorCode.DB_ERROR, "장비 분해 중 오류가 발생했습니다.")
+        finally:
+            db.close()
+
+        # ── [6] 응답 반환 ──
+        return {
+            "success": True,
+            "message": f"장비를 분해하여 광석 {ore_gain}개 + {gold_gain} 골드를 획득했습니다.",
+            "data": {
+                "item_uid": item_uid,
+                "ore_gained": ore_gain,
+                "ore_total": ore_total,
+                "gold_gained": gold_gain,
                 "total_gold": total_gold,
             },
         }

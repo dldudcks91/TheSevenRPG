@@ -3,7 +3,8 @@ feature: 도감 / 스킬 슬롯 관리
 manager: CardManager
 api_codes: [2007, 2008, 2009]
 status: partial
-# 미구현: 도감 레벨업 로직, 그룹 보너스, 카드 스킬 전투 발동
+# 미구현: 도감 그룹 보너스 재설계
+# Phase 18.5 완료: equip_skill/unequip_skill이 Cards 테이블로 이관됨 (Collection.skill_slot 미사용)
 ---
 
 ## 목적
@@ -57,10 +58,11 @@ status: partial
 - 동일 몬스터의 다중 슬롯 장착 금지 (이미 슬롯 있으면 먼저 해제하라고 에러)
 - with_for_update(): 2008(entry + occupant), 2009(entry)
 
-## 미구현 항목 (기획 확정됨)
-- 도감 레벨업: 3단계(Lv1/2/3), 일반=1/3/10장, 보스=1/2/4장, Lv2=발동확률↑, Lv3=능력치↑
-- 도감 그룹 보너스: 스테이지 노말3+보스1=1그룹, 합산 레벨(3/5/7/10)로 4단계 패시브
-- 카드 스킬 전투 발동: Phase 16 전투 엔진 v2에서 구현
+## 미구현 항목
+- ~~도감 레벨업~~ → **폐기**. 카드 레벨업(Phase 18.5)으로 대체
+- 도감 그룹 보너스: 기존 방식 폐기, 새 기준 미확정
+- ~~카드 스킬 전투 발동~~ → Phase 16 엔진에 스텁 존재, 카드 시스템 연동 대기
+- Collections.collection_level, Collections.skill_slot 컬럼: 미사용 (Cards 테이블로 이관됨)
 
 ---
 
@@ -69,3 +71,4 @@ status: partial
 |------|------|
 | 2026-03-16 | 최초 작성 (Phase 7, CardManager=CollectionManager 역할) |
 | 2026-03-17 | 도감 레벨업/그룹 기획 확정 — 미구현 항목으로 기록 |
+| 2026-03-20 | Phase 18.5: equip_skill/unequip_skill → Cards 테이블 기반 전환, Collection.skill_slot 미사용 |

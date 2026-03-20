@@ -17,6 +17,14 @@ LAST_STAGE = 704   # 최종 스테이지
 WAVES_PER_STAGE = 4  # 웨이브 1~3 일반 + 웨이브4 보스
 DEATH_EXP_PENALTY_RATE = 0.10  # 사망 시 현재 레벨 내 경험치 10% 차감
 
+# 챕터 클리어 시 시설 해금 매핑 (chapter_id → facility bit)
+CHAPTER_FACILITY_UNLOCK = {
+    1: 0,  # 대장간 (비트 0)
+    2: 1,  # 퀘스트 게시판 (비트 1)
+    3: 2,  # 상인 (비트 2)
+    4: 3,  # 흔적 조합소 (비트 3)
+}
+
 
 class StageManager:
     """스테이지 진행 관리 (API 3003, 3004, 3007, 3008)"""
@@ -147,11 +155,22 @@ class StageManager:
             saved_drops = cls._save_pending_drops(db, user_no, user, session.pending_drops or [])
 
             unlocked = False
+            facility_unlocked = None
             if stage_id == user.current_stage and stage_id < LAST_STAGE:
                 next_stage = cls._next_stage_id(stage_id)
                 if next_stage:
                     user.current_stage = next_stage
                     unlocked = True
+
+            # 챕터 보스(stage_num=4) 클리어 시 시설 해금
+            stage_num = stage_id % 100
+            chapter = stage_id // 100
+            if stage_num == STAGES_PER_CHAPTER and chapter in CHAPTER_FACILITY_UNLOCK:
+                facility_bit = CHAPTER_FACILITY_UNLOCK[chapter]
+                if not ((user.unlocked_facilities or 0) & (1 << facility_bit)):
+                    user.unlocked_facilities = (user.unlocked_facilities or 0) | (1 << facility_bit)
+                    facility_unlocked = facility_bit
+                    logger.info(f"[StageManager] 시설 해금 (user_no={user_no}, chapter={chapter}, bit={facility_bit})")
 
             current_stage = user.current_stage
             db.delete(session)
@@ -182,6 +201,7 @@ class StageManager:
                 "unlocked_next": unlocked,
                 "current_stage": current_stage,
                 "saved_drops": saved_drops,
+                "facility_unlocked": facility_unlocked,
             },
         }
 
@@ -399,12 +419,13 @@ class StageManager:
                 if not monster_idx:
                     continue
                 import uuid
+                from services.rpg.CardManager import CardManager
                 card = Card(
                     card_uid=str(uuid.uuid4()),
                     user_no=user_no,
                     monster_idx=int(monster_idx),
                     card_level=1,
-                    card_stats={},
+                    card_stats=CardManager.generate_card_stats(int(monster_idx)),
                     is_equipped=False,
                     skill_slot=None,
                 )

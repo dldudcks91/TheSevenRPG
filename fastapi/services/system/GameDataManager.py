@@ -28,6 +28,7 @@ class GameDataManager:
         'gold_drop_config': {},      # 골드 드롭 공식 파라미터
         'stigma_drop_config': {},    # 챕터보스별 낙인 드롭률
         'set_bonus': {},             # 세트 보너스 (sin → breakpoint → effect)
+        'card_skills': {},           # 카드 스킬 (monster_idx → skill data)
     }
 
     def __new__(cls):
@@ -207,6 +208,24 @@ class GameDataManager:
                 cls.REQUIRE_CONFIGS['stigma_drop_config'][int(row["stage_idx"])] = {
                     "sin_type": row["sin_type"],
                     "stigma_rate": float(row["stigma_rate"]) / 100.0,
+                }
+
+            # 18. Card Skill
+            for row in cls._read_csv(os.path.join(base_path, "card_skill.csv")):
+                midx = int(row["monster_idx"])
+                cls.REQUIRE_CONFIGS['card_skills'][midx] = {
+                    "skill_id": row.get("skill_id", ""),
+                    "skill_name": row.get("skill_name", ""),
+                    "trigger_type": row.get("trigger_type", ""),
+                    "trigger_rate_lv1": float(row.get("trigger_rate_lv1", 0)),
+                    "trigger_rate_lv2": float(row.get("trigger_rate_lv2", 0)),
+                    "cooldown": float(row.get("cooldown", 0)),
+                    "duration": float(row.get("duration", 0)),
+                    "effect_type": row.get("effect_type", ""),
+                    "effect_value_lv1": row.get("effect_value_lv1", "0"),
+                    "effect_value_lv3": row.get("effect_value_lv3", "0"),
+                    "max_stacks": int(row.get("max_stacks", 0)),
+                    "condition": row.get("condition", ""),
                 }
 
             cls._loaded = True

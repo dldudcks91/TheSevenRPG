@@ -36,6 +36,18 @@ class ErrorCode(str, Enum):
     ENHANCE_FAILED      = "E3007"   # 강화 실패 (최대 레벨 등)
     INSUFFICIENT_GOLD   = "E3008"   # 골드 부족
 
+    # ── E5xxx: 재료 ──────────────────────────────────────
+    MATERIAL_NOT_FOUND  = "E5001"   # 재료 없음 또는 수량 부족
+    POTION_LIMIT        = "E5002"   # 포션 사용 횟수 초과
+    POTION_NOT_USABLE   = "E5003"   # 포션 사용 불가 상태 (전투 중 등)
+
+    # ── E6xxx: 카드 ──────────────────────────────────────
+    CARD_NOT_FOUND      = "E6001"   # 카드 없음 또는 소유권 불일치
+    CARD_EQUIPPED       = "E6002"   # 장착 중인 카드 (분해/소모 불가)
+    CARD_MAX_LEVEL      = "E6003"   # 카드 최대 레벨 도달
+    CARD_INSUFFICIENT   = "E6004"   # 레벨업 소모 카드 부족
+    CARD_SOUL_INSUFFICIENT = "E6005"  # 카드 영혼 부족
+
     # ── E4xxx: 전투 ──────────────────────────────────────
     STAGE_NOT_FOUND     = "E4001"   # 스테이지 없음
     INVALID_BATTLE_REQ  = "E4002"   # 잘못된 전투 요청

@@ -107,6 +107,7 @@ class BattleSession(Base):
     max_hp = Column(Integer, nullable=False)            # 최대 HP
     pending_drops = Column(JSON, nullable=True)         # 웨이브 내 드롭 임시 저장
     wave_kills = Column(JSON, nullable=True)            # 웨이브별 처치 기록
+    potion_used = Column(Integer, default=0)            # 이번 런 포션 사용 횟수
     started_at = Column(DateTime, default=func.now())   # 세션 시작 시각
 
     # 관계 설정
