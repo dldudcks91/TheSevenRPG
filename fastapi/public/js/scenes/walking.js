@@ -6,6 +6,8 @@
 import { SceneManager } from '../scene-manager.js';
 import { t } from '../i18n/index.js';
 import story from '../i18n/story-ko.js';
+import { composeLpcSheet } from '../sprites/lpc-sprite.js';
+import { CHARACTER_LAYERS, LPC_BASE_URL } from '../sprites/lpc-manifest.js';
 
 const FRAME = 64;
 const SCALE = 4;          // 64 * 4 = 256px 캐릭터
@@ -14,28 +16,7 @@ const FPS = 8;
 const WALK_DIR = 0;       // 0 = North (위로 걸어감)
 const WALK_FRAMES = 9;
 
-/** 에셋 레이어 (z-order 순) */
-const ASSET_BASE = 'img/lpc/assets';
-const LAYERS = [
-    { path: 'cape/solid/male/walk/maroon.png',   z: 8  },
-    { path: 'body/male/walk.png',                z: 10 },
-    { path: 'head/male/walk.png',                z: 15 },
-    { path: 'eyes/eyebrows/thick/adult/walk.png', z: 16 },
-    { path: 'hair/bangslong/adult/walk.png',     z: 20 },
-    { path: 'legs/pants/male/walk.png',          z: 25 },
-    { path: 'feet/boots/basic/male/walk.png',    z: 28 },
-];
-
 const TOTAL_DURATION = 13000;
-
-function loadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error(`로드 실패: ${src}`));
-        img.src = src;
-    });
-}
 
 const WalkingScene = {
     el: null,
@@ -113,36 +94,9 @@ const WalkingScene = {
         if (target.dataset.action === 'skip') this._finish();
     },
 
-    /** 레이어 합성 → 단일 walk 스프라이트시트 */
+    /** walk 시트 합성 (공용 composeLpcSheet 사용) */
     async _composeSheet() {
-        const images = [];
-        for (const layer of LAYERS) {
-            try {
-                const img = await loadImage(`${ASSET_BASE}/${layer.path}`);
-                images.push({ img, z: layer.z });
-                console.log(`[Walking] 로드 OK: ${layer.path} (${img.width}x${img.height})`);
-            } catch (e) {
-                console.warn(`[Walking] 로드 실패: ${layer.path}`, e);
-            }
-        }
-
-        console.log(`[Walking] 로드된 레이어: ${images.length}개`);
-        if (images.length === 0) return;
-
-        images.sort((a, b) => a.z - b.z);
-
-        const maxW = Math.max(...images.map(l => l.img.width));
-        const maxH = Math.max(...images.map(l => l.img.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = maxW;
-        canvas.height = maxH;
-        const ctx = canvas.getContext('2d');
-
-        for (const { img } of images) {
-            ctx.drawImage(img, 0, 0);
-        }
-
-        this._sheet = canvas;
+        this._sheet = await composeLpcSheet(CHARACTER_LAYERS, 'walk', LPC_BASE_URL);
     },
 
     /** walk 애니메이션 시작 */

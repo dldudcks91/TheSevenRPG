@@ -87,9 +87,56 @@ status: partial
 
 ---
 
+## 재생 방식 (클라, idle 횡스크롤)
+
+> **서버 규칙은 불변.** 이 섹션은 `battle_log`를 클라이언트가 어떻게 시각화하는지만 규정한다. 전투 공식·결과·드롭·경험치·레벨 등 모든 데이터는 서버 결과를 그대로 사용한다.
+
+### 페이즈 FSM (몬스터 1기 기준)
+서버가 반환한 1 몬스터분 `battle_log[]`를 클라이언트가 4페이즈로 재해석한다.
+
+| 페이즈 | 입력 | 시각 액션 | 종료 조건 |
+|--------|------|-----------|-----------|
+| `SPAWN` | monster_idx, spawn_type | 오른쪽 밖에서 몬스터 스프라이트 생성 | 스프라이트 생성 완료 |
+| `APPROACH` | — | 몬스터 walk-W, 플레이어 walk-E + 배경 가로 스크롤 (CSS `translateX`) | 몬스터가 조우 지점(스테이지 너비 × 0.58)에 도달 (800ms) |
+| `EXCHANGE` | `battle_log[]` | 각 엔트리마다 공격자 slash 애니 + 피격자 hurt + 데미지/MISS 수치 표시. HP 바 갱신 | battle_log 모두 재생 후 300ms |
+| `DEATH` | `data.result` | 패배 측(win=몬스터, lose=플레이어) fadeOut + 아래로 살짝 낙하 | 400ms |
+
+- 페이즈 간 간격: PRE_EXCHANGE 200ms, POST_EXCHANGE 300ms, POST_DEATH 250ms.
+- 턴 간격: `TURN_DELAY_MS = 350`.
+- **`battle_log`의 순서·수치·actor는 절대 변경하지 않는다.** 이동·조우 좌표는 순전히 시각 레이어에서 결정된다.
+
+### 레이아웃
+- 플레이어는 스테이지 좌측 22%에 고정, 배경만 왼쪽으로 스크롤하여 "오른쪽으로 나아가는" 감각 연출.
+- 전투 로그는 하단 고정창 대신 스테이지 우하단 플로팅 로그(최근 3줄, 1.2s 후 fade out).
+- 웨이브 진입 시 중앙에 `WAVE n / 총` 배너 2.2s flash (`is_boss` 플래그가 오면 `BOSS WAVE` 빨간색).
+
+### 스프라이트 시스템
+- 플레이어: `LpcSprite`(LPC 레이어 합성 — body / head / legs) → PNG `StaticSprite` → RectSprite 3단 폴백.
+- 몬스터: `MONSTER_MANIFEST[monster_idx]` 매니페스트 존재 시 LpcSprite → PNG StaticSprite → RectSprite 3단 폴백.
+- 스폰 등급별 크기 배수: 일반 1.00 / 정예 1.10 / 보스 1.30 / 챕터보스 1.55. 기존 `SPAWN_TINT`도 유지.
+
+### 관련 클라이언트 파일
+| 경로 | 역할 |
+|------|------|
+| `fastapi/public/js/main/views/battle-view.js` | 데이터/HUD/로그/결과 오버레이. `IdleBattleScene`에 1 몬스터 재생 위임 |
+| `fastapi/public/js/main/views/idle-battle-scene.js` | Phaser Scene + 4페이즈 FSM (`playMob()`) |
+| `fastapi/public/js/main/views/pace-ctrl.js` | 속도/일시정지 래퍼 (Iter 4에서 UI 연결 예정) |
+| `fastapi/public/js/sprites/lpc-sprite.js` | LPC 레이어 합성 + Phaser 스프라이트 래퍼 |
+| `fastapi/public/js/sprites/lpc-manifest.js` | 캐릭터 레이어/애니 스펙, 몬스터 매니페스트, 스폰 사이즈 |
+| `fastapi/public/js/sprites/static-sprite.js` | PNG 기반 폴백 스프라이트 (동일 시그니처) |
+| `fastapi/public/css/components/battle-view.css` | `.bv-stage` 횡스크롤 배경, 플로팅 로그, 웨이브 배너 |
+
+### 미구현 (Iter 4 예정)
+- 재생 속도 1x / 2x / 3x 배속
+- 일시정지 / 재개 UI
+- `PaceCtrl`의 내부 로직(현재는 passthrough skeleton)
+
+---
+
 ## 변경 이력
 | 날짜 | 내용 |
 |------|------|
 | 2026-03-16 | 최초 작성 (Phase 4) |
 | 2026-03-17 | Phase 12에서 경험치 커브 + 등급 배율 CSV 연동 추가 |
 | 2026-03-19 | Phase 14 — BattleSession 연동, 연속 HP, 웨이브 보상, 사망 패널티 10% |
+| 2026-04-21 | 클라 전투 뷰 idle 횡스크롤 개편 (Iter 1~3). 서버 규칙 불변. "재생 방식 (클라)" 섹션 추가 |

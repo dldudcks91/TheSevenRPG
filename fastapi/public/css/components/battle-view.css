@@ -105,54 +105,133 @@
 
 .bv-hud-monster .bv-hp-text { text-align: right; }
 
-/* 아레나 (Phaser) */
-.bv-arena {
+/* 스테이지 (배경 가로 스크롤 + Phaser 레이어) */
+.bv-stage {
     flex: 1;
     min-height: 200px;
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    overflow: hidden;
     background: var(--bg-primary);
     border-top: 2px solid var(--border-primary);
     border-bottom: 2px solid var(--border-primary);
 }
 
-.bv-arena canvas {
+/* 배경 레이어: 가로로 2배 확장 후 translateX로 무한 스크롤 */
+.bv-stage-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background-repeat: repeat-x;
+    background-size: auto 100%;
+    background-position: left center;
+    image-rendering: pixelated;
+    will-change: transform;
+    transform: translateX(0);
+}
+
+.bv-stage-bg.scrolling {
+    animation: bvBgScroll 3.2s linear infinite;
+}
+
+@keyframes bvBgScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.bv-stage-phaser {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.bv-stage-phaser canvas {
     display: block;
     image-rendering: pixelated;
+    pointer-events: none;
 }
 
-/* 전투 로그 */
-.bv-log-area {
-    flex: 0 0 auto;
-    height: 200px;
-    overflow: hidden;
+/* 플로팅 로그 (스테이지 우하단, 최근 3줄 fade out) */
+.bv-floating-log {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
     display: flex;
     flex-direction: column;
-    margin: var(--spacing-xs);
-    margin-top: auto;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-secondary);
-    box-shadow: var(--rpg-border-outset);
+    gap: 3px;
+    max-width: 60%;
+    pointer-events: none;
+    z-index: 5;
 }
 
-.bv-log {
-    flex: 1;
-    overflow-y: auto;
-    padding: var(--spacing-sm) var(--spacing-md);
+.bv-floating-entry {
+    padding: 3px 8px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     font-size: var(--font-size-xs);
     font-family: var(--font-mono);
-    line-height: 1.8;
+    color: var(--text-secondary);
+    opacity: 0;
+    transform: translateX(24px);
+    transition: opacity 0.18s ease-out, transform 0.28s ease-out;
+    text-align: right;
+    white-space: nowrap;
 }
 
-.bv-log-entry { padding: 1px 0; color: var(--text-secondary); }
-.bv-log-entry.player { color: #80b0f8; }
-.bv-log-entry.monster { color: #f08080; }
-.bv-log-entry.crit { font-family: var(--font-bold); }
-.bv-log-entry.crit.player { color: #f8e830; }
-.bv-log-entry.crit.monster { color: #f86830; }
-.bv-log-entry.miss { color: var(--text-muted); }
+.bv-floating-entry.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.bv-floating-entry.fade {
+    opacity: 0;
+    transition: opacity 0.55s ease-out;
+}
+
+.bv-floating-entry.player { color: #80b0f8; border-color: rgba(128, 176, 248, 0.25); }
+.bv-floating-entry.monster { color: #f08080; border-color: rgba(240, 128, 128, 0.25); }
+.bv-floating-entry.crit { font-family: var(--font-bold); }
+.bv-floating-entry.crit.player { color: #f8e830; }
+.bv-floating-entry.crit.monster { color: #f86830; }
+.bv-floating-entry.miss { color: var(--text-muted); }
+
+/* 웨이브 배너 (스테이지 중앙 상단 flash) */
+.bv-wave-banner {
+    position: absolute;
+    top: 32%;
+    left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    opacity: 0;
+    font-family: var(--font-bold);
+    font-size: 28px;
+    color: var(--color-warning);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.9), 0 0 12px rgba(255, 200, 80, 0.6);
+    letter-spacing: 2px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.bv-wave-banner.boss {
+    color: var(--color-error);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.9), 0 0 14px rgba(232, 48, 48, 0.7);
+}
+
+.bv-wave-banner.show {
+    animation: bvWaveBanner 2.2s ease-out forwards;
+}
+
+@keyframes bvWaveBanner {
+    0%   { opacity: 0; transform: translateX(-50%) scale(0.6); }
+    15%  { opacity: 1; transform: translateX(-50%) scale(1.1); }
+    25%  { opacity: 1; transform: translateX(-50%) scale(1.0); }
+    70%  { opacity: 1; transform: translateX(-50%) scale(1.0); }
+    100% { opacity: 0; transform: translateX(-50%) scale(1.15); }
+}
 
 /* 결과 오버레이 */
 .bv-result-overlay {

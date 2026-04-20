@@ -1,10 +1,7 @@
 /**
- * TheSevenRPG — Battle View (우측 전투 모드)
- * 서버 battle_log를 Phaser 애니메이션으로 재생
- *
- * Phaser 최적화:
- *   Game 인스턴스는 mount 시 1회 생성, unmount 시 파괴.
- *   몬스터 교체 시 swapMonster()로 스프라이트만 교체.
+ * TheSevenRPG — Battle View (우측 전투 모드, idle 횡스크롤)
+ * 서버 battle_log를 IdleBattleScene에 위임하여 "오른쪽 스폰 → 조우 → 평타 교환 → 사망" 흐름으로 재생.
+ * 전투 공식/결과/드롭은 서버 결과 그대로 사용.
  */
 import { apiCall } from '../../api.js';
 import { Store } from '../../store.js';
@@ -13,6 +10,8 @@ import { getMonsterName, getStageName } from '../../meta-data.js';
 import { t, sinName, rarityName, slotName } from '../../i18n/index.js';
 import MainScreen from '../../main.js';
 import Popup from '../../popup.js';
+import { IdleBattleScene } from './idle-battle-scene.js';
+import { PaceCtrl } from './pace-ctrl.js';
 
 /** stage_id → 배경 이미지 경로 */
 function getStageBgUrl(stageId) {
@@ -24,10 +23,13 @@ const BattleView = {
     refs: {},
     _phaserGame: null,
     _battleScene: null,
-    _playTimer: null,
+    _pace: null,
+    _playerMaxHp: 0,
+    _monsterMaxHp: 0,
 
     mount(el, data) {
         setupEventDelegation(this, el);
+        this._pace = new PaceCtrl();
 
         el.innerHTML = `
             <div class="bv-screen">
@@ -50,10 +52,11 @@ const BattleView = {
                     </div>
                 </div>
 
-                <div class="bv-arena" id="bv-arena"></div>
-
-                <div class="bv-log-area">
-                    <div class="bv-log" id="bv-log"></div>
+                <div class="bv-stage" id="bv-stage">
+                    <div class="bv-stage-bg" id="bv-stage-bg"></div>
+                    <div class="bv-stage-phaser" id="bv-stage-phaser"></div>
+                    <div class="bv-floating-log" id="bv-floating-log"></div>
+                    <div class="bv-wave-banner" id="bv-wave-banner"></div>
                 </div>
 
                 <div class="bv-result-overlay" id="bv-result"></div>
@@ -68,8 +71,11 @@ const BattleView = {
             monsterName: el.querySelector('#bv-monster-name'),
             monsterHp: el.querySelector('#bv-monster-hp'),
             monsterHpText: el.querySelector('#bv-monster-hp-text'),
-            arena: el.querySelector('#bv-arena'),
-            log: el.querySelector('#bv-log'),
+            stage: el.querySelector('#bv-stage'),
+            stageBg: el.querySelector('#bv-stage-bg'),
+            phaserHost: el.querySelector('#bv-stage-phaser'),
+            floatingLog: el.querySelector('#bv-floating-log'),
+            waveBanner: el.querySelector('#bv-wave-banner'),
             result: el.querySelector('#bv-result'),
         };
 
@@ -79,17 +85,14 @@ const BattleView = {
 
     unmount() {
         teardown(this);
-        if (this._playTimer) {
-            clearTimeout(this._playTimer);
-            this._playTimer = null;
-        }
+        if (this._pace) { this._pace.clearAll(); this._pace = null; }
         this._destroyPhaser();
     },
 
     onVisibilityChange(hidden) {
         if (this._phaserGame && this._phaserGame.scene) {
-            if (hidden) this._phaserGame.scene.pause('BattleScene');
-            else this._phaserGame.scene.resume('BattleScene');
+            if (hidden) this._phaserGame.scene.pause('IdleBattleScene');
+            else this._phaserGame.scene.resume('IdleBattleScene');
         }
     },
 
@@ -143,11 +146,13 @@ const BattleView = {
 
         this.refs.stageName.textContent = getStageName(stageId);
         this.refs.result.classList.remove('show');
-        this.refs.log.innerHTML = '';
+        this.refs.floatingLog.innerHTML = '';
+        this.refs.waveBanner.classList.remove('show');
 
-        this.refs.arena.style.backgroundImage = `url('${getStageBgUrl(stageId)}')`;
-        this.refs.arena.style.backgroundSize = 'cover';
-        this.refs.arena.style.backgroundPosition = 'center';
+        this.refs.stageBg.style.backgroundImage = `url('${getStageBgUrl(stageId)}')`;
+        this._setBgScroll(false);
+
+        if (this._battleScene) await this._battleScene.resetForNewBattle();
 
         showLoading();
         try {
@@ -178,6 +183,7 @@ const BattleView = {
         for (let wi = 0; wi < waves.length; wi++) {
             const wave = waves[wi];
             this._updateWaveIndicator(wi);
+            this._showWaveBanner(wi + 1, waves.length, wave.is_boss);
 
             const monsters = wave.monsters || [];
             for (let mi = 0; mi < monsters.length; mi++) {
@@ -187,7 +193,6 @@ const BattleView = {
 
                 this.refs.monsterName.textContent = `${getMonsterName(monsterIdx)} (${spawnType})`;
                 this.refs.monsterHp.style.width = '100%';
-                this.refs.playerHp.style.width = '100%';
 
                 showLoading();
                 let data;
@@ -199,7 +204,8 @@ const BattleView = {
                     hideLoading();
                 }
 
-                await this._playBattleLog(data, monsterIdx, spawnType);
+                this._initHpBars(data);
+                await this._playMob(data, monsterIdx, spawnType);
 
                 const rw = data.rewards || {};
                 totalRewards.exp_gained += rw.exp_gained || 0;
@@ -220,72 +226,88 @@ const BattleView = {
         this._showResult(finalResult, totalRewards, stageId);
     },
 
-    // ── battle_log 재생 ──
+    // ── 몬스터 1기 재생 (Scene에 위임) ──
 
-    _playBattleLog(data, monsterIdx, spawnType) {
-        return new Promise((resolve) => {
-            const log = data.battle_log || [];
+    _initHpBars(data) {
+        const log = data.battle_log || [];
+        const firstPlayerAtk = log.find(e => e.actor === 'player' && e.action === 'attack');
+        const firstMonsterAtk = log.find(e => e.actor === 'monster' && e.action === 'attack');
 
-            const firstPlayerAtk = log.find(e => e.actor === 'player' && e.action === 'attack');
-            const firstMonsterAtk = log.find(e => e.actor === 'monster' && e.action === 'attack');
+        this._playerMaxHp = firstMonsterAtk ? firstMonsterAtk.target_hp + firstMonsterAtk.damage : (this._playerMaxHp || 200);
+        this._monsterMaxHp = firstPlayerAtk ? firstPlayerAtk.target_hp + firstPlayerAtk.damage : 100;
 
-            const playerMaxHp = firstMonsterAtk ? firstMonsterAtk.target_hp + firstMonsterAtk.damage : 200;
-            const monsterMaxHp = firstPlayerAtk ? firstPlayerAtk.target_hp + firstPlayerAtk.damage : 100;
+        this.refs.playerHpText.textContent = `${this._playerMaxHp} / ${this._playerMaxHp}`;
+        this.refs.monsterHpText.textContent = `${this._monsterMaxHp} / ${this._monsterMaxHp}`;
+        this.refs.playerHp.style.width = '100%';
+        this.refs.monsterHp.style.width = '100%';
+    },
 
-            this.refs.playerHpText.textContent = `${playerMaxHp} / ${playerMaxHp}`;
-            this.refs.monsterHpText.textContent = `${monsterMaxHp} / ${monsterMaxHp}`;
-            this.refs.playerHp.style.width = '100%';
-            this.refs.monsterHp.style.width = '100%';
+    _playMob(data, monsterIdx, spawnType) {
+        if (!this._battleScene) return Promise.resolve();
+        return this._battleScene.playMob(data, monsterIdx, spawnType);
+    },
 
-            // 스프라이트 교체 (Phaser 재생성 없음)
-            if (this._battleScene) {
-                this._battleScene.swapMonster(monsterIdx, spawnType);
-            }
+    _onPhase(phase) {
+        // APPROACH 구간에서만 배경을 왼쪽으로 스크롤
+        this._setBgScroll(phase === 'approach');
+    },
 
-            let i = 0;
-            const delay = 350;
+    _onBattleEntry(entry) {
+        if (entry.actor === 'player') {
+            const hp = Math.max(0, entry.target_hp);
+            const pct = this._monsterMaxHp > 0 ? (hp / this._monsterMaxHp) * 100 : 0;
+            this.refs.monsterHp.style.width = pct + '%';
+            this.refs.monsterHpText.textContent = `${hp} / ${this._monsterMaxHp}`;
+        } else {
+            const hp = Math.max(0, entry.target_hp);
+            const pct = this._playerMaxHp > 0 ? (hp / this._playerMaxHp) * 100 : 0;
+            this.refs.playerHp.style.width = pct + '%';
+            this.refs.playerHpText.textContent = `${hp} / ${this._playerMaxHp}`;
+        }
+        this._appendLog(entry);
+    },
 
-            const playNext = () => {
-                if (i >= log.length) { setTimeout(resolve, 400); return; }
-
-                const entry = log[i];
-                i++;
-
-                if (entry.actor === 'player') {
-                    const hp = Math.max(0, entry.target_hp);
-                    this.refs.monsterHp.style.width = (monsterMaxHp > 0 ? hp / monsterMaxHp * 100 : 0) + '%';
-                    this.refs.monsterHpText.textContent = `${hp} / ${monsterMaxHp}`;
-                } else {
-                    const hp = Math.max(0, entry.target_hp);
-                    this.refs.playerHp.style.width = (playerMaxHp > 0 ? hp / playerMaxHp * 100 : 0) + '%';
-                    this.refs.playerHpText.textContent = `${hp} / ${playerMaxHp}`;
-                }
-
-                if (this._battleScene) this._battleScene.playAction(entry);
-                this._appendLog(entry);
-
-                this._playTimer = setTimeout(playNext, delay);
-            };
-
-            this._playTimer = setTimeout(playNext, 600);
-        });
+    _setBgScroll(on) {
+        if (!this.refs.stageBg) return;
+        this.refs.stageBg.classList.toggle('scrolling', !!on);
     },
 
     _appendLog(entry) {
         const el = document.createElement('div');
-        el.className = `bv-log-entry ${entry.actor}`;
+        el.className = `bv-floating-entry ${entry.actor}`;
         const name = entry.actor === 'player' ? 'Player' : 'Monster';
 
         if (entry.action === 'miss') {
-            el.textContent = `[${entry.turn}] ${name} \u2192 MISS`;
+            el.textContent = `${name} \u2192 MISS`;
             el.classList.add('miss');
         } else {
-            el.textContent = `[${entry.turn}] ${name} \u2192 ${entry.damage}${entry.crit ? ' CRIT!' : ''}`;
+            el.textContent = `${name} \u2192 ${entry.damage}${entry.crit ? ' CRIT!' : ''}`;
             if (entry.crit) el.classList.add('crit');
         }
 
-        this.refs.log.appendChild(el);
-        this.refs.log.scrollTop = this.refs.log.scrollHeight;
+        this.refs.floatingLog.appendChild(el);
+
+        // 최근 3줄만 유지
+        while (this.refs.floatingLog.children.length > 3) {
+            this.refs.floatingLog.removeChild(this.refs.floatingLog.firstChild);
+        }
+
+        // 생성 직후 show, 1.2s 후 fade out, 1.8s 후 제거
+        requestAnimationFrame(() => el.classList.add('show'));
+        setTimeout(() => el.classList.add('fade'), 1200);
+        setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 1800);
+    },
+
+    _showWaveBanner(waveNum, total, isBoss) {
+        const banner = this.refs.waveBanner;
+        if (!banner) return;
+        const label = isBoss ? `BOSS WAVE` : `WAVE ${waveNum} / ${total}`;
+        banner.textContent = label;
+        banner.classList.toggle('boss', !!isBoss);
+        banner.classList.remove('show');
+        // 재적용(클래스 재지정) 위해 reflow
+        void banner.offsetWidth;
+        banner.classList.add('show');
     },
 
     // ── 결과 ──
@@ -409,22 +431,25 @@ const BattleView = {
         Popup.showSingle(html, target, { pinned: true });
     },
 
-    // ── Phaser (1회 생성, 스프라이트만 교체) ──
+    // ── Phaser 초기화 ──
 
     _initPhaser() {
         if (this._phaserGame) return;
 
-        const arenaEl = this.refs.arena;
-        const width = arenaEl.clientWidth || 600;
-        const height = arenaEl.clientHeight || 300;
+        const host = this.refs.phaserHost;
+        const width = host.clientWidth || 600;
+        const height = host.clientHeight || 300;
 
-        const scene = new BattlePhaserScene(width, height);
+        const scene = new IdleBattleScene(width, height, {
+            onPhase: (p) => this._onPhase(p),
+            onBattleEntry: (e) => this._onBattleEntry(e),
+        });
         this._battleScene = scene;
 
         this._phaserGame = new Phaser.Game({
             type: Phaser.AUTO,
             width, height,
-            parent: arenaEl,
+            parent: host,
             transparent: true,
             scene: scene,
             physics: { default: 'none' },
@@ -439,152 +464,5 @@ const BattleView = {
         }
     },
 };
-
-// ── Phaser Scene ──
-
-const SPAWN_TINT = {
-    '\uC815\uC608':     0x4488ff,
-    '\uBCF4\uC2A4':     0xff4444,
-    '\uCC55\uD130\uBCF4\uC2A4': 0xffaa00,
-};
-
-class BattlePhaserScene extends Phaser.Scene {
-    constructor(w, h) {
-        super({ key: 'BattleScene' });
-        this._w = w;
-        this._h = h;
-        this._spawnType = '\uC77C\uBC18';
-        this.playerSprite = null;
-        this.monsterSprite = null;
-        this._monsterLabel = null;
-    }
-
-    preload() {
-        this.load.on('loaderror', () => {});
-        this.load.image('player', '/assets/sprites/character.png');
-    }
-
-    create() {
-        this._createPlayerSprite();
-    }
-
-    /** 몬스터 스프라이트를 교체한다 (Phaser Game 재생성 없음) */
-    swapMonster(monsterIdx, spawnType) {
-        this._spawnType = spawnType || '\uC77C\uBC18';
-
-        if (this.monsterSprite) { this.monsterSprite.destroy(); this.monsterSprite = null; }
-        if (this._monsterLabel) { this._monsterLabel.destroy(); this._monsterLabel = null; }
-
-        const textureKey = `monster_${monsterIdx}`;
-
-        if (this.textures.exists(textureKey)) {
-            this._createMonsterSprite(textureKey);
-        } else {
-            this.load.image(textureKey, `/assets/sprites/monster_${monsterIdx}.png`);
-            this.load.once('complete', () => this._createMonsterSprite(textureKey));
-            this.load.once('loaderror', () => this._createMonsterFallback());
-            this.load.start();
-        }
-    }
-
-    _createPlayerSprite() {
-        const cx = this._w / 2;
-        const bottom = this._h - 10;
-
-        if (this.textures.exists('player')) {
-            this.playerSprite = this.add.image(cx - 180, bottom, 'player');
-            this.playerSprite.setDisplaySize(240, 240);
-            this.playerSprite.setOrigin(0.5, 1.0);
-        } else {
-            this.playerSprite = this.add.rectangle(cx - 180, bottom - 32, 50, 64, 0x42a5f5);
-            this.playerSprite.setStrokeStyle(2, 0x90caf9);
-            this.add.text(cx - 120, bottom, 'Player', {
-                fontSize: '12px', color: '#90caf9', fontFamily: 'sans-serif',
-            }).setOrigin(0.5);
-        }
-    }
-
-    _createMonsterSprite(textureKey) {
-        const cx = this._w / 2;
-        const bottom = this._h - 10;
-        const tint = SPAWN_TINT[this._spawnType];
-
-        this.monsterSprite = this.add.image(cx + 180, bottom, textureKey);
-        this.monsterSprite.setDisplaySize(240, 240);
-        this.monsterSprite.setOrigin(0.5, 1.0);
-        if (tint) this.monsterSprite.setTint(tint);
-    }
-
-    _createMonsterFallback() {
-        const cx = this._w / 2;
-        const bottom = this._h - 10;
-        const tint = SPAWN_TINT[this._spawnType];
-        const rectColor = tint || 0xe53935;
-
-        this.monsterSprite = this.add.rectangle(cx + 180, bottom - 35, 56, 70, rectColor);
-        this.monsterSprite.setStrokeStyle(2, tint ? 0xffffff : 0xef9a9a);
-        this._monsterLabel = this.add.text(cx + 180, bottom, 'Monster', {
-            fontSize: '12px', color: tint ? '#ffffff' : '#ef9a9a', fontFamily: 'sans-serif',
-        }).setOrigin(0.5);
-    }
-
-    playAction(entry) {
-        if (!this.playerSprite || !this.monsterSprite) return;
-        const cx = this._w / 2;
-        const dmgY = this._h - 120;
-
-        if (entry.actor === 'player') {
-            this.tweens.add({ targets: this.playerSprite, x: cx + 60, duration: 100, yoyo: true, ease: 'Power2' });
-            if (entry.action === 'attack') {
-                this._showDamage(cx + 180, dmgY, entry.damage, entry.crit);
-                this._flashSprite(this.monsterSprite);
-            } else {
-                this._showMiss(cx + 180, dmgY);
-            }
-        } else {
-            this.tweens.add({ targets: this.monsterSprite, x: cx - 60, duration: 100, yoyo: true, ease: 'Power2' });
-            if (entry.action === 'attack') {
-                this._showDamage(cx - 180, dmgY, entry.damage, entry.crit);
-                this._flashSprite(this.playerSprite);
-            } else {
-                this._showMiss(cx - 180, dmgY);
-            }
-        }
-    }
-
-    _showDamage(x, y, damage, isCrit) {
-        const text = this.add.text(x, y, `${isCrit ? '\u2757' : ''}${damage}`, {
-            fontSize: isCrit ? '18px' : '14px',
-            color: isCrit ? '#ffeb3b' : '#ffffff',
-            fontFamily: 'sans-serif',
-            fontStyle: isCrit ? 'bold' : 'normal',
-            stroke: '#000', strokeThickness: 2,
-        }).setOrigin(0.5);
-        this.tweens.add({ targets: text, y: y - 30, alpha: 0, duration: 600, ease: 'Power2', onComplete: () => text.destroy() });
-    }
-
-    _showMiss(x, y) {
-        const text = this.add.text(x, y, 'MISS', {
-            fontSize: '13px', color: '#999999', fontFamily: 'sans-serif', stroke: '#000', strokeThickness: 2,
-        }).setOrigin(0.5);
-        this.tweens.add({ targets: text, y: y - 25, alpha: 0, duration: 500, onComplete: () => text.destroy() });
-    }
-
-    _flashSprite(sprite) {
-        if (sprite.setTintFill) {
-            const origTint = sprite.tintTopLeft;
-            const hadTint = origTint !== 0xffffff;
-            sprite.setTintFill(0xffffff);
-            this.time.delayedCall(80, () => {
-                sprite.clearTint();
-                if (hadTint) sprite.setTint(origTint);
-            });
-        } else if (sprite.setFillStyle) {
-            const orig = sprite.fillColor;
-            sprite.setFillStyle(0xffffff);
-            this.time.delayedCall(80, () => sprite.setFillStyle(orig));
-        }
-    }
-}
 
 export default BattleView;

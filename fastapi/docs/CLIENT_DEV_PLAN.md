@@ -1,7 +1,7 @@
 # TheSevenRPG — 클라이언트 개발 계획서
 
 > 최초 작성: 2026-03-13
-> 최종 업데이트: 2026-03-20 (LPC 스프라이트 도입, Walking Scene, 프롤로그 개선, 씬 다시보기)
+> 최종 업데이트: 2026-04-21 (Phase C17 — Idle 횡스크롤 전투 개편 Iter 1~3 완료)
 > 화면 기획서: `fastapi/docs/game_design/SCREEN_DESIGN.md`
 > 기준 서버 계획서: `fastapi/docs/SERVER_DEV_PLAN.md`
 > 개발 가이드: `.claude/skills/web-client/skill.md`
@@ -319,6 +319,49 @@ Prologue → Walking Scene → Tutorial Battle → Main
 
 ---
 
+### Phase C17 — Idle 횡스크롤 전투 개편 (2026-04-21)
+**목적**: 정적 대치 전투를 "오른쪽에서 몬스터 스폰 → 캐릭터가 걸어가며 조우 → 평타 교환" 형태의 idle 오토배틀로 전환.
+**상태**: [x] Iter 1~3 완료 / [ ] Iter 4(속도·일시정지 UI) 미착수
+
+**핵심 원칙**
+- 서버 API(3001/3003/3004), BattleManager, StageManager 등 서버 로직은 **완전 불변**. 클라이언트만 수정.
+- 전투 공식·결과·드롭은 서버 `battle_log`를 그대로 재생. 이동/조우 좌표는 순수 시각 좌표.
+- 웨이브 구조([일반3+정예1]×3 + 보스) 유지. 한 웨이브 안에서 몬스터가 순차 스폰.
+
+**신규 파일**
+| 경로 | 역할 |
+|------|------|
+| `js/sprites/lpc-manifest.js` | 캐릭터 레이어/애니 스펙, 몬스터 매니페스트, 스폰 사이즈 배수 |
+| `js/sprites/lpc-sprite.js` | LPC 레이어 합성(`composeLpcSheet`) + Phaser 스프라이트 래퍼 |
+| `js/sprites/static-sprite.js` | PNG 기반 `StaticSprite` + `RectSprite` (LpcSprite와 동일 시그니처) |
+| `js/main/views/idle-battle-scene.js` | Phaser Scene. `playMob(data, monsterIdx, spawnType)` 4페이즈 FSM |
+| `js/main/views/pace-ctrl.js` | 속도/일시정지 래퍼 skeleton (Iter 4에서 UI 연결) |
+
+**수정 파일**
+- `js/main/views/battle-view.js` — 내부 `BattlePhaserScene` 제거 → `IdleBattleScene` 위임. 플로팅 로그, 웨이브 배너 추가
+- `css/components/battle-view.css` — `.bv-arena` → `.bv-stage`. 배경 가로 스크롤(`bvBgScroll`), 플로팅 로그, 웨이브 배너
+- `js/scenes/walking.js` — `composeLpcSheet` 공용 모듈 사용으로 리팩토링 (시각 동일)
+
+**Iter 별 상세**
+| Iter | 범위 | 상태 |
+|------|------|------|
+| 1 | 스켈레톤 + PNG 폴백. 횡스크롤·조우·평타 교환·사망 FSM 동작 | [x] |
+| 2 | LPC 공용 모듈 도입. 플레이어를 LpcSprite로 전환. walking.js 회귀 | [x] |
+| 3 | `MONSTER_MANIFEST` 구조 확정, 몬스터 3단 폴백, 스폰 크기 배수, 플로팅 로그, 웨이브 배너 | [x] |
+| 4 | 속도 1x/2x/3x + 일시정지 UI, IR 문서 세부 sync | [ ] |
+
+**LPC 에셋 현황**
+- `fastapi/tools/lpc_download.py`가 body/head/legs (male/female) + 무기/방패 다운로드
+- `lpc-manifest.js`의 `CHARACTER_LAYERS`는 body/head/legs 3파츠만 사용. cape/eyes/hair/feet은 다운로드 스크립트 확장 후 추가 예정.
+- `MONSTER_MANIFEST`는 비어있음. 엔트리를 채우면 해당 몬스터가 LPC로 렌더됨.
+
+**관련 IR 문서**
+- `fastapi/docs/ir/battle.md` "재생 방식 (클라, idle 횡스크롤)" 섹션 참조.
+
+**연동 API (불변)**: `3001`, `3003`, `3004`
+
+---
+
 ### Phase C16 — 통합 테스트 & 폴리싱
 **목적**: 전체 흐름 검증 + UI 다듬기.
 **상태**: [ ] 미착수 (2026-03-19: 버그 발견 — "이미 진행중인 전투" 메시지)
@@ -362,6 +405,8 @@ Phase C15 (아이템 탭)        [x] 스켈레톤 (서버 Phase 18 이후 본격
     ↓
 Phase C15.5 (스토리 씬)      [x] Walking Scene + 프롤로그 개선 + 씬 다시보기
     ↓
+Phase C17 (idle 횡스크롤 전투) [x] Iter 1~3 / [ ] Iter 4 속도·일시정지
+    ↓
 Phase C16 (통합/폴리싱)      [ ] 전체 흐름 검증
 ```
 
@@ -383,4 +428,4 @@ Phase C16 (통합/폴리싱)      [ ] 전체 흐름 검증
 
 ---
 
-*마지막 업데이트: 2026-03-20*
+*마지막 업데이트: 2026-04-21*
