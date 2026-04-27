@@ -6,15 +6,8 @@
 
 ## 챕터별 지역 설계
 
-| 챕터 | 죄종 | 지역명 | 영문 | 상태이상 | 스테이지 타입 순서 |
-|------|------|--------|------|---------|------------------|
-| 1 | 분노 / Wrath | 불타는 전장 | Burning Battlefield | 화상 | Demon → Normal → Undead |
-| 2 | 시기 / Envy | 뒤틀린 숲 | Twisted Forest | 중독 | Normal → Demon → Undead |
-| 3 | 탐욕 / Greed | 황금의 사막 | Golden Desert | 스턴 | Normal → Undead → Demon |
-| 4 | 나태 / Sloth | 망각의 동토 | Frozen Oblivion | 빙결 | Undead → Demon → Normal |
-| 5 | 폭식 / Gluttony | 심연의 동굴 | Caverns of the Abyss | 침식 | Undead → Normal → Demon |
-| 6 | 색욕 / Lust | 타락한 궁전 | Corrupted Palace | 매혹 | Demon → Undead → Normal |
-| 7 | 오만 / Pride | 신의 폐허 | Ruins of God | 심판 | Demon → Normal → Undead |
+> 수치 데이터: `fastapi/meta_data/chapter_info.csv`
+> (chapter_id, sin, region, stage_type_order, boss 등 전체 필드 포함)
 
 ---
 

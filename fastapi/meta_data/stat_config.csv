@@ -1,0 +1,6 @@
+stat_id,stat_korean,stat_english,effect_per_point,effect_type_1,value_per_point_1,effect_type_2,value_per_point_2,max_invest,note
+str,힘,Strength,공격력 +0.5%,atk_percent,0.5,-,-,245,무기 기본공격력에 곱연산
+dex,민첩,Dexterity,공격속도 +0.3% / 명중 +5,aspd_percent,0.3,accuracy_flat,5,245,공격속도는 수확체감 적용
+vit,체력,Life,최대HP +10,hp_flat,10,-,-,245,고정값 증가
+luk,운,Luck,치확 +5 / 회피 +5,crit_rate_flat,5,evasion_flat,5,245,치명타 확률 및 회피 수치
+cost,코스트,Cost,최대코스트 +2,max_cost_flat,2,-,-,245,레벨당 자동 +1 별도
